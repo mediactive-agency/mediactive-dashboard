@@ -74,12 +74,7 @@ const ICONS = {
   closed:    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
 }
 
-const ARROW = (
-  <svg width="20" height="32" viewBox="0 0 20 40" fill="none" stroke="var(--text3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="10" y1="2" x2="10" y2="34"/>
-    <polyline points="3 26 10 34 17 26"/>
-  </svg>
-)
+const ARROW = <svg width="52" height="20" viewBox="0 0 60 20" fill="none" stroke="#888888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="10" x2="52" y2="10"/><polyline points="44 3 52 10 44 17"/></svg>
 
 function getGreeting() {
   const h = parseInt(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', hour12: false }))
@@ -196,7 +191,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
                       <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
                       <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
                     </div>
-                    {pct && <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text3)', flexShrink: 0 }}>→ {pct}</div>}
+                    {pct && <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text3)', flexShrink: 0 }}>→ {pct}</div>}
                   </div>
                   {i < funnelSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)', marginLeft: 52 }} />}
                 </div>
@@ -204,17 +199,17 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             })}
           </div>
         ) : (
-          <div style={{ background: 'var(--card)', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden', display: 'flex', alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', alignItems: 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
             {funnelSteps.map((step, i) => (
               <>
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '26px 10px', background: 'var(--card)' }}>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px', background: 'var(--card)' }}>
                   <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
-                  <div style={{ fontSize: 30, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
                 </div>
                 {i < funnelSteps.length - 1 && (
-                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', gap: 2, flexShrink: 0, width: 72, borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
+                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 68 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
                       {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
                     </div>
                     {ARROW}

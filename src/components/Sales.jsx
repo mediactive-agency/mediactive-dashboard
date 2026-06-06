@@ -179,7 +179,7 @@ function CallCard({ r, linkedinMap }) {
   )
 }
 
-export default function Sales({ data, filter, customFrom, customTo, isMobile }) {
+export default function Sales({ data, filter, customFrom, customTo, isMobile, isTablet }) {
   const { filtered, linkedinMap, stats } = useMemo(() => {
     if (!data) return { filtered: [], linkedinMap: {}, stats: null }
     const rows = data.sales.slice(1).filter(r => r && r[0])
@@ -259,7 +259,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile }) 
       </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
         {[
           { label: 'Total Calls', value: total, suffix: '', sub: 'logged', color: '#60A5FA' },
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },

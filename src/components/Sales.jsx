@@ -115,8 +115,8 @@ function CallCard({ r, linkedinMap, isMobile }) {
     return (
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
         <span style={{ color, flexShrink: 0, marginTop: 1 }}>{ico}</span>
-        <span style={{ fontSize: isMobile ? 13 : 11, color: 'var(--text4)', minWidth: isMobile ? 72 : 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: isMobile ? 15 : 13, color: 'var(--text2)', lineHeight: 1.5 }}>{val}</span>
+        <span style={{ fontSize: 11, color: 'var(--text4)', minWidth: 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{val}</span>
       </div>
     )
   }
@@ -153,13 +153,13 @@ function CallCard({ r, linkedinMap, isMobile }) {
       {(cur || goal || r[2] || r[3]) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px' }}>
-            <div style={{ fontSize: isMobile ? 12 : 10, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', marginBottom: 10 }}>CURRENT SITUATION</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', marginBottom: 10 }}>CURRENT SITUATION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {cur ? visibleRows.filter(row => !row.goalOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(cur, row.key)} />) : r[2] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[2]}</div> : null}
             </div>
           </div>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', borderLeft: '2px solid #34D39944' }}>
-            <div style={{ fontSize: isMobile ? 12 : 10, fontWeight: 700, color: '#34D399', letterSpacing: '0.1em', marginBottom: 10 }}>DESIRED SITUATION</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#34D399', letterSpacing: '0.1em', marginBottom: 10 }}>DESIRED SITUATION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {goal ? visibleRows.filter(row => !row.curOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(goal, row.key)} />) : r[3] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[3]}</div> : null}
             </div>

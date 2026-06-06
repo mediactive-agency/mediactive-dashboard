@@ -1,4 +1,4 @@
-import { LOGO_SVG, LOGO_MINI_SVG } from '../utils/data'
+import { LOGO_SVG } from '../utils/data'
 
 const NAV_ITEMS = [
   { key: 'dashboard', label: 'Dashboard', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> },
@@ -7,27 +7,27 @@ const NAV_ITEMS = [
   { key: 'tasks',     label: 'Daily Tasks', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
 ]
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
-  const subText = loading
-    ? 'Loading...'
-    : error
-    ? 'Error'
-    : loadedAt
-    ? `Updated ${loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
-    : 'Live'
+const SUN = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+const MOON = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme }) {
+  const isDark = theme === 'dark'
 
   return (
     <aside style={{
-      width: 240, minHeight: '100vh', background: '#111113',
-      borderRight: '1px solid #222224', display: 'flex', flexDirection: 'column',
+      width: 240, minHeight: '100vh',
+      background: 'var(--bg2)',
+      borderRight: '1px solid var(--border)',
+      display: 'flex', flexDirection: 'column',
       position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
+      transition: 'background 0.3s ease',
     }}>
-      <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid #222224', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
       </div>
 
       <nav style={{ padding: '12px 10px', flex: 1 }}>
-        <div style={{ fontSize: 10, color: '#555558', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
+        <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
         {NAV_ITEMS.map(item => (
           <button
             key={item.key}
@@ -35,25 +35,43 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
             style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
               borderRadius: 8, border: 'none', width: '100%', textAlign: 'left',
-              fontSize: 14, fontWeight: active === item.key ? 600 : 500,
-              color: active === item.key ? '#F3F4F6' : '#88888B',
-              background: active === item.key ? '#0d1825' : 'none',
+              fontSize: 14, fontWeight: active === item.key ? 600 : 400,
+              color: active === item.key ? 'var(--text)' : 'var(--text3)',
+              background: active === item.key ? 'var(--sidebar-active)' : 'transparent',
               cursor: 'pointer', marginBottom: 3, transition: 'all 0.15s',
-              fontFamily: "Inter, sans-serif",
             }}
           >
             {item.icon}
             <span>{item.label}</span>
             <div style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: active === item.key ? '#FFFFFF' : '#2a2a2c',
+              background: active === item.key ? 'var(--nav-dot-active)' : 'var(--nav-dot)',
               marginLeft: 'auto', flexShrink: 0,
             }} />
           </button>
         ))}
       </nav>
 
-      <div style={{ padding: '16px 20px', borderTop: '1px solid #222224' }}>
+      {/* Footer */}
+      <div style={{ padding: '12px 20px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+        {/* Theme toggle */}
+        <button
+          onClick={onThemeToggle}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '7px 12px', cursor: 'pointer',
+            color: 'var(--text3)', fontSize: 11, fontWeight: 500, width: '100%',
+            transition: 'all 0.15s',
+          }}
+        >
+          {isDark ? SUN : MOON}
+          <span>{isDark ? 'Light mode' : 'Dark mode'}</span>
+          {isManualTheme && <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text4)', fontStyle: 'italic' }}>manual</span>}
+        </button>
+
+        {/* Live indicator */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
           <div style={{
             width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
@@ -64,7 +82,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
             {loading ? 'Loading...' : error ? 'Error' : 'Live'}
           </span>
           {loadedAt && !loading && !error && (
-            <span style={{ fontSize: 11, color: '#555558' }}>
+            <span style={{ fontSize: 11, color: 'var(--text4)' }}>
               · {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}

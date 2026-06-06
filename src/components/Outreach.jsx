@@ -55,7 +55,7 @@ const ARROW = (dimmed) => (
   </svg>
 )
 
-function VarCard({ v, dimmed, selected, onToggle, isMobile }) {
+function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
   const steps = [
     { val: v.A, label: 'Initiated',  color: '#60A5FA' },
     { val: v.MS, label: 'Media Seen', color: '#F472B6' },
@@ -86,11 +86,11 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {
           {steps.map((step, i) => (
             <>
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
                 <div style={{ fontSize: 10, color: dimmed ? 'var(--text5)' : 'var(--text3)', whiteSpace: 'nowrap' }}>{step.label}</div>
               </div>
               {i < steps.length - 1 && (
-                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
+                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: dimmed ? 'var(--border2)' : 'var(--text)', lineHeight: 1 }}>
                     {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
                   </div>
@@ -100,7 +100,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {
             </>
           ))}
         </div>
-        <div style={{ flex: 1 }} />
+        <div style={{ flex: isMobile ? 0 : 1 }} />
         <div style={{ width: 1, background: 'var(--border)', height: 44, margin: '0 28px', flexShrink: 0 }} />
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {rates.map((r, i) => (
@@ -248,7 +248,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                     <div style={{ fontSize: 11, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < mainSteps.length - 1 && (
-                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
+                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
                       <div style={{ fontSize: 14, fontWeight: 800, color: '#FFFFFF' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       {ARROW(false)}
                     </div>
@@ -299,7 +299,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                     <div style={{ fontSize: 10, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < arr.length - 1 && (
-                    <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
+                    <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--selected-text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       <svg width="44" height="14" viewBox="0 0 50 14" fill="none"><line x1="0" y1="7" x2="42" y2="7" stroke="#AAAAAA" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="#AAAAAA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>

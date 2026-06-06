@@ -196,7 +196,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
     return (
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 10, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: 16, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 6 }}>
             {WDAYS.map(d => <div key={d} style={{ fontSize: 10, color: 'var(--text4)', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
           </div>
@@ -224,7 +224,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
         {/* Sidebar widgets */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Outreach */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>OUTREACH</div>
               <div style={{ color: task1Color }}>{isCheckWeekend ? '' : task1Done ? ICO_CHECK : ICO_X}</div>
@@ -243,7 +243,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Followups */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>FOLLOWUPS</div>
               <div style={{ color: task2Color }}>{isCheckWeekend ? '' : task2Done ? ICO_CHECK : (fuTotal === 0 ? '' : ICO_X)}</div>
@@ -257,7 +257,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Positive Followups */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>POSITIVE FOLLOWUPS</div>
               <div style={{ color: pfuColor }}>{isCheckWeekend ? '' : pfuTask3Done ? (pfuTotal === 0 ? '' : ICO_CHECK) : ICO_X}</div>
@@ -271,7 +271,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Streak */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ color: '#FB923C' }}>{ICO_FIRE}</span>
               <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)' }}>{streak}</span>

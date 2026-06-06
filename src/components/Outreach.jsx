@@ -18,7 +18,7 @@ function parseRawVars(rows, filterFn) {
     const r = rows[i]; if (!r || !r[3] || !r[4]) continue
     const date = toDateStr(r[3]); if (!date) continue
     if (!filterFn(date)) continue
-    const varN = normName(r[4].toString().trim()); if (!varN) continue
+    const varN = normName(String(r[4]||'').trim()); if (!varN) continue
     if (!agg[varN]) agg[varN] = { name: varN, A: 0, MS: 0, B: 0, C: 0, D: 0, fuTotal: 0, fuCount: 0, daysTotal: 0, daysCount: 0 }
     agg[varN].A++
     if (r[10] === 'YES') agg[varN].MS++
@@ -42,7 +42,7 @@ function getLastUsed(allSheets, varN) {
   let last = null
   for (const r of allRows) {
     if (!r || !r[4]) continue
-    if (normName(r[4].toString().trim()) !== varN) continue
+    if (normName(String(r[4]||'').trim()) !== varN) continue
     const d = toDateStr(r[3]); if (d && (!last || d > last)) last = d
   }
   return last

@@ -39,7 +39,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
               color: active === item.key ? '#F3F4F6' : '#88888B',
               background: active === item.key ? '#0d1825' : 'none',
               cursor: 'pointer', marginBottom: 3, transition: 'all 0.15s',
-              fontFamily: "'Inter Display', 'Inter', sans-serif",
+              fontFamily: "Inter, sans-serif",
             }}
           >
             {item.icon}
@@ -60,20 +60,13 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
             background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981',
             animation: 'pulse-dot 2s infinite',
           }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', fontWeight: 600 }}>
-                {loading ? 'Loading...' : error ? 'Error' : 'Live'}
-              </span>
-              {loadedAt && !loading && !error && (
-                <span style={{ fontSize: 11, color: '#555558' }}>
-                  {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 11, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', fontWeight: 600 }}>
+              {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+            </span>
             {loadedAt && !loading && !error && (
-              <span style={{ fontSize: 10, color: '#444446' }}>
-                {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              <span style={{ fontSize: 10, color: '#555558' }}>
+                {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
           </div>

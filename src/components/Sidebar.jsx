@@ -142,19 +142,16 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
           ))}
         </nav>
         <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <TogglePill isDark={isDark} onToggle={onThemeToggle} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
-              <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', animation: 'pulse-dot 2s infinite' }} />
-              <span style={{ fontSize: 11, fontWeight: 600, flexShrink: 0, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981' }}>
-                {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', animation: 'pulse-dot 2s infinite' }} />
+            <span style={{ fontSize: 11, fontWeight: 600, flexShrink: 0, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981' }}>
+              {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+            </span>
+            {loadedAt && !loading && !error && (
+              <span style={{ fontSize: 11, color: 'var(--text4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                · {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
               </span>
-              {loadedAt && !loading && !error && (
-                <span style={{ fontSize: 11, color: 'var(--text4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  · {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </aside>

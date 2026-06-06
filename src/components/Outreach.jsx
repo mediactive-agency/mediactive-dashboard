@@ -75,7 +75,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
   return (
     <div
       onClick={onToggle}
-      style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 22px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
+      style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
     >
       <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>
         {v.name}
@@ -83,27 +83,30 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
       </div>
       {isMobile ? (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-            {steps.map((step, i) => {
-              const nextPct = i < steps.length - 1 && step.val > 0
-                ? +((steps[i+1].val / step.val)*100).toFixed(1)+'%' : null
-              return (
-                <div key={i} style={{ background: 'var(--bg)', borderRadius: 10, padding: '12px 14px' }}>
-                  <div style={{ fontSize: 11, color: dimmed ? 'var(--text4)' : 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{step.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                  {nextPct && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: dimmed ? 'var(--text4)' : 'var(--text3)' }}>{nextPct}</span>
-                      <svg width="10" height="14" viewBox="0 0 10 18" fill="none" stroke={dimmed ? 'var(--text4)' : 'var(--text3)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="1" x2="5" y2="14"/><polyline points="1 10 5 15 9 10"/>
+          {steps.map((step, i) => {
+            const pct = i < steps.length - 1 && step.val > 0
+              ? +((steps[i+1].val / step.val)*100).toFixed(1)+'%' : null
+            return (
+              <div key={i}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0', gap: 14 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, color: dimmed ? 'var(--text4)' : 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                  </div>
+                  {pct && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: dimmed ? 'var(--text4)' : 'var(--text)' }}>{pct}</span>
+                      <svg width="14" height="18" viewBox="0 0 14 22" fill="none" stroke={dimmed ? 'var(--text4)' : 'var(--text3)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="7" y1="1" x2="7" y2="18"/><polyline points="2 13 7 19 12 13"/>
                       </svg>
                     </div>
                   )}
                 </div>
-              )
-            })}
-          </div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+                {i < steps.length - 1 && <div style={{ height: 1, background: 'var(--border)' }} />}
+              </div>
+            )
+          })}
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             {[...rates, ...secRates].map(r => (
               <div key={r.label}>
                 <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.label}</div>
@@ -269,7 +272,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
   return (
     <div>
       <Divider label="Total Active Funnel" />
-      <div style={{ background: 'var(--card)', borderRadius: 14, padding: 24, marginBottom: 20, boxShadow: 'var(--card-shadow)' }}>
+      <div style={{ background: 'var(--card)', borderRadius: 14, padding: '12px 20px', marginBottom: 20, boxShadow: 'var(--card-shadow)' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
           : isMobile ? (
@@ -297,7 +300,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                   </div>
                 )
               })}
-              <div style={{ borderTop: '1px solid var(--border)', marginTop: 12, paddingTop: 12, display: 'flex', gap: 20 }}>
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 20 }}>
                 {mainRates.map(r => (
                   <div key={r.label}>
                     <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em' }}>{r.label}</div>

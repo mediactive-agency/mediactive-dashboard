@@ -3,11 +3,22 @@ export const TODAY = new Date()
 export function toDateStr(val) {
   if (!val) return null
   if (typeof val === 'string') {
-    const m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
-    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`
-    const m2 = val.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    const s = val.trim()
+    // ISO with time component — apply local timezone offset to get correct date
+    if (s.match(/^\d{4}-\d{2}-\d{2}T/)) {
+      const d = new Date(s)
+      const offset = d.getTimezoneOffset()
+      const corrected = new Date(d.getTime() - offset * 60 * 1000)
+      return corrected.getUTCFullYear() + '-' + String(corrected.getUTCMonth()+1).padStart(2,'0') + '-' + String(corrected.getUTCDate()).padStart(2,'0')
+    }
+    // Already YYYY-MM-DD
+    const m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
     if (m2) return `${m2[1]}-${m2[2]}-${m2[3]}`
-    const m3 = val.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/)
+    // DD/MM/YYYY
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`
+    // DD-Mon-YYYY
+    const m3 = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/)
     if (m3) {
       const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}
       return `${m3[3]}-${months[m3[2]]||'01'}-${m3[1].padStart(2,'0')}`

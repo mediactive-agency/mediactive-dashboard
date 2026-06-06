@@ -84,7 +84,7 @@ function getGreeting() {
   return 'Good night, Kryštof'
 }
 
-export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile }) {
+export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile, isTablet }) {
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -200,7 +200,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
       {/* Rate cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
         {rates.map(r => (
           <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
@@ -245,7 +245,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile || isTablet ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>

@@ -144,3 +144,10 @@ a { text-decoration: none; }
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Rate cards - force 2 columns on mobile */
+@media (max-width: 767px) {
+  .rate-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

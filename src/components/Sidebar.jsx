@@ -7,7 +7,15 @@ const NAV_ITEMS = [
   { key: 'tasks',     label: 'Daily Tasks', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
 ]
 
-export default function Sidebar({ active, onNav }) {
+export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
+  const subText = loading
+    ? 'Loading...'
+    : error
+    ? 'Error'
+    : loadedAt
+    ? `Updated ${loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
+    : 'Live'
+
   return (
     <aside style={{
       width: 240, minHeight: '100vh', background: '#111113',
@@ -46,12 +54,21 @@ export default function Sidebar({ active, onNav }) {
       </nav>
 
       <div style={{ padding: '16px 20px', borderTop: '1px solid #222224' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: '#666669' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
-            width: 6, height: 6, borderRadius: '50%', background: '#F59E0B',
-            animation: 'pulse-dot 2s infinite',
+            width: 6, height: 6, borderRadius: '50%',
+            background: loading ? '#F59E0B' : error ? '#EF4444' : '#F59E0B',
+            animation: 'pulse-dot 2s infinite', flexShrink: 0,
           }} />
-          <span>Live</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ fontSize: 10, color: '#666669' }}>Live</span>
+            {loadedAt && !loading && !error && (
+              <span style={{ fontSize: 9, color: '#444446' }}>{subText}</span>
+            )}
+            {(loading || error) && (
+              <span style={{ fontSize: 9, color: loading ? '#F59E0B' : '#EF4444' }}>{subText}</span>
+            )}
+          </div>
         </div>
       </div>
 

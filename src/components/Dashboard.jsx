@@ -177,29 +177,51 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     <div>
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>Full Sales Funnel</div>
-        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, alignItems: isMobile ? undefined : 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden', gap: isMobile ? 1 : 0 }}>
-          {funnelSteps.map((step, i) => (
-            <>
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '16px 8px' : '24px 12px', background: 'var(--card)', boxShadow: 'none', borderRadius: 0 }}>
-                <div style={{ marginBottom: 10, opacity: 0.5, color: step.color }}>{step.icon}</div>
-                <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 6, textAlign: 'center', lineHeight: 1.4 }}>{step.label}</div>
-              </div>
-              {i < funnelSteps.length - 1 && !isMobile && (
-                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 4px', background: 'var(--card)', gap: 6, flexShrink: 0, width: 80 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                    {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
+        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16, fontWeight: 600 }}>Full Sales Funnel</div>
+        {isMobile ? (
+          <div style={{ background: 'var(--card)', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
+            {funnelSteps.map((step, i) => {
+              const pct = i < funnelSteps.length - 1 && step.count > 0
+                ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : null
+              return (
+                <div key={i}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 14 }}>
+                    <div style={{ color: step.color, opacity: 0.7, flexShrink: 0 }}>{step.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                    </div>
+                    {pct && <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text3)', flexShrink: 0 }}>→ {pct}</div>}
                   </div>
-                  {ARROW}
+                  {i < funnelSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)', marginLeft: 52 }} />}
                 </div>
-              )}
-            </>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
+            {funnelSteps.map((step, i) => (
+              <>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px', background: 'var(--card)' }}>
+                  <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
+                </div>
+                {i < funnelSteps.length - 1 && (
+                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 68 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
+                      {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
+                    </div>
+                    {ARROW}
+                  </div>
+                )}
+              </>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Rate cards */}
+            {/* Rate cards */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
         {rates.map(r => (
           <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 20px', boxShadow: 'var(--card-shadow)' }}>

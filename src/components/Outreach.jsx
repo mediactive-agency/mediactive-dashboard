@@ -91,7 +91,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
               </div>
               {i < steps.length - 1 && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: dimmed ? 'var(--border2)' : 'var(--text)', lineHeight: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: dimmed ? 'var(--text4)' : 'var(--text)', lineHeight: 1 }}>
                     {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
                   </div>
                   {ARROW(dimmed)}

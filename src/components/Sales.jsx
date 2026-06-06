@@ -115,35 +115,37 @@ function CallCard({ r, linkedinMap }) {
     return (
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
         <span style={{ color, flexShrink: 0, marginTop: 1 }}>{ico}</span>
-        <span style={{ fontSize: 11, color: 'var(--text4)', minWidth: 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{val}</span>
+        <span style={{ fontSize: isMobile ? 13 : 11, color: 'var(--text4)', minWidth: isMobile ? 72 : 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: isMobile ? 15 : 13, color: 'var(--text2)', lineHeight: 1.5 }}>{val}</span>
       </div>
     )
   }
 
   return (
     <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-      {/* Header: name + meta | quality score | divider | result */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: 6 }}>{r[0]}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text4)' }}>{ICO.calendar} {toSalesDateStr(r[1])}</span>
-            {r[7] && <span style={{ fontSize: 13, color: 'var(--text4)' }}>{r[7]}</span>}
-            {r[8] && <span style={{ fontSize: 12, color: subjectColor, background: subjectColor + '18', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{r[8]}</span>}
-            {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
+          <div style={{ fontSize: isMobile ? 22 : 20, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>{r[0]}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            {q >= 1 && q <= 5 && (
+              <div style={{ textAlign: 'center', minWidth: 44 }}>
+                <div style={{ fontSize: isMobile ? 28 : 32, fontWeight: 900, color: qc, lineHeight: 1 }}>{q}</div>
+                <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2, letterSpacing: '0.06em' }}>QUALITY</div>
+              </div>
+            )}
+            <div style={{ width: 1, height: 40, background: 'var(--border)' }} />
+            <div style={{ textAlign: 'center', minWidth: 64 }}>
+              <div style={{ fontSize: isMobile ? 16 : 15, fontWeight: 800, color: res.color }}>{res.label}</div>
+              <div style={{ width: '100%', height: 2, background: res.color, borderRadius: 1, marginTop: 4, opacity: 0.5 }} />
+            </div>
           </div>
         </div>
-        {q >= 1 && q <= 5 && (
-          <div style={{ textAlign: 'center', minWidth: 52, flexShrink: 0 }}>
-            <div style={{ fontSize: 32, fontWeight: 900, color: qc, lineHeight: 1 }}>{q}</div>
-            <div style={{ fontSize: 10, color: 'var(--text4)', marginTop: 3, letterSpacing: '0.06em' }}>QUALITY</div>
-          </div>
-        )}
-        <div style={{ width: 1, height: 44, background: 'var(--border)', flexShrink: 0 }} />
-        <div style={{ textAlign: 'center', minWidth: 72, flexShrink: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 800, color: res.color }}>{res.label}</div>
-          <div style={{ width: '100%', height: 2, background: res.color, borderRadius: 1, marginTop: 4, opacity: 0.5 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: isMobile ? 14 : 13, color: 'var(--text4)' }}>{ICO.calendar} {toSalesDateStr(r[1])}</span>
+          {r[7] && <span style={{ fontSize: isMobile ? 14 : 13, color: 'var(--text4)' }}>{r[7]}</span>}
+          {r[8] && <span style={{ fontSize: isMobile ? 13 : 12, color: subjectColor, background: subjectColor + '18', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{r[8]}</span>}
+          {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: isMobile ? 14 : 13, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
         </div>
       </div>
 
@@ -151,13 +153,13 @@ function CallCard({ r, linkedinMap }) {
       {(cur || goal || r[2] || r[3]) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', marginBottom: 10 }}>CURRENT SITUATION</div>
+            <div style={{ fontSize: isMobile ? 12 : 10, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', marginBottom: 10 }}>CURRENT SITUATION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {cur ? visibleRows.filter(row => !row.goalOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(cur, row.key)} />) : r[2] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[2]}</div> : null}
             </div>
           </div>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', borderLeft: '2px solid #34D39944' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#34D399', letterSpacing: '0.1em', marginBottom: 10 }}>DESIRED SITUATION</div>
+            <div style={{ fontSize: isMobile ? 12 : 10, fontWeight: 700, color: '#34D399', letterSpacing: '0.1em', marginBottom: 10 }}>DESIRED SITUATION</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {goal ? visibleRows.filter(row => !row.curOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(goal, row.key)} />) : r[3] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[3]}</div> : null}
             </div>

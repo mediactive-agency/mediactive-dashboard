@@ -67,8 +67,8 @@ export default function App() {
 
           {/* Filter + toggle on desktop */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
             {!isMobile && <TogglePill isDark={isDark} onToggle={toggle} />}
+            <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
           </div>
         </div>
 

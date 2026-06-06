@@ -122,7 +122,7 @@ function CallCard({ r, linkedinMap }) {
   }
 
   return (
-    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -265,13 +265,13 @@ export default function Sales({ data, filter, customFrom, customTo }) {
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },
           { label: 'Follow-ups', value: followUp, suffix: '', sub: 'open pipeline', color: '#F59E0B' },
         ].map(k => (
-          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px' }}>
+          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{k.label}</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: k.color, lineHeight: 1, marginBottom: 4 }}>{typeof k.value === 'number' ? (Number.isInteger(k.value) ? k.value : k.value.toFixed(1)) : k.value}{k.suffix}</div>
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
           </div>
         ))}
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '—'}</div>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Lead Quality</div>
         </div>
@@ -279,7 +279,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
 
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
           {OBJ_CATS.map(cat => {
             const count = catCounts[cat.key]; const w = (count/maxCat)*100
@@ -296,7 +296,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
             )
           })}
         </div>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Lead Quality</div>
           {[5,4,3,2,1].map(q => {
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0

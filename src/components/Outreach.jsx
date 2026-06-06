@@ -106,7 +106,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
               </div>
             )
           })}
-          <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 12, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             {[...rates, ...secRates].map(r => (
               <div key={r.label}>
                 <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.label}</div>
@@ -300,7 +300,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                   </div>
                 )
               })}
-              <div style={{ borderTop: '1px solid var(--border)', marginTop: 20, paddingTop: 16, display: 'flex', gap: 20 }}>
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 12, display: 'flex', gap: 20 }}>
                 {mainRates.map(r => (
                   <div key={r.label}>
                     <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em' }}>{r.label}</div>

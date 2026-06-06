@@ -73,7 +73,7 @@ const UPCOMING_CALLS = [
   { name: 'Savannah Adkins',  datetime: new Date('2026-06-12T18:00:00Z'), date: '12 Jun 2026', time: '20:00', confirmed: true,  meet: 'https://calendly.com/events/21a9c7c6-b668-4334-82f1-320d4c1d5f80/google_meet' },
 ]
 
-function CallCard({ r, linkedinMap, isMobile }) {
+function CallCard({ r, linkedinMap }) {
   const res = (() => {
     const v = String(r[5]||'').toLowerCase()
     if (v === 'yes') return { color: '#34D399', label: 'Closed' }
@@ -123,7 +123,7 @@ function CallCard({ r, linkedinMap, isMobile }) {
 
   return (
     <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
-      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 10 : 20, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{r[0]}</span>
@@ -144,7 +144,7 @@ function CallCard({ r, linkedinMap, isMobile }) {
       </div>
 
       {(cur || goal) && (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 20, marginBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, paddingBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, borderBottom: r[6] || uniqueObjs.length > 0 ? '1px solid #222224' : 'none' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, paddingBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, borderBottom: r[6] || uniqueObjs.length > 0 ? '1px solid #222224' : 'none' }}>
           <div>
             <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Current Situation</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -179,7 +179,7 @@ function CallCard({ r, linkedinMap, isMobile }) {
   )
 }
 
-export default function Sales({ data, filter, customFrom, customTo, isMobile, isTablet }) {
+export default function Sales({ data, filter, customFrom, customTo }) {
   const { filtered, linkedinMap, stats } = useMemo(() => {
     if (!data) return { filtered: [], linkedinMap: {}, stats: null }
     const rows = data.sales.slice(1).filter(r => r && r[0])
@@ -256,10 +256,10 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
             </div>
           )
         })}
-      </div>
+        </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
         {[
           { label: 'Total Calls', value: total, suffix: '', sub: 'logged', color: '#60A5FA' },
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },
@@ -278,7 +278,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       </div>
 
       {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
           {OBJ_CATS.map(cat => {
@@ -302,12 +302,12 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0
             return (
               <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                <div style={{ fontSize: 15, color: Q_COLORS[q], fontWeight: 800, width: 20, textAlign: 'right', flexShrink: 0 }}>{q}</div>
-                <div style={{ fontSize: 13, color: 'var(--text3)', width: 52, flexShrink: 0 }}>{Q_LABELS[q]}</div>
+                <div style={{ fontSize: 12, color: Q_COLORS[q], fontWeight: 700, width: 16, textAlign: 'right', flexShrink: 0 }}>{q}</div>
+                <div style={{ fontSize: 11, color: 'var(--text4)', width: 44, flexShrink: 0 }}>{Q_LABELS[q]}</div>
                 <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2 }} />
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', width: 24, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
               </div>
             )
           })}
@@ -321,7 +321,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ marginBottom: 20 }}>
         {filtered.length === 0
           ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>
-          : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} isMobile={isMobile} />)}
+          : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} />)}
       </div>
     </div>
   )

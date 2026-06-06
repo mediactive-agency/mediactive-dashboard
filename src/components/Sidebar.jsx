@@ -57,16 +57,15 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
             width: 6, height: 6, borderRadius: '50%',
-            background: loading ? '#F59E0B' : error ? '#EF4444' : '#F59E0B',
+            background: error ? '#EF4444' : '#F59E0B',
             animation: 'pulse-dot 2s infinite', flexShrink: 0,
           }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span style={{ fontSize: 10, color: '#666669' }}>Live</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 11, color: '#888889', fontWeight: 500 }}>
+              {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+            </span>
             {loadedAt && !loading && !error && (
-              <span style={{ fontSize: 9, color: '#444446' }}>{subText}</span>
-            )}
-            {(loading || error) && (
-              <span style={{ fontSize: 9, color: loading ? '#F59E0B' : '#EF4444' }}>{subText}</span>
+              <span style={{ fontSize: 11, color: '#555558' }}>{loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
             )}
           </div>
         </div>

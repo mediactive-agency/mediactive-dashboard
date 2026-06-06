@@ -75,9 +75,9 @@ function VarCard({ v, dimmed, selected, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 22px', marginBottom: 14, cursor: 'pointer', outline: selected ? '2px solid #FFFFFF' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
+      style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 22px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
     >
-      <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? '#444446' : '#F3F4F6', marginBottom: 16 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>
         {v.name}
         {dimmed && v.lastUsed && <span style={{ fontSize: 10, color: 'var(--text5)', fontWeight: 400, marginLeft: 10 }}>Last: {v.lastUsed}</span>}
       </div>
@@ -86,12 +86,12 @@ function VarCard({ v, dimmed, selected, onToggle }) {
           {steps.map((step, i) => (
             <>
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: dimmed ? '#333336' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                <div style={{ fontSize: 10, color: dimmed ? '#333336' : '#555558', whiteSpace: 'nowrap' }}>{step.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                <div style={{ fontSize: 10, color: dimmed ? 'var(--text5)' : 'var(--text3)', whiteSpace: 'nowrap' }}>{step.label}</div>
               </div>
               {i < steps.length - 1 && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: dimmed ? '#2a2a2c' : '#FFFFFF', lineHeight: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: dimmed ? 'var(--border2)' : 'var(--text)', lineHeight: 1 }}>
                     {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
                   </div>
                   {ARROW(dimmed)}
@@ -107,8 +107,8 @@ function VarCard({ v, dimmed, selected, onToggle }) {
             <>
               {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 20px', flexShrink: 0 }} />}
               <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: dimmed ? '#333336' : r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                <div style={{ fontSize: 10, color: dimmed ? '#2a2a2c' : '#555558', letterSpacing: '0.05em' }}>{r.label}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: dimmed ? 'var(--text5)' : r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                <div style={{ fontSize: 10, color: dimmed ? 'var(--text5)' : 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
               </div>
             </>
           ))}
@@ -119,8 +119,8 @@ function VarCard({ v, dimmed, selected, onToggle }) {
                 <>
                   {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 16px', flexShrink: 0 }} />}
                   <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: dimmed ? '#333336' : '#888889', lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                    <div style={{ fontSize: 10, color: dimmed ? '#2a2a2c' : '#444446', letterSpacing: '0.05em' }}>{r.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: dimmed ? 'var(--text5)' : 'var(--text3)', lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                    <div style={{ fontSize: 10, color: dimmed ? 'var(--text5)' : 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
                   </div>
                 </>
               ))}
@@ -236,7 +236,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
   return (
     <div>
       <Divider label="Total Active Funnel" />
-      <div style={{ background: 'var(--card)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 14, padding: 24, marginBottom: 20, boxShadow: 'var(--card-shadow)' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
           : <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -289,7 +289,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
 
       {selected.size > 0 && (
         <div style={{ background: 'var(--upcoming-card-bg)', borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: '#333333', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
+          <div style={{ fontSize: 11, color: 'var(--selected-text)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},{val:agg.C,label:'Booked',color:'#A78BFA'}].map((step,i,arr) => (
@@ -300,7 +300,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
                   </div>
                   {i < arr.length - 1 && (
                     <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#333333', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--selected-text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       <svg width="44" height="14" viewBox="0 0 50 14" fill="none"><line x1="0" y1="7" x2="42" y2="7" stroke="#AAAAAA" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="#AAAAAA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   )}

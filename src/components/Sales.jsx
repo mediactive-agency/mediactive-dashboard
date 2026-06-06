@@ -122,51 +122,58 @@ function CallCard({ r, linkedinMap }) {
   }
 
   return (
-    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
+    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+      {/* Header: name + meta | quality score | divider | result */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{r[0]}</span>
-            {r[8] && <span style={{ fontSize: 11, fontWeight: 700, color: subjectColor, background: subjectColor + '15', border: `1px solid ${subjectColor}33`, padding: '2px 10px', borderRadius: 20 }}>{r[8]}</span>}
-            {li.account && <span style={{ fontSize: 11, color: 'var(--text4)' }}>{String(li.account).includes('Main acc') ? 'Main Account' : String(li.account).includes('2nd acc') ? '2nd Account' : String(li.account).split('—')[0].trim()}</span>}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text4)', flexWrap: 'wrap' }}>
-            <span style={{ color: 'var(--text2)' }}>{ICO.calendar}</span>
-            <span>{toSalesDateStr(r[1])}</span>
-            {r[7] && <><span>·</span><span>{r[7]}</span></>}
-            {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
+          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em', marginBottom: 6 }}>{r[0]}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text4)' }}>{ICO.calendar} {toSalesDateStr(r[1])}</span>
+            {r[7] && <span style={{ fontSize: 13, color: 'var(--text4)' }}>{r[7]}</span>}
+            {r[8] && <span style={{ fontSize: 12, color: subjectColor, background: subjectColor + '18', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{r[8]}</span>}
+            {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: res.color, background: res.color + '20', border: `1px solid ${res.color}33`, padding: '3px 12px', borderRadius: 20 }}>{res.label}</span>
-          {q >= 1 && q <= 5 && <span style={{ fontSize: 11, color: qc, background: qc + '15', padding: '2px 10px', borderRadius: 20 }}>{q} · {ql}</span>}
+        {q >= 1 && q <= 5 && (
+          <div style={{ textAlign: 'center', minWidth: 52, flexShrink: 0 }}>
+            <div style={{ fontSize: 32, fontWeight: 900, color: qc, lineHeight: 1 }}>{q}</div>
+            <div style={{ fontSize: 10, color: 'var(--text4)', marginTop: 3, letterSpacing: '0.06em' }}>QUALITY</div>
+          </div>
+        )}
+        <div style={{ width: 1, height: 44, background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ textAlign: 'center', minWidth: 72, flexShrink: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: res.color }}>{res.label}</div>
+          <div style={{ width: '100%', height: 2, background: res.color, borderRadius: 1, marginTop: 4, opacity: 0.5 }} />
         </div>
       </div>
 
-      {(cur || goal) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, paddingBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, borderBottom: r[6] || uniqueObjs.length > 0 ? '1px solid #222224' : 'none' }}>
-          <div>
-            <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Current Situation</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      {/* Current / Desired situation — dark inset panels */}
+      {(cur || goal || r[2] || r[3]) && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', marginBottom: 10 }}>CURRENT SITUATION</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {cur ? visibleRows.filter(row => !row.goalOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(cur, row.key)} />) : r[2] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[2]}</div> : null}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Desired Situation</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px', borderLeft: '2px solid #34D39944' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#34D399', letterSpacing: '0.1em', marginBottom: 10 }}>DESIRED SITUATION</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {goal ? visibleRows.filter(row => !row.curOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(goal, row.key)} />) : r[3] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[3]}</div> : null}
             </div>
           </div>
         </div>
       )}
 
+      {/* Notes */}
       {r[6] && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text2)', marginBottom: uniqueObjs.length > 0 ? 12 : 0, lineHeight: 1.6 }}>
+        <div style={{ display: 'flex', gap: 10, fontSize: 13, color: 'var(--text3)', lineHeight: 1.7, marginBottom: 14, paddingLeft: 12, borderLeft: '2px solid var(--border2)' }}>
           <span style={{ color: 'var(--text5)', flexShrink: 0, marginTop: 2 }}>{ICO.note}</span>
           <span>{r[6]}</span>
         </div>
       )}
 
+      {/* Objections */}
       {uniqueObjs.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ color: 'var(--text5)', flexShrink: 0 }}>{ICO.warn}</span>

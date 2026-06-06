@@ -178,15 +178,15 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>Full Sales Funnel</div>
-        <div style={{ display: 'flex', alignItems: 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: isMobile ? 'auto' : 'hidden' }}>
+        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, alignItems: isMobile ? undefined : 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden', gap: isMobile ? 1 : 0 }}>
           {funnelSteps.map((step, i) => (
             <>
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: 'var(--card)', boxShadow: 'none', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '16px 8px' : '24px 12px', background: 'var(--card)', boxShadow: 'none', borderRadius: 0 }}>
                 <div style={{ marginBottom: 10, opacity: 0.5, color: step.color }}>{step.icon}</div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                <div style={{ fontSize: isMobile ? 22 : 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 6, textAlign: 'center', lineHeight: 1.4 }}>{step.label}</div>
               </div>
-              {i < funnelSteps.length - 1 && (
+              {i < funnelSteps.length - 1 && !isMobile && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 4px', background: 'var(--card)', gap: 6, flexShrink: 0, width: 80 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
                     {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
@@ -200,9 +200,9 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
       {/* Rate cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
         {rates.map(r => (
-          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px', boxShadow: 'var(--card-shadow)' }}>
+          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 20px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}

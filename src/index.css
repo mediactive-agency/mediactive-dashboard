@@ -1,65 +1,63 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Dark theme (default) */
 :root {
-  --bg:       #0C0C0E;
-  --bg2:      #111113;
-  --card:     #161618;
-  --border:   #222224;
-  --border2:  #2a2a2c;
-  --text:     #F3F4F6;
-  --text2:    #9CA3AF;
-  --text3:    #666669;
-  --text4:    #555558;
-  --text5:    #333336;
+  --bg:        #0C0C0E;
+  --bg2:       #111113;
+  --card:      #161618;
+  --border:    #222224;
+  --border2:   #2a2a2c;
+  --text:      #F3F4F6;
+  --text2:     #9CA3AF;
+  --text3:     #666669;
+  --text4:     #555558;
+  --text5:     #333336;
   --sidebar-active: #0d1825;
   --nav-dot-active: #FFFFFF;
-  --nav-dot: #2a2a2c;
+  --nav-dot:   #2a2a2c;
   --filter-bg: #161618;
   --filter-active-bg: #FFFFFF;
   --filter-active-text: #000000;
-  --upcoming-card-bg: #FFFFFF;
-  --upcoming-card-border: #E5E7EB;
-  --upcoming-card-name: #111827;
-  --upcoming-card-meta: #6B7280;
-  --selected-summary-bg: #FFFFFF;
-  --selected-summary-text: #333333;
-  --selected-arrow: #AAAAAA;
-  --bar-divider: #DDDDDD;
+  --card-shadow: none;
+  --upcoming-bg: #FFFFFF;
+  --upcoming-border: #E5E7EB;
+  --upcoming-name: #111827;
+  --upcoming-meta: #6B7280;
+  --selected-bg: #FFFFFF;
+  --selected-text: #333333;
+  --cal-weekend: #1a1a1c;
+  --cal-weekend-text: #3a3a3c;
+  --var-name-color: #F3F4F6;
 }
 
-/* Light theme */
 body.light {
-  --bg:       #F4F5F7;
-  --bg2:      #FFFFFF;
-  --card:     #FFFFFF;
-  --border:   #E2E4E9;
-  --border2:  #D1D5DB;
-  --text:     #111827;
-  --text2:    #374151;
-  --text3:    #6B7280;
-  --text4:    #9CA3AF;
-  --text5:    #D1D5DB;
-  --sidebar-active: #EFF6FF;
+  --bg:        #F0F2F7;
+  --bg2:       #FFFFFF;
+  --card:      #FFFFFF;
+  --border:    #E2E4EC;
+  --border2:   #CDD0DB;
+  --text:      #111827;
+  --text2:     #374151;
+  --text3:     #6B7280;
+  --text4:     #9CA3AF;
+  --text5:     #D1D5DB;
+  --sidebar-active: #EEF2FF;
   --nav-dot-active: #111827;
-  --nav-dot: #D1D5DB;
+  --nav-dot:   #D1D5DB;
   --filter-bg: #FFFFFF;
   --filter-active-bg: #111827;
   --filter-active-text: #FFFFFF;
-  --upcoming-card-bg: #F9FAFB;
-  --upcoming-card-border: #E5E7EB;
-  --upcoming-card-name: #111827;
-  --upcoming-card-meta: #6B7280;
-  --selected-summary-bg: #111827;
-  --selected-summary-text: #FFFFFF;
-  --selected-arrow: #666669;
-  --bar-divider: #374151;
+  --card-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+  --upcoming-bg: #F9FAFB;
+  --upcoming-border: #E5E7EB;
+  --upcoming-name: #111827;
+  --upcoming-meta: #6B7280;
+  --selected-bg: #111827;
+  --selected-text: #FFFFFF;
+  --cal-weekend: #E8EAF0;
+  --cal-weekend-text: #9CA3AF;
+  --var-name-color: #111827;
 }
 
 body {

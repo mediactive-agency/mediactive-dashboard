@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { TODAY, toDateStr, inRange, normName, ago } from '../utils/data'
+import { TODAY, toDateStr, inRange, normName, ago, todayStr } from '../utils/data'
 
 const VAR_COLORS = {
   'Main acc — Normal':   '#60A5FA', '2nd acc — Normal':    '#A78BFA',
@@ -148,7 +148,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
     if (useRaw) {
       let filterFn
       switch(filter) {
-        case 'today':     filterFn = d => d === ago(0); break
+        case 'today':     filterFn = d => d === todayStr; break
         case 'yesterday': filterFn = d => d === ago(1); break
         case '7d':        filterFn = d => d >= ago(7); break
         case '14d':       filterFn = d => d >= ago(14); break

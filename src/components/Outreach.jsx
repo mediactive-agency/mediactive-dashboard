@@ -55,7 +55,7 @@ const ARROW = (dimmed) => (
   </svg>
 )
 
-function VarCard({ v, dimmed, selected, onToggle }) {
+function VarCard({ v, dimmed, selected, onToggle, isMobile }) {
   const steps = [
     { val: v.A, label: 'Initiated',  color: '#60A5FA' },
     { val: v.MS, label: 'Media Seen', color: '#F472B6' },
@@ -81,7 +81,7 @@ function VarCard({ v, dimmed, selected, onToggle }) {
         {v.name}
         {dimmed && v.lastUsed && <span style={{ fontSize: 10, color: 'var(--text5)', fontWeight: 400, marginLeft: 10 }}>Last: {v.lastUsed}</span>}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {steps.map((step, i) => (
             <>
@@ -132,7 +132,7 @@ function VarCard({ v, dimmed, selected, onToggle }) {
   )
 }
 
-export default function Outreach({ data, filter, customFrom, customTo }) {
+export default function Outreach({ data, filter, customFrom, customTo, isMobile }) {
   const [selected, setSelected] = useState(new Set())
 
   const { activeVars, inactiveVars, tot } = useMemo(() => {

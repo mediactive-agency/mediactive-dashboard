@@ -256,7 +256,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
             </div>
           )
         })}
-      </div>
+        </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
@@ -302,12 +302,12 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0
             return (
               <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                <div style={{ fontSize: 12, color: Q_COLORS[q], fontWeight: 700, width: 16, textAlign: 'right', flexShrink: 0 }}>{q}</div>
-                <div style={{ fontSize: 11, color: 'var(--text4)', width: 44, flexShrink: 0 }}>{Q_LABELS[q]}</div>
+                <div style={{ fontSize: 15, color: Q_COLORS[q], fontWeight: 800, width: 20, textAlign: 'right', flexShrink: 0 }}>{q}</div>
+                <div style={{ fontSize: 13, color: 'var(--text3)', width: 52, flexShrink: 0 }}>{Q_LABELS[q]}</div>
                 <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2 }} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', width: 24, textAlign: 'right', flexShrink: 0 }}>{count}</div>
               </div>
             )
           })}

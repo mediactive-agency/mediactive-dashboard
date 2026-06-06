@@ -272,7 +272,42 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
       <div style={{ background: 'var(--card)', borderRadius: 14, padding: 24, marginBottom: 20, boxShadow: 'var(--card-shadow)' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
-          : <div style={{ display: 'flex', alignItems: 'center' }}>
+          : isMobile ? (
+            <div style={{ width: '100%' }}>
+              {mainSteps.map((step, i) => {
+                const pct = i < mainSteps.length - 1 && step.val > 0
+                  ? +((mainSteps[i+1].val / step.val)*100).toFixed(1)+'%' : null
+                return (
+                  <div key={i}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 0', gap: 14 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
+                        <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                      </div>
+                      {pct && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{pct}</span>
+                          <svg width="14" height="18" viewBox="0 0 14 22" fill="none" stroke="var(--text3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="7" y1="1" x2="7" y2="18"/><polyline points="2 13 7 19 12 13"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    {i < mainSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)' }} />}
+                  </div>
+                )
+              })}
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 12, paddingTop: 12, display: 'flex', gap: 20 }}>
+                {mainRates.map(r => (
+                  <div key={r.label}>
+                    <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em' }}>{r.label}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: r.color }}>{r.val}{r.suffix}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {mainSteps.map((step, i) => (
                 <>
@@ -281,8 +316,8 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                     <div style={{ fontSize: 11, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < mainSteps.length - 1 && (
-                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
+                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       {ARROW(false)}
                     </div>
                   )}
@@ -315,7 +350,8 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                 </>
               )}
             </div>
-          </div>}
+          </div>
+          )}
       </div>
 
       <Divider label="By Variable — click to compare" />
@@ -360,7 +396,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
         </div>
       )}
 
-      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />) : <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>}
+      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} />) : <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>}
 
       {inactiveVars.length > 0 && (
         <>
@@ -369,7 +405,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text5)' }}>Inactive — not used in last 14d</div>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
-          {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />)}
+          {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} />)}
         </>
       )}
     </div>

@@ -140,7 +140,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
   const task2Color = task2Done ? '#34D399' : fuTotal === 0 ? '#555558' : '#EF4444'
   const pfuColor = pfuTask3Done ? (pfuTotal === 0 ? '#555558' : '#34D399') : '#EF4444'
 
-  const NOT_TODAY = <span style={{ fontSize: 28, fontWeight: 600, color: '#333336', lineHeight: 1 }}>Not today</span>
+  const NOT_TODAY = <span style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</span>
 
   const AVAILABLE_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06']
   const showMonths = (filter === '30d') ? ['2026-05', '2026-06']
@@ -195,10 +195,10 @@ export default function Tasks({ data, onDailyStats, filter }) {
     while (cells.length % 7 !== 0) cells.push(null)
     return (
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#F3F4F6', marginBottom: 10, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
-        <div style={{ background: '#161618', borderRadius: 12, padding: 16, border: '1px solid #222224' }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 10, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: 16, border: '1px solid var(--border)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 6 }}>
-            {WDAYS.map(d => <div key={d} style={{ fontSize: 10, color: '#555558', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
+            {WDAYS.map(d => <div key={d} style={{ fontSize: 10, color: 'var(--text4)', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
             {cells.map((d, i) => {
@@ -217,25 +217,25 @@ export default function Tasks({ data, onDailyStats, filter }) {
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 14, marginBottom: 20, alignItems: 'start' }}>
         {/* Calendar */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#555558', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Streak Calendar</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Streak Calendar</div>
           {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
         </div>
 
         {/* Sidebar widgets */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Outreach */}
-          <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>OUTREACH</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>OUTREACH</div>
               <div style={{ color: task1Color }}>{isCheckWeekend ? '' : task1Done ? ICO_CHECK : ICO_X}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
                   <span style={{ fontSize: 36, fontWeight: 700, color: task1Color, lineHeight: 1 }}>{outreachCount}</span>
-                  <span style={{ fontSize: 13, color: '#555558' }}>/ 20</span>
+                  <span style={{ fontSize: 13, color: 'var(--text4)' }}>/ 20</span>
                 </div>
-                <div style={{ height: 4, background: '#222224', borderRadius: 2 }}>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${Math.min(outreachCount/20*100,100)}%`, background: task1Color, borderRadius: 2 }} />
                 </div>
               </>
@@ -243,43 +243,43 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Followups */}
-          <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>FOLLOWUPS</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>FOLLOWUPS</div>
               <div style={{ color: task2Color }}>{isCheckWeekend ? '' : task2Done ? ICO_CHECK : (fuTotal === 0 ? '' : ICO_X)}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontSize: 36, fontWeight: 700, color: task2Color, lineHeight: 1 }}>{fuDone}</span>
-                <span style={{ fontSize: 13, color: '#555558' }}>/ {fuTotal || '—'}</span>
+                <span style={{ fontSize: 13, color: 'var(--text4)' }}>/ {fuTotal || '—'}</span>
               </div>
             )}
           </div>
 
           {/* Positive Followups */}
-          <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>POSITIVE FOLLOWUPS</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>POSITIVE FOLLOWUPS</div>
               <div style={{ color: pfuColor }}>{isCheckWeekend ? '' : pfuTask3Done ? (pfuTotal === 0 ? '' : ICO_CHECK) : ICO_X}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontSize: 36, fontWeight: 700, color: pfuColor, lineHeight: 1 }}>{pfuDone}</span>
-                <span style={{ fontSize: 13, color: '#555558' }}>/ {pfuTotal || '—'}</span>
+                <span style={{ fontSize: 13, color: 'var(--text4)' }}>/ {pfuTotal || '—'}</span>
               </div>
             )}
           </div>
 
           {/* Streak */}
-          <div style={{ background: '#161618', borderRadius: 12, padding: '14px 18px', border: '1px solid #222224' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ color: '#FB923C' }}>{ICO_FIRE}</span>
-              <span style={{ fontSize: 28, fontWeight: 800, color: '#F3F4F6' }}>{streak}</span>
-              <span style={{ fontSize: 12, color: '#555558' }}>day streak</span>
+              <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)' }}>{streak}</span>
+              <span style={{ fontSize: 12, color: 'var(--text4)' }}>day streak</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {[['#34D39930', 'Complete'], ['#F59E0B28', 'Partial'], ['#EF444420', 'Missed']].map(([bg, lbl]) => (
-                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#555558' }}>
+                <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--text4)' }}>
                   <div style={{ width: 8, height: 8, borderRadius: 1, background: bg, flexShrink: 0 }} />{lbl}
                 </div>
               ))}

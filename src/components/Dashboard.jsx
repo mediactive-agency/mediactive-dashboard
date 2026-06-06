@@ -153,7 +153,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     { label: 'Call Close Rate',          value: total > 0 ? +((closed/total)*100).toFixed(1) : 0, suffix: '%', sub: 'Held → Closed', color: '#34D399' },
   ].filter(r => r.value !== null && r.value !== undefined)
 
-  const s = card => ({ background: '#161618', borderRadius: 12, padding: '16px 18px', ...card })
+  const s = card => ({ background: '#161618', borderRadius: 12, padding: '20px 22px', ...card })
 
   // Today stats
   const now = new Date()
@@ -202,9 +202,9 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       {/* Rate cards */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'nowrap' }}>
         {rates.map(r => (
-          <div key={r.label} style={{ flex: 1, minWidth: 0, background: '#161618', borderRadius: 12, padding: '16px 18px' }}>
-            <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>{r.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: r.color, lineHeight: 1, marginBottom: 4 }}>
+          <div key={r.label} style={{ flex: 1, minWidth: 0, background: '#161618', borderRadius: 12, padding: '20px 20px' }}>
+            <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
             </div>
             <div style={{ fontSize: 11, color: '#666669' }}>{r.sub}</div>
@@ -222,8 +222,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
             <div key={l} style={s({})}>
-              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{l}</div>
-              <div style={{ fontSize: 24, fontWeight: 500, color: '#333336', lineHeight: 1, marginTop: 4 }}>Not today</div>
+              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{l}</div>
+              <div style={{ fontSize: 28, fontWeight: 600, color: '#333336', lineHeight: 1 }}>Not today</div>
             </div>
           ))
           : [
@@ -232,8 +232,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '—'}`, color: pfuColor, sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={s({})}>
-              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>{k.label}</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: k.color, lineHeight: 1, marginBottom: 4 }}>{k.value}</div>
+              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
               <div style={{ fontSize: 11, color: '#666669' }}>{k.sub}</div>
             </div>
           ))}

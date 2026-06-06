@@ -6,33 +6,70 @@
   padding: 0;
 }
 
+/* Dark theme (default) */
+:root {
+  --bg:       #0C0C0E;
+  --bg2:      #111113;
+  --card:     #161618;
+  --border:   #222224;
+  --border2:  #2a2a2c;
+  --text:     #F3F4F6;
+  --text2:    #9CA3AF;
+  --text3:    #666669;
+  --text4:    #555558;
+  --text5:    #333336;
+  --sidebar-active: #0d1825;
+  --nav-dot-active: #FFFFFF;
+  --nav-dot: #2a2a2c;
+  --filter-bg: #161618;
+  --filter-active-bg: #FFFFFF;
+  --filter-active-text: #000000;
+  --upcoming-card-bg: #FFFFFF;
+  --upcoming-card-border: #E5E7EB;
+  --upcoming-card-name: #111827;
+  --upcoming-card-meta: #6B7280;
+  --selected-summary-bg: #FFFFFF;
+  --selected-summary-text: #333333;
+  --selected-arrow: #AAAAAA;
+  --bar-divider: #DDDDDD;
+}
+
+/* Light theme */
+body.light {
+  --bg:       #F4F5F7;
+  --bg2:      #FFFFFF;
+  --card:     #FFFFFF;
+  --border:   #E2E4E9;
+  --border2:  #D1D5DB;
+  --text:     #111827;
+  --text2:    #374151;
+  --text3:    #6B7280;
+  --text4:    #9CA3AF;
+  --text5:    #D1D5DB;
+  --sidebar-active: #EFF6FF;
+  --nav-dot-active: #111827;
+  --nav-dot: #D1D5DB;
+  --filter-bg: #FFFFFF;
+  --filter-active-bg: #111827;
+  --filter-active-text: #FFFFFF;
+  --upcoming-card-bg: #F9FAFB;
+  --upcoming-card-border: #E5E7EB;
+  --upcoming-card-name: #111827;
+  --upcoming-card-meta: #6B7280;
+  --selected-summary-bg: #111827;
+  --selected-summary-text: #FFFFFF;
+  --selected-arrow: #666669;
+  --bar-divider: #374151;
+}
+
 body {
-  background: #0C0C0E;
-  color: #F3F4F6;
+  background: var(--bg);
+  color: var(--text);
   font-family: 'Inter', sans-serif;
   font-weight: 400;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-}
-
-:root {
-  --bg: #0C0C0E;
-  --bg2: #111113;
-  --card: #161618;
-  --border: #222224;
-  --border2: #2a2a2c;
-  --text: #F3F4F6;
-  --text2: #9CA3AF;
-  --text3: #666669;
-  --text4: #555558;
-  --green: #10B981;
-  --green2: #34D399;
-  --amber: #F59E0B;
-  --red: #EF4444;
-  --blue: #60A5FA;
-  --purple: #A78BFA;
-  --pink: #F472B6;
-  --orange: #FB923C;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 button { font-family: 'Inter', sans-serif; cursor: pointer; }

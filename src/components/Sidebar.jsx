@@ -7,43 +7,125 @@ const NAV_ITEMS = [
   { key: 'tasks',     label: 'Daily Tasks', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
 ]
 
+function TogglePill({ isDark, onToggle }) {
+  return (
+    <button
+      onClick={onToggle}
+      title={isDark ? 'Switch to light' : 'Switch to dark'}
+      style={{
+        flexShrink: 0, position: 'relative',
+        width: 48, height: 26, borderRadius: 13,
+        background: isDark ? '#374151' : '#D1D5DB',
+        border: 'none', cursor: 'pointer', padding: 0,
+        transition: 'background 0.2s',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 3,
+        left: isDark ? 25 : 3,
+        width: 20, height: 20, borderRadius: '50%',
+        background: isDark ? '#F59E0B' : '#FFFFFF',
+        transition: 'left 0.2s ease',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+      }}>
+        {isDark
+          ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        }
+      </div>
+    </button>
+  )
+}
+
+export { TogglePill }
+
 export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, mobileOpen, onMobileClose }) {
   const isDark = theme === 'dark'
 
   return (
     <>
-      {/* Mobile overlay */}
       {mobileOpen && (
-        <div
-          onClick={onMobileClose}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 98, display: 'none' }}
-          className="mob-overlay"
-        />
+        <div onClick={onMobileClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 98 }} />
       )}
 
       <aside className={`sidebar${mobileOpen ? ' sidebar-open' : ''}`} style={{
-        width: 240, minHeight: '100vh',
+        width: 240, height: '100vh',
         background: 'var(--bg2)',
         borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column',
-        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
+        position: 'fixed', top: 0, left: 0, zIndex: 100,
+        transform: 'translateX(-100%)',
         transition: 'transform 0.25s ease, background 0.3s ease',
       }}>
-        {/* Logo row */}
-        <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Logo */}
+        <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
-          <button onClick={onMobileClose} className="mob-close" style={{ background: 'none', border: 'none', color: 'var(--text3)', padding: 4, cursor: 'pointer', display: 'none' }}>
+          <button onClick={onMobileClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', padding: 4, cursor: 'pointer' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         {/* Nav */}
-        <nav style={{ padding: '12px 10px', flex: 1 }}>
+        <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
           {NAV_ITEMS.map(item => (
             <button
               key={item.key}
               onClick={() => { onNav(item.key); onMobileClose?.() }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                borderRadius: 8, border: 'none', width: '100%', textAlign: 'left',
+                fontSize: 15, fontWeight: active === item.key ? 600 : 400,
+                color: active === item.key ? 'var(--text)' : 'var(--text3)',
+                background: active === item.key ? 'var(--sidebar-active)' : 'transparent',
+                cursor: 'pointer', marginBottom: 4, transition: 'all 0.15s',
+              }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: active === item.key ? 'var(--nav-dot-active)' : 'var(--nav-dot)', marginLeft: 'auto', flexShrink: 0 }} />
+            </button>
+          ))}
+        </nav>
+
+        {/* Footer — always at bottom */}
+        <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <TogglePill isDark={isDark} onToggle={onThemeToggle} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', animation: 'pulse-dot 2s infinite' }} />
+              <span style={{ fontSize: 11, fontWeight: 600, flexShrink: 0, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981' }}>
+                {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+              </span>
+              {loadedAt && !loading && !error && (
+                <span style={{ fontSize: 11, color: 'var(--text4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  · {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Desktop sidebar — always visible */}
+      <aside style={{
+        width: 240, height: '100vh',
+        background: 'var(--bg2)',
+        borderRight: '1px solid var(--border)',
+        display: 'flex', flexDirection: 'column',
+        position: 'fixed', top: 0, left: 0, zIndex: 50,
+        transition: 'background 0.3s ease',
+      }} className="sidebar-desktop">
+        <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
+        </div>
+        <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
+          <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
+          {NAV_ITEMS.map(item => (
+            <button
+              key={item.key}
+              onClick={() => onNav(item.key)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
                 borderRadius: 8, border: 'none', width: '100%', textAlign: 'left',
@@ -59,42 +141,9 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
             </button>
           ))}
         </nav>
-
-        {/* Footer */}
-        <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-          {/* Toggle row — pill toggle LEFT of live */}
+        <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-
-            {/* Pill toggle */}
-            <button
-              onClick={onThemeToggle}
-              title={isDark ? 'Switch to light' : 'Switch to dark'}
-              style={{
-                flexShrink: 0, position: 'relative',
-                width: 48, height: 26, borderRadius: 13,
-                background: isDark ? '#374151' : '#D1D5DB',
-                border: 'none', cursor: 'pointer', padding: 0,
-                transition: 'background 0.2s',
-              }}
-            >
-              <div style={{
-                position: 'absolute', top: 3,
-                left: isDark ? 25 : 3,
-                width: 20, height: 20, borderRadius: '50%',
-                background: isDark ? '#F59E0B' : '#FFFFFF',
-                transition: 'left 0.2s ease',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-              }}>
-                {isDark
-                  ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                  : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                }
-              </div>
-            </button>
-
-            {/* Live indicator */}
+            <TogglePill isDark={isDark} onToggle={onThemeToggle} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', animation: 'pulse-dot 2s infinite' }} />
               <span style={{ fontSize: 11, fontWeight: 600, flexShrink: 0, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981' }}>
@@ -112,11 +161,14 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
 
       <style>{`
         @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .sidebar.sidebar-open { transform: translateX(0) !important; box-shadow: 4px 0 32px rgba(0,0,0,0.25); }
+        /* On mobile hide desktop sidebar, show hamburger */
         @media (max-width: 768px) {
-          .sidebar { transform: translateX(-100%); box-shadow: none; }
-          .sidebar.sidebar-open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.3); }
-          .mob-overlay { display: block !important; }
-          .mob-close { display: flex !important; }
+          .sidebar-desktop { display: none !important; }
+        }
+        /* On desktop hide the mobile overlay sidebar by default (it's behind) */
+        @media (min-width: 769px) {
+          .sidebar { display: none !important; }
         }
       `}</style>
     </>

@@ -140,7 +140,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
   const task2Color = task2Done ? '#34D399' : fuTotal === 0 ? '#555558' : '#EF4444'
   const pfuColor = pfuTask3Done ? (pfuTotal === 0 ? '#555558' : '#34D399') : '#EF4444'
 
-  const NOT_TODAY = <span style={{ fontSize: 36, fontWeight: 900, color: '#333336', lineHeight: 1 }}>Not today</span>
+  const NOT_TODAY = <span style={{ fontSize: 28, fontWeight: 600, color: '#333336', lineHeight: 1 }}>Not today</span>
 
   const AVAILABLE_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06']
   const showMonths = (filter === '30d') ? ['2026-05', '2026-06']
@@ -225,14 +225,14 @@ export default function Tasks({ data, onDailyStats, filter }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Outreach */}
           <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#555558', letterSpacing: '0.08em' }}>OUTREACH</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>OUTREACH</div>
               <div style={{ color: task1Color }}>{isCheckWeekend ? '' : task1Done ? ICO_CHECK : ICO_X}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 8 }}>
-                  <span style={{ fontSize: 36, fontWeight: 900, color: task1Color, lineHeight: 1 }}>{outreachCount}</span>
+                  <span style={{ fontSize: 36, fontWeight: 700, color: task1Color, lineHeight: 1 }}>{outreachCount}</span>
                   <span style={{ fontSize: 13, color: '#555558' }}>/ 20</span>
                 </div>
                 <div style={{ height: 4, background: '#222224', borderRadius: 2 }}>
@@ -244,13 +244,13 @@ export default function Tasks({ data, onDailyStats, filter }) {
 
           {/* Followups */}
           <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#555558', letterSpacing: '0.08em' }}>FOLLOWUPS</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>FOLLOWUPS</div>
               <div style={{ color: task2Color }}>{isCheckWeekend ? '' : task2Done ? ICO_CHECK : (fuTotal === 0 ? '' : ICO_X)}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: task2Color, lineHeight: 1 }}>{fuDone}</span>
+                <span style={{ fontSize: 36, fontWeight: 700, color: task2Color, lineHeight: 1 }}>{fuDone}</span>
                 <span style={{ fontSize: 13, color: '#555558' }}>/ {fuTotal || '—'}</span>
               </div>
             )}
@@ -258,13 +258,13 @@ export default function Tasks({ data, onDailyStats, filter }) {
 
           {/* Positive Followups */}
           <div style={{ background: '#161618', borderRadius: 12, padding: '16px 18px', border: '1px solid #222224' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#555558', letterSpacing: '0.08em' }}>POSITIVE FOLLOWUPS</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#555558', letterSpacing: '0.08em', marginBottom: 14 }}>POSITIVE FOLLOWUPS</div>
               <div style={{ color: pfuColor }}>{isCheckWeekend ? '' : pfuTask3Done ? (pfuTotal === 0 ? '' : ICO_CHECK) : ICO_X}</div>
             </div>
             {isCheckWeekend ? NOT_TODAY : (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: pfuColor, lineHeight: 1 }}>{pfuDone}</span>
+                <span style={{ fontSize: 36, fontWeight: 700, color: pfuColor, lineHeight: 1 }}>{pfuDone}</span>
                 <span style={{ fontSize: 13, color: '#555558' }}>/ {pfuTotal || '—'}</span>
               </div>
             )}

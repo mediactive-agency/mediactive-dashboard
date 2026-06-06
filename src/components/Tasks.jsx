@@ -48,7 +48,7 @@ export default function Tasks({ data, onDailyStats }) {
 
     allRows.forEach(x => {
       const r = x.r
-      const varN = (r[4]||'').toLowerCase()
+      const varN = String(r[4]||'').toLowerCase()
       if (varN.includes('inmail')) return
       const bookedDate = toDateStr(r[27])
       const hasPositiveReply = !!(r[14] && toDateStr(r[14]))

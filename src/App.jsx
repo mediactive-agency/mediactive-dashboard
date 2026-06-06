@@ -34,7 +34,6 @@ export default function App() {
     setFilter(key)
     if (key !== 'custom') { setAppliedFrom(''); setAppliedTo('') }
   }
-
   function applyCustom() {
     if (!customFrom || !customTo) return
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
@@ -51,47 +50,46 @@ export default function App() {
         mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)}
       />
 
-      <main className="main-content" style={{ marginLeft: 240, flex: 1, padding: '36px 40px', minHeight: '100vh', transition: 'margin 0.25s' }}>
+      <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }} className="main-content">
         {/* Topbar */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* Hamburger — mobile only */}
-            <button
-              className="hamburger"
-              onClick={() => setMobileOpen(true)}
-              style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text)', padding: 4 }}
-            >
+        <div style={{ padding: '28px 40px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button className="hamburger" onClick={() => setMobileOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text)', padding: 4, cursor: 'pointer' }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </button>
-            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
+            <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
           </div>
           <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} />
         </div>
 
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
-            <div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            <div style={{ color: 'var(--text3)', fontSize: 12 }}>Fetching live data...</div>
-          </div>
-        ) : error ? (
-          <div style={{ textAlign: 'center', padding: 60 }}>
-            <div style={{ color: '#EF4444', marginBottom: 8 }}>{error}</div>
-            <button onClick={reload} style={{ padding: '8px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Retry</button>
-          </div>
-        ) : data ? (
-          <>
-            {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} />}
-            {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
-            {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
-            {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} />}
-          </>
-        ) : null}
+        <div className="page-body" style={{ padding: '0 40px 40px' }}>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
+              <div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              <div style={{ color: 'var(--text3)', fontSize: 12 }}>Fetching live data...</div>
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: 60 }}>
+              <div style={{ color: '#EF4444', marginBottom: 8 }}>{error}</div>
+              <button onClick={reload} style={{ padding: '8px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Retry</button>
+            </div>
+          ) : data ? (
+            <>
+              {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} />}
+              {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
+              {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
+              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} />}
+            </>
+          ) : null}
+        </div>
       </main>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
         @media (max-width: 768px) {
-          .main-content { margin-left: 0 !important; padding: 20px 16px !important; }
+          .main-content { margin-left: 0 !important; }
+          .main-content > div:first-child { padding: 20px 16px 0 !important; }
+          .page-body { padding: 0 16px 32px !important; }
           .hamburger { display: flex !important; }
         }
       `}</style>

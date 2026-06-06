@@ -75,7 +75,7 @@ const UPCOMING_CALLS = [
 
 function CallCard({ r, linkedinMap }) {
   const res = (() => {
-    const v = (r[5]||'').toLowerCase()
+    const v = String(r[5]||'').toLowerCase()
     if (v === 'yes') return { color: '#34D399', label: 'Closed' }
     if (v === 'follow-up') return { color: '#F59E0B', label: 'Follow-up' }
     return { color: '#EF4444', label: 'Lost' }
@@ -83,13 +83,13 @@ function CallCard({ r, linkedinMap }) {
   const q = parseInt(r[9])
   const qc = Q_COLORS[q] || '#555558'
   const ql = Q_LABELS[q] || ''
-  const rawObjs = (r[4]||'').trim() === 'None' || !(r[4]||'').trim() ? [] : (r[4]||'').split('|').map(s => s.trim()).filter(s => s.length > 2)
+  const rawObjs = String(r[4]||'').trim() === 'None' || !String(r[4]||'').trim() ? [] : String(r[4]||'').split('|').map(s => s.trim()).filter(s => s.length > 2)
   const seenKeys = new Set()
   const uniqueObjs = rawObjs.map(o => normalizeObjection(o)).filter(Boolean).filter(o => { if (seenKeys.has(o.key)) return false; seenKeys.add(o.key); return true })
   const cur = parseSituation(r[2])
   const goal = parseGoal(r[3])
   const subjectColor = r[8] === 'Appt. Booking' ? '#A78BFA' : r[8] === 'Website + Appt. Booking' ? '#F472B6' : '#60A5FA'
-  const li = linkedinMap[(r[0]||'').toLowerCase()] || {}
+  const li = linkedinMap[String(r[0]||'').toLowerCase()] || {}
 
   const ROWS = [
     { key: 'revenue', label: 'Revenue', ico: ICO.revenue, color: '#34D399' },
@@ -128,7 +128,7 @@ function CallCard({ r, linkedinMap }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 17, fontWeight: 800, color: '#F3F4F6' }}>{r[0]}</span>
             {r[8] && <span style={{ fontSize: 11, fontWeight: 700, color: subjectColor, background: subjectColor + '15', border: `1px solid ${subjectColor}33`, padding: '2px 10px', borderRadius: 20 }}>{r[8]}</span>}
-            {li.account && <span style={{ fontSize: 11, color: '#555558' }}>{li.account.includes('Main acc') ? 'Main Account' : li.account.includes('2nd acc') ? '2nd Account' : li.account.split('—')[0].trim()}</span>}
+            {li.account && <span style={{ fontSize: 11, color: '#555558' }}>{String(li.account).includes('Main acc') ? 'Main Account' : String(li.account).includes('2nd acc') ? '2nd Account' : String(li.account).split('—')[0].trim()}</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#555558', flexWrap: 'wrap' }}>
             <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
@@ -195,13 +195,13 @@ export default function Sales({ data, filter, customFrom, customTo }) {
       const name = (r[1]||'').toString().trim().toLowerCase()
       if (name && !linkedinMap[name]) {
         const li = (r[2]||'').toString().trim()
-        linkedinMap[name] = { linkedin: li.startsWith('http') ? li : null, account: (r[4]||'').trim() || null }
+        linkedinMap[name] = { linkedin: li.startsWith('http') ? li : null, account: String(r[4]||'').trim() || null }
       }
     }
 
     const total = filtered.length
-    const closed = filtered.filter(r => (r[5]||'').toLowerCase() === 'yes').length
-    const followUp = filtered.filter(r => (r[5]||'').toLowerCase() === 'follow-up').length
+    const closed = filtered.filter(r => String(r[5]||'').toLowerCase() === 'yes').length
+    const followUp = filtered.filter(r => String(r[5]||'').toLowerCase() === 'follow-up').length
     const qs = filtered.map(r => parseInt(r[9])).filter(q => q >= 1 && q <= 5)
     const avgQ = qs.length > 0 ? +(qs.reduce((a,b) => a+b, 0) / qs.length).toFixed(1) : null
     const closeRate = total > 0 ? +((closed/total)*100).toFixed(1) : 0

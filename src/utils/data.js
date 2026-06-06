@@ -24,7 +24,11 @@ export function toDateStr(val) {
 export function toSalesDateStr(val) {
   if (!val) return null
   if (typeof val === 'string') {
-    const m = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+    const s = val.trim()
+    const MONTHS = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}
+    const m3 = s.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/)
+    if (m3 && MONTHS[m3[2]]) return `${m3[3]}-${MONTHS[m3[2]]}-${m3[1].padStart(2,'0')}`
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
     if (m) return `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`
     return toDateStr(val)
   }

@@ -185,15 +185,23 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
                 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : null
               return (
                 <div key={i}>
-                  <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 14 }}>
-                    <div style={{ color: step.color, opacity: 0.7, flexShrink: 0 }}>{step.icon}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 16 }}>
+                    <div style={{ color: step.color, opacity: 0.8, flexShrink: 0 }}>{step.icon}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 4 }}>{step.label}</div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
                     </div>
-                    {pct && <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text3)', flexShrink: 0 }}>→ {pct}</div>}
+                    {pct && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{pct}</div>
+                        <svg width="16" height="22" viewBox="0 0 16 28" fill="none" stroke="var(--text3)" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="8" y1="2" x2="8" y2="22"/>
+                          <polyline points="2 16 8 23 14 16"/>
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  {i < funnelSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)', marginLeft: 52 }} />}
+                  {i < funnelSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)' }} />}
                 </div>
               )
             })}
@@ -222,10 +230,10 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
             {/* Rate cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
         {rates.map(r => (
           <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 20px', boxShadow: 'var(--card-shadow)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
+            <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
             </div>
@@ -304,8 +312,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ].map(x => (
             <div key={x.l} style={{ marginBottom: 11 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: 11, color: 'var(--text2)' }}>{x.l}</span>
-                <span style={{ fontSize: 12, color: x.c, fontWeight: 600 }}>{x.v}</span>
+                <span style={{ fontSize: isMobile ? 14 : 11, color: 'var(--text2)' }}>{x.l}</span>
+                <span style={{ fontSize: isMobile ? 15 : 12, color: x.c, fontWeight: 600 }}>{x.v}</span>
               </div>
               <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: total > 0 ? `${(x.v/total)*100}%` : 0, background: x.c, borderRadius: 2 }} />

@@ -230,9 +230,9 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
             {/* Rate cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
+      <div className="rate-cards-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3,1fr)' : 'repeat(6,1fr)', gap: 10, marginBottom: 20, width: '100%' }}>
         {rates.map(r => (
-          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 18px' : '20px 20px', boxShadow: 'var(--card-shadow)' }}>
+          <div key={r.label} style={{ background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 14px' : '20px 20px', boxShadow: 'var(--card-shadow)', minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}

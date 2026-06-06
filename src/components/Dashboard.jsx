@@ -153,7 +153,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     { label: 'Call Close Rate',          value: total > 0 ? +((closed/total)*100).toFixed(1) : 0, suffix: '%', sub: 'Held → Closed', color: '#34D399' },
   ].filter(r => r.value !== null && r.value !== undefined)
 
-  const s = card => ({ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', ...card })
+  const s = card => ({ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', ...card })
 
   // Today stats
   const now = new Date()
@@ -202,7 +202,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       {/* Rate cards */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'nowrap' }}>
         {rates.map(r => (
-          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px' }}>
+          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
@@ -247,7 +247,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
           {monthlyTable.map(m => (
             <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
@@ -273,7 +273,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         </div>
 
         {/* Pipeline */}
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
           {[
             { l: 'Closed / Won', v: closed,   c: '#F59E0B' },
@@ -293,7 +293,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         </div>
 
         {/* Objections */}
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Top Objections</div>
           {topObj.length === 0
             ? <div style={{ color: 'var(--text4)', fontSize: 12 }}>No data yet</div>
@@ -306,9 +306,6 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         </div>
       </div>
 
-      <div style={{ marginTop: 36, textAlign: 'center', color: '#222224', fontSize: 10 }}>
-        MEDIACTIVE · LIVE DASHBOARD · {TODAY.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-      </div>
     </div>
   )
 }

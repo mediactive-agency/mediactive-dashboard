@@ -41,7 +41,7 @@ const OBJ_CATS = [
   { key: 'third_party',    label: '3rd Party Approval', color: '#F59E0B' },
   { key: 'burned_before',  label: 'Burned Before',      color: '#A78BFA' },
   { key: 'lack_of_trust',  label: 'Lack of Trust',      color: '#60A5FA' },
-  { key: 'not_urgent',     label: 'Not Right Now',      color: '#555558' },
+  { key: 'not_urgent',     label: 'Not Right Now',      color: 'var(--text4)' },
 ]
 
 function normObj(raw) {
@@ -153,7 +153,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     { label: 'Call Close Rate',          value: total > 0 ? +((closed/total)*100).toFixed(1) : 0, suffix: '%', sub: 'Held → Closed', color: '#34D399' },
   ].filter(r => r.value !== null && r.value !== undefined)
 
-  const s = card => ({ background: '#161618', borderRadius: 12, padding: '20px 22px', ...card })
+  const s = card => ({ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', ...card })
 
   // Today stats
   const now = new Date()
@@ -177,17 +177,17 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     <div>
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>Full Sales Funnel</div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>Full Sales Funnel</div>
         <div style={{ display: 'flex', alignItems: 'stretch', width: '100%' }}>
           {funnelSteps.map((step, i) => (
             <>
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: '#161618', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: 'var(--card)', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
                 <div style={{ marginBottom: 10, opacity: 0.5, color: step.color }}>{step.icon}</div>
                 <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: '#88888B', marginTop: 6, textAlign: 'center', lineHeight: 1.4 }}>{step.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 6, textAlign: 'center', lineHeight: 1.4 }}>{step.label}</div>
               </div>
               {i < funnelSteps.length - 1 && (
-                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 4px', background: '#161618', gap: 6, flexShrink: 0, width: 80 }}>
+                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 4px', background: 'var(--card)', gap: 6, flexShrink: 0, width: 80 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', lineHeight: 1 }}>
                     {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
                   </div>
@@ -202,28 +202,28 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       {/* Rate cards */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'nowrap' }}>
         {rates.map(r => (
-          <div key={r.label} style={{ flex: 1, minWidth: 0, background: '#161618', borderRadius: 12, padding: '20px 20px' }}>
-            <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
+          <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px' }}>
+            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
               {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
             </div>
-            <div style={{ fontSize: 11, color: '#666669' }}>{r.sub}</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>{r.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Today's Tasks */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666669' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
             <div key={l} style={s({})}>
-              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{l}</div>
-              <div style={{ fontSize: 28, fontWeight: 600, color: '#333336', lineHeight: 1 }}>Not today</div>
+              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{l}</div>
+              <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
             </div>
           ))
           : [
@@ -232,28 +232,28 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '—'}`, color: pfuColor, sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={s({})}>
-              <div style={{ fontSize: 10, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
               <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
-              <div style={{ fontSize: 11, color: '#666669' }}>{k.sub}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
             </div>
           ))}
       </div>
 
       {/* Breakdown */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666669' }}>Breakdown</div>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
-        <div style={{ background: '#161618', borderRadius: 12, padding: '24px 26px' }}>
-          <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
           {monthlyTable.map(m => (
-            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid #222224' }}>
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontWeight: 700, color: '#D1D5DB', fontSize: 13 }}>{m.month} 2026</span>
-                <span style={{ fontSize: 11, color: '#666669' }}>{m.A.toLocaleString()} sent</span>
+                <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>{m.A.toLocaleString()} sent</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
                 {[
@@ -264,7 +264,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
                 ].map(x => (
                   <div key={x.lbl} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>
-                    <div style={{ fontSize: 9, color: '#555558', marginTop: 2 }}>{x.lbl}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
                   </div>
                 ))}
               </div>
@@ -273,8 +273,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         </div>
 
         {/* Pipeline */}
-        <div style={{ background: '#161618', borderRadius: 12, padding: '24px 26px' }}>
-          <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
           {[
             { l: 'Closed / Won', v: closed,   c: '#F59E0B' },
             { l: 'Follow-up',    v: followUp,  c: '#FB923C' },
@@ -282,10 +282,10 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ].map(x => (
             <div key={x.l} style={{ marginBottom: 11 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: 11, color: '#88888B' }}>{x.l}</span>
+                <span style={{ fontSize: 11, color: 'var(--text2)' }}>{x.l}</span>
                 <span style={{ fontSize: 12, color: x.c, fontWeight: 600 }}>{x.v}</span>
               </div>
-              <div style={{ height: 4, background: '#222224', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: total > 0 ? `${(x.v/total)*100}%` : 0, background: x.c, borderRadius: 2 }} />
               </div>
             </div>
@@ -293,14 +293,14 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         </div>
 
         {/* Objections */}
-        <div style={{ background: '#161618', borderRadius: 12, padding: '24px 26px' }}>
-          <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Top Objections</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Top Objections</div>
           {topObj.length === 0
-            ? <div style={{ color: '#555558', fontSize: 12 }}>No data yet</div>
+            ? <div style={{ color: 'var(--text4)', fontSize: 12 }}>No data yet</div>
             : topObj.map(o => (
               <div key={o.key} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 11 }}>
-                <div style={{ width: 26, height: 26, borderRadius: 6, background: '#222224', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: o.color, flexShrink: 0 }}>{o.count}</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>{o.label}</div>
+                <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: o.color, flexShrink: 0 }}>{o.count}</div>
+                <div style={{ fontSize: 12, color: 'var(--text2)' }}>{o.label}</div>
               </div>
             ))}
         </div>

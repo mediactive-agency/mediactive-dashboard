@@ -30,7 +30,7 @@ export default function App() {
 
   const { data, loading, error, reload, loadedAt } = useData()
   const { theme, toggle, isManual } = useTheme()
-  const { isMobile } = useWindowSize()
+  const { isMobile, isTablet } = useWindowSize()
 
   function handleFilter(key) {
     setFilter(key)
@@ -80,10 +80,10 @@ export default function App() {
             </div>
           ) : data ? (
             <>
-              {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} />}
-              {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} />}
-              {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} />}
-              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} />}
+              {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
             </>
           ) : null}
         </div>

@@ -339,10 +339,6 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />)}
         </>
       )}
-
-      <div style={{ marginTop: 36, textAlign: 'center', color: '#222224', fontSize: 10 }}>
-        MEDIACTIVE · OUTREACH · {TODAY.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-      </div>
     </div>
   )
 }

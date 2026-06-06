@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
 import { useTheme } from './hooks/useTheme'
+import { useWindowSize } from './hooks/useWindowSize'
 import Sidebar from './components/Sidebar'
 import FilterBar from './components/FilterBar'
 import Dashboard from './components/Dashboard'
@@ -29,6 +30,7 @@ export default function App() {
 
   const { data, loading, error, reload, loadedAt } = useData()
   const { theme, toggle, isManual } = useTheme()
+  const { isMobile } = useWindowSize()
 
   function handleFilter(key) {
     setFilter(key)
@@ -40,6 +42,7 @@ export default function App() {
   }
 
   const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks' }
+  const pad = isMobile ? '0 16px' : '0 40px'
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -50,19 +53,21 @@ export default function App() {
         mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)}
       />
 
-      <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }} className="main-content">
+      <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>
         {/* Topbar */}
-        <div style={{ padding: '28px 40px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button className="hamburger" onClick={() => setMobileOpen(true)} style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text)', padding: 4, cursor: 'pointer' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-            <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
+        <div style={{ padding: isMobile ? '20px 16px 0' : '28px 40px 0', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {isMobile && (
+              <button onClick={() => setMobileOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text)', padding: 4, cursor: 'pointer', flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+            )}
+            <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
           </div>
-          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} />
+          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
         </div>
 
-        <div className="page-body" style={{ padding: '0 40px 40px' }}>
+        <div style={{ padding: isMobile ? '0 16px 32px' : '0 40px 40px' }}>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
               <div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -75,24 +80,16 @@ export default function App() {
             </div>
           ) : data ? (
             <>
-              {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} />}
-              {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
-              {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
-              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} />}
+              {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} />}
+              {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} />}
+              {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} />}
+              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} />}
             </>
           ) : null}
         </div>
       </main>
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @media (max-width: 768px) {
-          .main-content { margin-left: 0 !important; }
-          .main-content > div:first-child { padding: 20px 16px 0 !important; }
-          .page-body { padding: 0 16px 32px !important; }
-          .hamburger { display: flex !important; }
-        }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }

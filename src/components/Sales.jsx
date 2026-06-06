@@ -7,7 +7,7 @@ const OBJ_CATS = [
   { key: 'third_party',   label: '3rd Party Approval', color: '#F59E0B', patterns: ['partner','lawyer','husband','wife','cfo','coo','approval','consult','family'] },
   { key: 'burned_before', label: 'Burned Before',      color: '#A78BFA', patterns: ['burned','scam','previous','past','bad experience','failed','waste'] },
   { key: 'lack_of_trust', label: 'Lack of Trust',      color: '#60A5FA', patterns: ['trust','case stud','nda','proof','guarantee','result','evidence','testimonial','credential'] },
-  { key: 'not_urgent',    label: 'Not Right Now',      color: '#555558', patterns: ['not urgent','no need','no rush','future','not ready','not now','eventually','revisit'] },
+  { key: 'not_urgent',    label: 'Not Right Now',      color: 'var(--text4)', patterns: ['not urgent','no need','no rush','future','not ready','not now','eventually','revisit'] },
 ]
 
 function normalizeObjection(raw) {
@@ -115,23 +115,23 @@ function CallCard({ r, linkedinMap }) {
     return (
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
         <span style={{ color, flexShrink: 0, marginTop: 1 }}>{ico}</span>
-        <span style={{ fontSize: 11, color: '#555558', minWidth: 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
-        <span style={{ fontSize: 13, color: '#CCCCCE', lineHeight: 1.5 }}>{val}</span>
+        <span style={{ fontSize: 11, color: 'var(--text4)', minWidth: 60, flexShrink: 0, fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{val}</span>
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#161618', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid #222224' }}>
+    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 17, fontWeight: 800, color: '#F3F4F6' }}>{r[0]}</span>
+            <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{r[0]}</span>
             {r[8] && <span style={{ fontSize: 11, fontWeight: 700, color: subjectColor, background: subjectColor + '15', border: `1px solid ${subjectColor}33`, padding: '2px 10px', borderRadius: 20 }}>{r[8]}</span>}
-            {li.account && <span style={{ fontSize: 11, color: '#555558' }}>{String(li.account).includes('Main acc') ? 'Main Account' : String(li.account).includes('2nd acc') ? '2nd Account' : String(li.account).split('—')[0].trim()}</span>}
+            {li.account && <span style={{ fontSize: 11, color: 'var(--text4)' }}>{String(li.account).includes('Main acc') ? 'Main Account' : String(li.account).includes('2nd acc') ? '2nd Account' : String(li.account).split('—')[0].trim()}</span>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: '#555558', flexWrap: 'wrap' }}>
-            <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--text4)', flexWrap: 'wrap' }}>
+            <span style={{ color: 'var(--text2)' }}>{ICO.calendar}</span>
             <span>{toSalesDateStr(r[1])}</span>
             {r[7] && <><span>·</span><span>{r[7]}</span></>}
             {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
@@ -146,30 +146,30 @@ function CallCard({ r, linkedinMap }) {
       {(cur || goal) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, paddingBottom: r[6] || uniqueObjs.length > 0 ? 16 : 0, borderBottom: r[6] || uniqueObjs.length > 0 ? '1px solid #222224' : 'none' }}>
           <div>
-            <div style={{ fontSize: 10, color: '#444446', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Current Situation</div>
+            <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Current Situation</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {cur ? visibleRows.filter(row => !row.goalOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(cur, row.key)} />) : r[2] ? <div style={{ fontSize: 13, color: '#AAAAAD', lineHeight: 1.6 }}>{r[2]}</div> : null}
+              {cur ? visibleRows.filter(row => !row.goalOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(cur, row.key)} />) : r[2] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[2]}</div> : null}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 10, color: '#444446', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Desired Situation</div>
+            <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, fontWeight: 700 }}>Desired Situation</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {goal ? visibleRows.filter(row => !row.curOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(goal, row.key)} />) : r[3] ? <div style={{ fontSize: 13, color: '#AAAAAD', lineHeight: 1.6 }}>{r[3]}</div> : null}
+              {goal ? visibleRows.filter(row => !row.curOnly).map(row => <Cell key={row.key} ico={row.ico} color={row.color} label={row.label} val={getVal(goal, row.key)} />) : r[3] ? <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{r[3]}</div> : null}
             </div>
           </div>
         </div>
       )}
 
       {r[6] && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: '#9CA3AF', marginBottom: uniqueObjs.length > 0 ? 12 : 0, lineHeight: 1.6 }}>
-          <span style={{ color: '#333336', flexShrink: 0, marginTop: 2 }}>{ICO.note}</span>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text2)', marginBottom: uniqueObjs.length > 0 ? 12 : 0, lineHeight: 1.6 }}>
+          <span style={{ color: 'var(--text5)', flexShrink: 0, marginTop: 2 }}>{ICO.note}</span>
           <span>{r[6]}</span>
         </div>
       )}
 
       {uniqueObjs.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span style={{ color: '#333336', flexShrink: 0 }}>{ICO.warn}</span>
+          <span style={{ color: 'var(--text5)', flexShrink: 0 }}>{ICO.warn}</span>
           {uniqueObjs.map(o => (
             <span key={o.key} style={{ fontSize: 13, color: o.color, background: o.color + '15', border: `1px solid ${o.color}33`, padding: '4px 14px', borderRadius: 20, fontWeight: 600 }}>{o.label}</span>
           ))}
@@ -230,18 +230,18 @@ export default function Sales({ data, filter, customFrom, customTo }) {
     <div>
       {/* Upcoming */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666669' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: '#222224' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
-        {upcomingNow.length === 0 ? <div style={{ color: '#555558', fontSize: 13 }}>No upcoming calls</div> : upcomingNow.map(c => {
+        {upcomingNow.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13 }}>No upcoming calls</div> : upcomingNow.map(c => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           return (
-            <div key={c.name} style={{ background: '#FFFFFF', borderRadius: 14, padding: '20px 24px', border: '1px solid #E5E7EB', flex: 1, minWidth: 220 }}>
+            <div key={c.name} style={{ background: 'var(--upcoming-card-bg)', borderRadius: 14, padding: '20px 24px', border: '1px solid var(--upcoming-card-border)', flex: 1, minWidth: 220 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
-                    <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--upcoming-card-name)', marginBottom: 4 }}>{c.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--upcoming-card-meta)' }}>
+                    <span style={{ color: 'var(--text2)' }}>{ICO.calendar}</span>
                     {c.date} · {c.time}
                   </div>
                 </div>
@@ -251,7 +251,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>
-                {(c.linkedin || li.linkedin) && <><span style={{ color: '#D1D5DB' }}>·</span><a href={c.linkedin || li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a></>}
+                {(c.linkedin || li.linkedin) && <><span style={{ color: 'var(--text2)' }}>·</span><a href={c.linkedin || li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a></>}
               </div>
             </div>
           )
@@ -265,49 +265,49 @@ export default function Sales({ data, filter, customFrom, customTo }) {
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },
           { label: 'Follow-ups', value: followUp, suffix: '', sub: 'open pipeline', color: '#F59E0B' },
         ].map(k => (
-          <div key={k.label} style={{ background: '#161618', borderRadius: 12, padding: '22px 24px' }}>
-            <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{k.label}</div>
+          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px' }}>
+            <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>{k.label}</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: k.color, lineHeight: 1, marginBottom: 4 }}>{typeof k.value === 'number' ? (Number.isInteger(k.value) ? k.value : k.value.toFixed(1)) : k.value}{k.suffix}</div>
-            <div style={{ fontSize: 11, color: '#666669' }}>{k.sub}</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
           </div>
         ))}
-        <div style={{ background: '#161618', borderRadius: 12, padding: '22px 24px' }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px' }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '—'}</div>
-          <div style={{ fontSize: 11, color: '#666669', marginTop: 4 }}>Lead Quality</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Lead Quality</div>
         </div>
       </div>
 
       {/* Charts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
-        <div style={{ background: '#161618', borderRadius: 12, padding: '24px 26px' }}>
-          <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
           {OBJ_CATS.map(cat => {
             const count = catCounts[cat.key]; const w = (count/maxCat)*100
             return (
               <div key={cat.key} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: '#D1D5DB', fontWeight: 500 }}>{cat.label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 500 }}>{cat.label}</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: count > 0 ? cat.color : '#333336', marginLeft: 8, flexShrink: 0 }}>{count}×</span>
                 </div>
-                <div style={{ height: 4, background: '#222224', borderRadius: 2 }}>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: cat.color, borderRadius: 2, opacity: count > 0 ? 1 : 0.15 }} />
                 </div>
               </div>
             )
           })}
         </div>
-        <div style={{ background: '#161618', borderRadius: 12, padding: '24px 26px' }}>
-          <div style={{ fontSize: 11, color: '#666669', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Lead Quality</div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Lead Quality</div>
           {[5,4,3,2,1].map(q => {
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0
             return (
               <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
                 <div style={{ fontSize: 12, color: Q_COLORS[q], fontWeight: 700, width: 16, textAlign: 'right', flexShrink: 0 }}>{q}</div>
-                <div style={{ fontSize: 11, color: '#555558', width: 44, flexShrink: 0 }}>{Q_LABELS[q]}</div>
-                <div style={{ flex: 1, height: 4, background: '#222224', borderRadius: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--text4)', width: 44, flexShrink: 0 }}>{Q_LABELS[q]}</div>
+                <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2 }} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#F3F4F6', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
               </div>
             )
           })}
@@ -316,11 +316,11 @@ export default function Sales({ data, filter, customFrom, customTo }) {
 
       {/* Call log */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: '#222224' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#666669' }}>Call Log</div><div style={{ flex: 1, height: 1, background: '#222224' }} />
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Call Log</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ marginBottom: 20 }}>
         {filtered.length === 0
-          ? <div style={{ color: '#444446', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>
+          ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>
           : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} />)}
       </div>
 

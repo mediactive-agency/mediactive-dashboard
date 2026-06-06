@@ -72,3 +72,74 @@ body {
 
 button { font-family: 'Inter', sans-serif; cursor: pointer; }
 a { text-decoration: none; }
+
+/* ── Mobile responsive ────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Layout */
+  .main-content { margin-left: 0 !important; }
+  .hamburger { display: flex !important; }
+
+  /* Typography */
+  body { font-size: 14px; }
+
+  /* Grids → single column */
+  [style*="grid-template-columns: repeat(3"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="grid-template-columns: repeat(4"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  [style*="grid-template-columns: 3fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Flex rows → wrap */
+  [style*="display: flex"][style*="gap: 10"],
+  [style*="display: flex"][style*="gap: 12"],
+  [style*="display: flex"][style*="gap: 14"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Funnel — scroll horizontally instead of cramping */
+  [style*="alignItems: 'stretch'"] {
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+  }
+
+  /* Filter bar */
+  [style*="gap: 2"][style*="background: var(--filter-bg)"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Cards full width */
+  [style*="flex: 1, minWidth: 0"] {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Calendar cells smaller */
+  [style*="height: 120"] {
+    height: 72px !important;
+    padding: 5px 6px !important;
+  }
+
+  /* Outreach var cards */
+  [style*="margin: '0 48px'"] {
+    margin: 0 12px !important;
+  }
+
+  /* Page title */
+  [style*="fontSize: 28, fontWeight: 800"] {
+    font-size: 22px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}

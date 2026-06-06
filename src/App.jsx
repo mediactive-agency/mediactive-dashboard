@@ -40,23 +40,14 @@ export default function App() {
 
   const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks' }
 
-  const subText = loading
-    ? 'Loading data...'
-    : error ? 'Error loading data'
-    : loadedAt ? `Updated ${loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`
-    : ''
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar active={page} onNav={setPage} />
+      <Sidebar active={page} onNav={setPage} loadedAt={loadedAt} loading={loading} error={error} />
 
       <main style={{ marginLeft: 240, flex: 1, padding: '36px 40px', minHeight: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, gap: 16, flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{PAGE_TITLES[page]}</div>
-            <div style={{ fontSize: 13, color: loading ? '#F59E0B' : error ? '#EF4444' : '#555558', marginTop: 5, animation: loading ? 'pulse 1.2s infinite' : 'none' }}>
-              {subText}
-            </div>
           </div>
           <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} />
         </div>
@@ -83,7 +74,6 @@ export default function App() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
       `}</style>
     </div>
   )

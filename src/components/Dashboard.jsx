@@ -122,7 +122,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     OBJ_CATS.forEach(c => objCounts[c.key] = 0)
     sf.forEach(r => {
       if (!r[4]) return
-      r[4].split('|').map(s => s.trim()).filter(s => s.length > 2).forEach(raw => {
+      String(r[4]||'').split('|').map(s => s.trim()).filter(s => s.length > 2).forEach(raw => {
         const key = normObj(raw); if (key) objCounts[key]++
       })
     })

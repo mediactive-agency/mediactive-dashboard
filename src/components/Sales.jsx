@@ -122,7 +122,7 @@ function CallCard({ r, linkedinMap }) {
   }
 
   return (
-    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)' }}>
+    <div style={{ background: 'var(--card)', borderRadius: 14, padding: '24px 28px', marginBottom: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
@@ -322,10 +322,6 @@ export default function Sales({ data, filter, customFrom, customTo }) {
         {filtered.length === 0
           ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>
           : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} />)}
-      </div>
-
-      <div style={{ marginTop: 36, textAlign: 'center', color: '#222224', fontSize: 10 }}>
-        MEDIACTIVE · SALES CALLS · {TODAY.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
       </div>
     </div>
   )

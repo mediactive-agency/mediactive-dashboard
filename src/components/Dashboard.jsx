@@ -181,7 +181,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ display: 'flex', alignItems: 'stretch', width: '100%' }}>
           {funnelSteps.map((step, i) => (
             <>
-              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: 'var(--card)', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
+              <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: 'var(--card)', boxShadow: 'none', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
                 <div style={{ marginBottom: 10, opacity: 0.5, color: step.color }}>{step.icon}</div>
                 <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 6, textAlign: 'center', lineHeight: 1.4 }}>{step.label}</div>

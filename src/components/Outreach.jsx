@@ -75,11 +75,11 @@ function VarCard({ v, dimmed, selected, onToggle }) {
   return (
     <div
       onClick={onToggle}
-      style={{ background: '#161618', borderRadius: 12, padding: '18px 22px', marginBottom: 14, cursor: 'pointer', outline: selected ? '2px solid #FFFFFF' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
+      style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 22px', marginBottom: 14, cursor: 'pointer', outline: selected ? '2px solid #FFFFFF' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
     >
       <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? '#444446' : '#F3F4F6', marginBottom: 16 }}>
         {v.name}
-        {dimmed && v.lastUsed && <span style={{ fontSize: 10, color: '#2a2a2c', fontWeight: 400, marginLeft: 10 }}>Last: {v.lastUsed}</span>}
+        {dimmed && v.lastUsed && <span style={{ fontSize: 10, color: 'var(--text5)', fontWeight: 400, marginLeft: 10 }}>Last: {v.lastUsed}</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -101,11 +101,11 @@ function VarCard({ v, dimmed, selected, onToggle }) {
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        <div style={{ width: 1, background: '#222224', height: 44, margin: '0 28px', flexShrink: 0 }} />
+        <div style={{ width: 1, background: 'var(--border)', height: 44, margin: '0 28px', flexShrink: 0 }} />
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {rates.map((r, i) => (
             <>
-              {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 32, background: '#222224', margin: '0 20px', flexShrink: 0 }} />}
+              {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 20px', flexShrink: 0 }} />}
               <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 <div style={{ fontSize: 24, fontWeight: 800, color: dimmed ? '#333336' : r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
                 <div style={{ fontSize: 10, color: dimmed ? '#2a2a2c' : '#555558', letterSpacing: '0.05em' }}>{r.label}</div>
@@ -117,7 +117,7 @@ function VarCard({ v, dimmed, selected, onToggle }) {
               <div style={{ width: 1, height: 32, background: dimmed ? '#1a1a1c' : '#FFFFFF', margin: '0 20px', flexShrink: 0 }} />
               {secRates.map((r, i) => (
                 <>
-                  {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 32, background: '#222224', margin: '0 16px', flexShrink: 0 }} />}
+                  {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 16px', flexShrink: 0 }} />}
                   <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                     <div style={{ fontSize: 20, fontWeight: 700, color: dimmed ? '#333336' : '#888889', lineHeight: 1 }}>{r.val}{r.suffix}</div>
                     <div style={{ fontSize: 10, color: dimmed ? '#2a2a2c' : '#444446', letterSpacing: '0.05em' }}>{r.label}</div>
@@ -227,25 +227,25 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
 
   const Divider = ({ label, dim }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-      <div style={{ flex: 1, height: 1, background: '#222224' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dim ? '#2a2a2c' : '#666669' }}>{label}</div>
-      <div style={{ flex: 1, height: 1, background: '#222224' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
   )
 
   return (
     <div>
       <Divider label="Total Active Funnel" />
-      <div style={{ background: '#161618', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
         {tot.A === 0
-          ? <div style={{ textAlign: 'center', padding: 40, color: '#333336', fontSize: 12 }}>No data for selected period</div>
+          ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
           : <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {mainSteps.map((step, i) => (
                 <>
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                     <div style={{ fontSize: 30, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: '#555558', whiteSpace: 'nowrap' }}>{step.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < mainSteps.length - 1 && (
                     <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
@@ -256,26 +256,26 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
                 </>
               ))}
             </div>
-            <div style={{ width: 1, background: '#2a2a2c', height: 52, margin: '0 32px', flexShrink: 0 }} />
+            <div style={{ width: 1, background: 'var(--border2)', height: 52, margin: '0 32px', flexShrink: 0 }} />
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {mainRates.map((r, i) => (
                 <>
-                  {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 40, background: '#2a2a2c', margin: '0 24px', flexShrink: 0 }} />}
+                  {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 40, background: 'var(--border2)', margin: '0 24px', flexShrink: 0 }} />}
                   <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                    <div style={{ fontSize: 10, color: '#555558', letterSpacing: '0.05em' }}>{r.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
                   </div>
                 </>
               ))}
               {(tot.avgFu !== null || tot.avgDays !== null) && (
                 <>
-                  <div style={{ width: 1, height: 40, background: '#FFFFFF', margin: '0 24px', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 40, background: 'var(--upcoming-card-bg)', margin: '0 24px', flexShrink: 0 }} />
                   {[tot.avgFu !== null ? { label: 'Avg FU', val: tot.avgFu, suffix: 'x' } : null, tot.avgDays !== null ? { label: 'Avg Days', val: tot.avgDays, suffix: 'd' } : null].filter(Boolean).map((r, i) => (
                     <>
-                      {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 36, background: '#2a2a2c', margin: '0 20px', flexShrink: 0 }} />}
+                      {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 36, background: 'var(--border2)', margin: '0 20px', flexShrink: 0 }} />}
                       <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                         <div style={{ fontSize: 24, fontWeight: 700, color: '#888889', lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                        <div style={{ fontSize: 10, color: '#444446', letterSpacing: '0.05em' }}>{r.label}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
                       </div>
                     </>
                   ))}
@@ -288,7 +288,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
       <Divider label="By Variable — click to compare" />
 
       {selected.size > 0 && (
-        <div style={{ background: '#FFFFFF', borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
+        <div style={{ background: 'var(--upcoming-card-bg)', borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: '#333333', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
@@ -296,7 +296,7 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
                 <>
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                    <div style={{ fontSize: 10, color: '#555558', whiteSpace: 'nowrap' }}>{step.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < arr.length - 1 && (
                     <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
@@ -315,10 +315,10 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
                 { label:'ABR', val: agg.A>0 ? +((agg.C/agg.A)*100).toFixed(1):0, color:'#A78BFA' },
               ].map((r,i) => (
                 <>
-                  {i > 0 && <div key={`rd${i}`} style={{ width: 1, height: 36, background: '#2a2a2c', margin: '0 20px' }} />}
+                  {i > 0 && <div key={`rd${i}`} style={{ width: 1, height: 36, background: 'var(--border2)', margin: '0 20px' }} />}
                   <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
                     <div style={{ fontSize: 24, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}%</div>
-                    <div style={{ fontSize: 10, color: '#555558' }}>{r.label}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text4)' }}>{r.label}</div>
                   </div>
                 </>
               ))}
@@ -327,14 +327,14 @@ export default function Outreach({ data, filter, customFrom, customTo }) {
         </div>
       )}
 
-      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />) : <div style={{ textAlign: 'center', padding: 40, color: '#333336', fontSize: 12 }}>No data for selected period</div>}
+      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />) : <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>}
 
       {inactiveVars.length > 0 && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 16px' }}>
-            <div style={{ flex: 1, height: 1, background: '#222224' }} />
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#2a2a2c' }}>Inactive — not used in last 14d</div>
-            <div style={{ flex: 1, height: 1, background: '#222224' }} />
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text5)' }}>Inactive — not used in last 14d</div>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} />)}
         </>

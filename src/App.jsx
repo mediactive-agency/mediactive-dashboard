@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
+import { useTheme } from './hooks/useTheme'
 import Sidebar from './components/Sidebar'
 import FilterBar from './components/FilterBar'
 import Dashboard from './components/Dashboard'
@@ -26,6 +27,7 @@ export default function App() {
   const [dailyStats, setDailyStats] = useState(null)
 
   const { data, loading, error, reload, loadedAt } = useData()
+  const { theme, toggle, isManual } = useTheme()
 
   function handleFilter(key) {
     setFilter(key)
@@ -42,32 +44,32 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar active={page} onNav={setPage} loadedAt={loadedAt} loading={loading} error={error} />
+      <Sidebar active={page} onNav={setPage} loadedAt={loadedAt} loading={loading} error={error} theme={theme} onThemeToggle={toggle} isManualTheme={isManual} />
 
       <main style={{ marginLeft: 240, flex: 1, padding: '36px 40px', minHeight: '100vh' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{PAGE_TITLES[page]}</div>
+            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
           </div>
-          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} />
+          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} theme={theme} />
         </div>
 
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: 16 }}>
-            <div style={{ width: 32, height: 32, border: '2px solid #FFFFFF', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-            <div style={{ color: '#666669', fontSize: 12 }}>Fetching live data...</div>
+            <div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <div style={{ color: 'var(--text3)', fontSize: 12 }}>Fetching live data...</div>
           </div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: 60 }}>
             <div style={{ color: '#EF4444', marginBottom: 8 }}>{error}</div>
-            <button onClick={reload} style={{ padding: '8px 18px', background: '#FFFFFF', color: '#000', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Retry</button>
+            <button onClick={reload} style={{ padding: '8px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Retry</button>
           </div>
         ) : data ? (
           <>
-            {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} />}
-            {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
-            {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
-            {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} />}
+            {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} />}
+            {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
+            {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} />}
+            {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} />}
           </>
         ) : null}
       </main>

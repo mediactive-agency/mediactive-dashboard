@@ -210,7 +210,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
     OBJ_CATS.forEach(c => catCounts[c.key] = 0)
     filtered.forEach(r => {
       if (!r[4]) return
-      r[4].split('|').map(s => s.trim()).filter(s => s.length > 2).forEach(raw => {
+      String(r[4]||'').split('|').map(s => s.trim()).filter(s => s.length > 2).forEach(raw => {
         const cat = normalizeObjection(raw); if (cat) catCounts[cat.key]++
       })
     })

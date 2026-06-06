@@ -68,6 +68,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 button { font-family: 'Inter', sans-serif; cursor: pointer; }

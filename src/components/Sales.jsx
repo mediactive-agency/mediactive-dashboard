@@ -73,7 +73,7 @@ const UPCOMING_CALLS = [
   { name: 'Savannah Adkins',  datetime: new Date('2026-06-12T18:00:00Z'), date: '12 Jun 2026', time: '20:00', confirmed: true,  meet: 'https://calendly.com/events/21a9c7c6-b668-4334-82f1-320d4c1d5f80/google_meet' },
 ]
 
-function CallCard({ r, linkedinMap }) {
+function CallCard({ r, linkedinMap, isMobile }) {
   const res = (() => {
     const v = String(r[5]||'').toLowerCase()
     if (v === 'yes') return { color: '#34D399', label: 'Closed' }
@@ -330,7 +330,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
       <div style={{ marginBottom: 20 }}>
         {filtered.length === 0
           ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>
-          : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} />)}
+          : [...filtered].reverse().map((r, i) => <CallCard key={i} r={r} linkedinMap={linkedinMap} isMobile={isMobile} />)}
       </div>
     </div>
   )

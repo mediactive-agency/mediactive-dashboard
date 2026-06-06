@@ -184,7 +184,7 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     while (cells.length % 7 !== 0) cells.push(null)
     return (
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: isMobile ? 16 : 20, fontWeight: 800, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
+        <div style={{ fontSize: isMobile ? 20 : 20, fontWeight: 800, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: isMobile ? 10 : 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isMobile ? 2 : 4, marginBottom: 4 }}>
             {WDAYS.map(d => <div key={d} style={{ fontSize: isMobile ? 8 : 10, color: 'var(--text4)', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}

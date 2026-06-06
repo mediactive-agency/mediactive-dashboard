@@ -10,7 +10,7 @@ export default function FilterBar({ active, onFilter, customFrom, customTo, onCu
             onClick={() => onFilter(f.key)}
             style={{
               padding: '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
-              fontSize: 11, fontFamily: 'DM Sans, sans-serif',
+              fontSize: 11, fontFamily: "'Inter Display', 'Inter', sans-serif",
               background: active === f.key ? '#FFFFFF' : 'transparent',
               color: active === f.key ? '#000' : '#666669',
               fontWeight: active === f.key ? 700 : 400,
@@ -29,13 +29,13 @@ export default function FilterBar({ active, onFilter, customFrom, customTo, onCu
                 type="date"
                 value={val}
                 onChange={e => setter(e.target.value)}
-                style={{ background: '#0C0C0E', border: '1px solid #2a2a2c', borderRadius: 7, color: '#F3F4F6', fontFamily: 'DM Sans, sans-serif', fontSize: 13, padding: '7px 12px', outline: 'none', width: 140 }}
+                style={{ background: '#0C0C0E', border: '1px solid #2a2a2c', borderRadius: 7, color: '#F3F4F6', fontFamily: "'Inter Display', 'Inter', sans-serif", fontSize: 13, padding: '7px 12px', outline: 'none', width: 140 }}
               />
             </div>
           ))}
           <button
             onClick={onCustomApply}
-            style={{ padding: '8px 18px', background: '#FFFFFF', color: '#000', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12, fontFamily: 'DM Sans, sans-serif' }}
+            style={{ padding: '8px 18px', background: '#FFFFFF', color: '#000', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12, fontFamily: "'Inter Display', 'Inter', sans-serif" }}
           >Apply</button>
         </div>
       )}

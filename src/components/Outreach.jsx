@@ -81,16 +81,48 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
         {v.name}
         {dimmed && v.lastUsed && <span style={{ fontSize: 10, color: 'var(--text5)', fontWeight: 400, marginLeft: 10 }}>Last: {v.lastUsed}</span>}
       </div>
-      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+      {isMobile ? (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+            {steps.map((step, i) => {
+              const nextPct = i < steps.length - 1 && step.val > 0
+                ? +((steps[i+1].val / step.val)*100).toFixed(1)+'%' : null
+              return (
+                <div key={i} style={{ background: 'var(--bg)', borderRadius: 10, padding: '12px 14px' }}>
+                  <div style={{ fontSize: 11, color: dimmed ? 'var(--text4)' : 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{step.label}</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                  {nextPct && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: dimmed ? 'var(--text4)' : 'var(--text3)' }}>{nextPct}</span>
+                      <svg width="10" height="14" viewBox="0 0 10 18" fill="none" stroke={dimmed ? 'var(--text4)' : 'var(--text3)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="1" x2="5" y2="14"/><polyline points="1 10 5 15 9 10"/>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+            {[...rates, ...secRates].map(r => (
+              <div key={r.label}>
+                <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: dimmed ? 'var(--text5)' : r.color }}>{r.val}{r.suffix}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           {steps.map((step, i) => (
             <>
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: dimmed ? 'var(--text5)' : step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
                 <div style={{ fontSize: 10, color: dimmed ? 'var(--text5)' : 'var(--text3)', whiteSpace: 'nowrap' }}>{step.label}</div>
               </div>
               {i < steps.length - 1 && (
-                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
+                <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: dimmed ? 'var(--text4)' : 'var(--text)', lineHeight: 1 }}>
                     {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
                   </div>
@@ -100,7 +132,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
             </>
           ))}
         </div>
-        <div style={{ flex: isMobile ? 0 : 1 }} />
+        <div style={{ flex: 1 }} />
         <div style={{ width: 1, background: 'var(--border)', height: 44, margin: '0 28px', flexShrink: 0 }} />
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {rates.map((r, i) => (
@@ -114,7 +146,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
           ))}
           {secRates.length > 0 && (
             <>
-              <div style={{ width: 1, height: 32, background: dimmed ? '#1a1a1c' : '#FFFFFF', margin: '0 20px', flexShrink: 0 }} />
+              <div style={{ width: 1, height: 32, background: 'var(--bar-divider)', margin: '0 20px', flexShrink: 0 }} />
               {secRates.map((r, i) => (
                 <>
                   {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 16px', flexShrink: 0 }} />}
@@ -128,6 +160,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
           )}
         </div>
       </div>
+      )}
     </div>
   )
 }

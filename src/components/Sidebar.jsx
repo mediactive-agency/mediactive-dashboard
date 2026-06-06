@@ -39,7 +39,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
               color: active === item.key ? '#F3F4F6' : '#88888B',
               background: active === item.key ? '#0d1825' : 'none',
               cursor: 'pointer', marginBottom: 3, transition: 'all 0.15s',
-              fontFamily: 'DM Sans, sans-serif',
+              fontFamily: "'Inter Display', 'Inter', sans-serif",
             }}
           >
             {item.icon}
@@ -56,16 +56,25 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error }) {
       <div style={{ padding: '16px 20px', borderTop: '1px solid #222224' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: error ? '#EF4444' : '#F59E0B',
-            animation: 'pulse-dot 2s infinite', flexShrink: 0,
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981',
+            animation: 'pulse-dot 2s infinite',
           }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 11, color: '#888889', fontWeight: 500 }}>
-              {loading ? 'Loading...' : error ? 'Error' : 'Live'}
-            </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', fontWeight: 600 }}>
+                {loading ? 'Loading...' : error ? 'Error' : 'Live'}
+              </span>
+              {loadedAt && !loading && !error && (
+                <span style={{ fontSize: 11, color: '#555558' }}>
+                  {loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              )}
+            </div>
             {loadedAt && !loading && !error && (
-              <span style={{ fontSize: 11, color: '#555558' }}>{loadedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span style={{ fontSize: 10, color: '#444446' }}>
+                {loadedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
             )}
           </div>
         </div>

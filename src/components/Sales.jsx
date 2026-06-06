@@ -179,7 +179,7 @@ function CallCard({ r, linkedinMap }) {
   )
 }
 
-export default function Sales({ data, filter, customFrom, customTo }) {
+export default function Sales({ data, filter, customFrom, customTo, isMobile }) {
   const { filtered, linkedinMap, stats } = useMemo(() => {
     if (!data) return { filtered: [], linkedinMap: {}, stats: null }
     const rows = data.sales.slice(1).filter(r => r && r[0])
@@ -232,7 +232,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexDirection: isMobile ? 'column' : 'row' }}>
         {upcomingNow.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13 }}>No upcoming calls</div> : upcomingNow.map(c => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           return (
@@ -259,7 +259,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
         {[
           { label: 'Total Calls', value: total, suffix: '', sub: 'logged', color: '#60A5FA' },
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },
@@ -278,7 +278,7 @@ export default function Sales({ data, filter, customFrom, customTo }) {
       </div>
 
       {/* Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 20 }}>
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
           {OBJ_CATS.map(cat => {

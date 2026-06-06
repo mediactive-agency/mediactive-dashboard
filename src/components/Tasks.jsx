@@ -15,13 +15,12 @@ const ICO_CHECK = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 const ICO_X     = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const ICO_FIRE  = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg>
 
-export default function Tasks({ data, onDailyStats }) {
+export default function Tasks({ data, onDailyStats, filter }) {
   const now = new Date(TODAY)
   const today = new Date(now)
   if (now.getHours() < 3) today.setDate(today.getDate() - 1)
   const todayStr = dateStr(today)
 
-  const [viewMonth, setViewMonth] = useState(null) // null = all
 
   const stats = useMemo(() => {
     if (!data) return null
@@ -144,7 +143,10 @@ export default function Tasks({ data, onDailyStats }) {
   const NOT_TODAY = <span style={{ fontSize: 36, fontWeight: 900, color: '#333336', lineHeight: 1 }}>Not today</span>
 
   const AVAILABLE_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06']
-  const showMonths = viewMonth ? [viewMonth] : AVAILABLE_MONTHS
+  const showMonths = (filter === '30d') ? ['2026-05', '2026-06']
+    : (filter === '7d' || filter === '14d' || filter === 'today' || filter === 'yesterday')
+      ? [todayStr.slice(0, 7)]
+      : AVAILABLE_MONTHS
 
   function buildDayCell(ds2, d) {
     const isWeekend = d.getDay() === 0 || d.getDay() === 6
@@ -215,16 +217,7 @@ export default function Tasks({ data, onDailyStats }) {
       <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 14, marginBottom: 20, alignItems: 'start' }}>
         {/* Calendar */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#555558', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Streak Calendar</div>
-            <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
-              <button onClick={() => setViewMonth(null)} style={{ padding: '3px 10px', borderRadius: 6, border: 'none', fontSize: 10, background: !viewMonth ? '#FFFFFF' : 'transparent', color: !viewMonth ? '#000' : '#666669', fontWeight: !viewMonth ? 700 : 400, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>All</button>
-              {AVAILABLE_MONTHS.map(m => {
-                const [, mo] = m.split('-'); const label = ['Mar','Apr','May','Jun'][parseInt(mo)-3]
-                return <button key={m} onClick={() => setViewMonth(m)} style={{ padding: '3px 10px', borderRadius: 6, border: 'none', fontSize: 10, background: viewMonth === m ? '#FFFFFF' : 'transparent', color: viewMonth === m ? '#000' : '#666669', fontWeight: viewMonth === m ? 700 : 400, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>{label}</button>
-              })}
-            </div>
-          </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#555558', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Streak Calendar</div>
           {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
         </div>
 

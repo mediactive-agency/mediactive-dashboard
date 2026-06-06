@@ -3,7 +3,7 @@ import './index.css'
 import { useData } from './hooks/useData'
 import { useTheme } from './hooks/useTheme'
 import { useWindowSize } from './hooks/useWindowSize'
-import Sidebar from './components/Sidebar'
+import Sidebar, { TogglePill } from './components/Sidebar'
 import FilterBar from './components/FilterBar'
 import Dashboard from './components/Dashboard'
 import Outreach from './components/Outreach'
@@ -42,7 +42,7 @@ export default function App() {
   }
 
   const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks' }
-  const pad = isMobile ? '0 16px' : '0 40px'
+  const isDark = theme === 'dark'
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -55,7 +55,7 @@ export default function App() {
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>
         {/* Topbar */}
-        <div style={{ padding: isMobile ? '20px 16px 0' : '28px 40px 0', display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div style={{ padding: isMobile ? '20px 16px 0' : '28px 40px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isMobile && (
               <button onClick={() => setMobileOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text)', padding: 4, cursor: 'pointer', flexShrink: 0 }}>
@@ -64,7 +64,12 @@ export default function App() {
             )}
             <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
           </div>
-          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
+
+          {/* Filter + toggle on desktop */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
+            {!isMobile && <TogglePill isDark={isDark} onToggle={toggle} />}
+          </div>
         </div>
 
         <div style={{ padding: isMobile ? '0 16px 32px' : '0 40px 40px' }}>

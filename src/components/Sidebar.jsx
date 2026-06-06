@@ -74,9 +74,9 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
               key={item.key}
               onClick={() => { onNav(item.key); onMobileClose?.() }}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
                 borderRadius: 8, border: 'none', width: '100%', textAlign: 'left',
-                fontSize: 15, fontWeight: active === item.key ? 600 : 400,
+                fontSize: 17, fontWeight: active === item.key ? 600 : 400,
                 color: active === item.key ? 'var(--text)' : 'var(--text3)',
                 background: active === item.key ? 'var(--sidebar-active)' : 'transparent',
                 cursor: 'pointer', marginBottom: 4, transition: 'all 0.15s',

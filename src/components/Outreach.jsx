@@ -249,7 +249,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                   </div>
                   {i < mainSteps.length - 1 && (
                     <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#FFFFFF' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       {ARROW(false)}
                     </div>
                   )}

@@ -84,7 +84,7 @@ function getGreeting() {
   return 'Good night, Kryštof'
 }
 
-export default function Dashboard({ data, filter, customFrom, customTo, dailyStats }) {
+export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile }) {
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -178,7 +178,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>Full Sales Funnel</div>
-        <div style={{ display: 'flex', alignItems: 'stretch', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', width: '100%', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: isMobile ? 'auto' : 'hidden' }}>
           {funnelSteps.map((step, i) => (
             <>
               <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 12px', background: 'var(--card)', boxShadow: 'none', borderRadius: i === 0 ? '12px 0 0 12px' : i === funnelSteps.length - 1 ? '0 12px 12px 0' : 0 }}>
@@ -188,7 +188,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
               </div>
               {i < funnelSteps.length - 1 && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 4px', background: 'var(--card)', gap: 6, flexShrink: 0, width: 80 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', lineHeight: 1 }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
                     {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
                   </div>
                   {ARROW}
@@ -200,7 +200,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
       {/* Rate cards */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'nowrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(6,1fr)', gap: 10, marginBottom: 20 }}>
         {rates.map(r => (
           <div key={r.label} style={{ flex: 1, minWidth: 0, background: 'var(--card)', borderRadius: 12, padding: '20px 20px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
@@ -218,7 +218,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
             <div key={l} style={s({})}>
@@ -245,7 +245,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>

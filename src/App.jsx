@@ -67,7 +67,7 @@ export default function App() {
             {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} />}
             {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
             {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
-            {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} />}
+            {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} />}
           </>
         ) : null}
       </main>

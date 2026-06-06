@@ -199,7 +199,11 @@ export default function Tasks({ data, onDailyStats }) {
             {WDAYS.map(d => <div key={d} style={{ fontSize: 10, color: '#555558', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
-            {cells.map((d, i) => d ? buildDayCell(dateStr(d), d) : <div key={i} style={{ height: 120 }} />)}
+            {cells.map((d, i) => {
+              if (!d) return <div key={`empty-${i}`} style={{ height: 120 }} />
+              const ds2 = dateStr(d)
+              return <div key={ds2}>{buildDayCell(ds2, d)}</div>
+            })}
           </div>
         </div>
       </div>

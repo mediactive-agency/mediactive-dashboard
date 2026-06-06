@@ -162,7 +162,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
     const partial = (t1 || (!isWeekend && t2)) && !complete
 
     let bg, textC, numC
-    if (isWeekend)        { bg='#1e1e20'; textC='#444446'; numC='#444446' }
+    if (isWeekend)        { bg='var(--cal-weekend)'; textC='var(--cal-weekend-text)'; numC='var(--cal-weekend-text)' }
     else if (isToday)     { bg=complete?'#34D399':partial?'#F59E0B':'#EF4444'; textC='#000000'; numC='#00000099' }
     else if (complete)    { bg='#34D39930'; textC='#34D399'; numC='#34D39988' }
     else if (partial)     { bg='#F59E0B28'; textC='#F59E0B'; numC='#F59E0B88' }
@@ -224,7 +224,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
         {/* Sidebar widgets */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {/* Outreach */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>OUTREACH</div>
               <div style={{ color: task1Color }}>{isCheckWeekend ? '' : task1Done ? ICO_CHECK : ICO_X}</div>
@@ -243,7 +243,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Followups */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>FOLLOWUPS</div>
               <div style={{ color: task2Color }}>{isCheckWeekend ? '' : task2Done ? ICO_CHECK : (fuTotal === 0 ? '' : ICO_X)}</div>
@@ -257,7 +257,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
           </div>
 
           {/* Positive Followups */}
-          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)' }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--text4)', letterSpacing: '0.08em', marginBottom: 14 }}>POSITIVE FOLLOWUPS</div>
               <div style={{ color: pfuColor }}>{isCheckWeekend ? '' : pfuTask3Done ? (pfuTotal === 0 ? '' : ICO_CHECK) : ICO_X}</div>
@@ -288,9 +288,6 @@ export default function Tasks({ data, onDailyStats, filter }) {
         </div>
       </div>
 
-      <div style={{ marginTop: 36, textAlign: 'center', color: '#222224', fontSize: 10 }}>
-        MEDIACTIVE · DAILY TASKS · {TODAY.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-      </div>
     </div>
   )
 }

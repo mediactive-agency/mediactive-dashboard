@@ -50,7 +50,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
       )}
 
       <aside className={`sidebar${mobileOpen ? ' sidebar-open' : ''}`} style={{
-        width: 240, height: '100vh',
+        width: 240, height: '100dvh',
         background: 'var(--bg2)',
         borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column',
@@ -90,7 +90,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         </nav>
 
         {/* Footer — always at bottom */}
-        <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+        <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <TogglePill isDark={isDark} onToggle={onThemeToggle} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
@@ -110,7 +110,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
 
       {/* Desktop sidebar — always visible */}
       <aside style={{
-        width: 240, height: '100vh',
+        width: 240, height: '100dvh',
         background: 'var(--bg2)',
         borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column',
@@ -141,7 +141,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
             </button>
           ))}
         </nav>
-        <div style={{ padding: '14px 20px 18px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+        <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <TogglePill isDark={isDark} onToggle={onThemeToggle} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>

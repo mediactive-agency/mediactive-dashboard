@@ -15,7 +15,7 @@ const ICO_CHECK = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 const ICO_X     = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const ICO_FIRE  = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg>
 
-export default function Tasks({ data, onDailyStats, filter }) {
+export default function Tasks({ data, onDailyStats, filter, isMobile }) {
   const now = new Date(TODAY)
   const today = new Date(now)
   if (now.getHours() < 3) today.setDate(today.getDate() - 1)
@@ -170,7 +170,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
     else                  { bg='#EF444420'; textC='#EF4444'; numC='#EF444488' }
 
     return (
-      <div style={{ height: 120, borderRadius: 6, background: bg, padding: '8px 10px', outline: isToday ? '2px solid #FFFFFF' : 'none', outlineOffset: -2 }}>
+      <div style={{ height: isMobile ? 58 : 120, borderRadius: 6, background: bg, padding: isMobile ? '5px 6px' : '8px 10px', outline: isToday ? '2px solid #FFFFFF' : 'none', outlineOffset: -2 }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: textC }}>{d.getDate()}</div>
         {!isWeekend && (
           <div style={{ fontSize: 15, fontWeight: 700, color: numC, lineHeight: 1.5, marginTop: 6 }}>
@@ -214,7 +214,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: 14, marginBottom: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '3fr 1fr', gap: 14, marginBottom: 20, alignItems: 'start' }}>
         {/* Calendar */}
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Streak Calendar</div>
@@ -222,7 +222,7 @@ export default function Tasks({ data, onDailyStats, filter }) {
         </div>
 
         {/* Sidebar widgets */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: isMobile ? 'grid' : 'flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined, flexDirection: isMobile ? undefined : 'column', gap: 12, position: isMobile ? 'static' : 'sticky', top: 20 }}>
           {/* Outreach */}
           <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

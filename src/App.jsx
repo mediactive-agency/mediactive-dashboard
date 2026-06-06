@@ -25,6 +25,7 @@ export default function App() {
   const [appliedFrom, setAppliedFrom] = useState('')
   const [appliedTo, setAppliedTo] = useState('')
   const [dailyStats, setDailyStats] = useState(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const { data, loading, error, reload, loadedAt } = useData()
   const { theme, toggle, isManual } = useTheme()
@@ -36,22 +37,35 @@ export default function App() {
 
   function applyCustom() {
     if (!customFrom || !customTo) return
-    setAppliedFrom(customFrom); setAppliedTo(customTo)
-    setFilter('custom')
+    setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
   const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks' }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar active={page} onNav={setPage} loadedAt={loadedAt} loading={loading} error={error} theme={theme} onThemeToggle={toggle} isManualTheme={isManual} />
+      <Sidebar
+        active={page} onNav={setPage}
+        loadedAt={loadedAt} loading={loading} error={error}
+        theme={theme} onThemeToggle={toggle} isManualTheme={isManual}
+        mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)}
+      />
 
-      <main style={{ marginLeft: 240, flex: 1, padding: '36px 40px', minHeight: '100vh' }}>
+      <main className="main-content" style={{ marginLeft: 240, flex: 1, padding: '36px 40px', minHeight: '100vh', transition: 'margin 0.25s' }}>
+        {/* Topbar */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, gap: 16, flexWrap: 'wrap' }}>
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Hamburger — mobile only */}
+            <button
+              className="hamburger"
+              onClick={() => setMobileOpen(true)}
+              style={{ display: 'none', background: 'none', border: 'none', color: 'var(--text)', padding: 4 }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
             <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text)' }}>{PAGE_TITLES[page]}</div>
           </div>
-          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} theme={theme} />
+          <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} />
         </div>
 
         {loading ? (
@@ -76,6 +90,10 @@ export default function App() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
+        @media (max-width: 768px) {
+          .main-content { margin-left: 0 !important; padding: 20px 16px !important; }
+          .hamburger { display: flex !important; }
+        }
       `}</style>
     </div>
   )

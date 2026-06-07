@@ -308,7 +308,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                   </div>
                 )
               })}
-              <div style={{ borderTop: '1px solid var(--border)', marginTop: 10, paddingTop: 12, display: 'flex', gap: 20 }}>
+              <div style={{ borderTop: '1px solid var(--border)', marginTop: 0, padding: '14px 20px', display: 'flex', gap: 20 }}>
                 {mainRates.map(r => (
                   <div key={r.label}>
                     <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em' }}>{r.label}</div>
@@ -318,24 +318,49 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
               </div>
             </div>
           ) : (
-          <div style={{ display: 'flex', alignItems: 'stretch', overflow: 'hidden' }}>
-            {mainSteps.map((step, i) => (
-              <>
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px', background: 'var(--card)' }}>
-                  <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
-                  <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
-                </div>
-                {i < mainSteps.length - 1 && (
-                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                      {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
-                    </div>
-                    {ARROW(false)}
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--card)' }}>
+            {/* Funnel steps - left aligned */}
+            <div style={{ display: 'flex', alignItems: 'stretch' }}>
+              {mainSteps.map((step, i) => (
+                <>
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 16px', background: 'var(--card)' }}>
+                    <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
+                    <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
                   </div>
-                )}
-              </>
-            ))}
+                  {i < mainSteps.length - 1 && (
+                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
+                        {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
+                      </div>
+                      {ARROW(false)}
+                    </div>
+                  )}
+                </>
+              ))}
+            </div>
+            {/* Separator */}
+            <div style={{ width: 1, background: 'var(--border)', height: 52, margin: '0 28px', flexShrink: 0 }} />
+            {/* Stats */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              {mainRates.map((r, i) => (
+                <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
+                </div>
+              ))}
+              {(tot.avgFu !== null || tot.avgDays !== null) && (
+                <>
+                  <div style={{ width: 1, background: 'var(--border)', height: 36, flexShrink: 0 }} />
+                  {[tot.avgFu !== null ? { label: 'Avg FU', val: tot.avgFu, suffix: 'x' } : null, tot.avgDays !== null ? { label: 'Avg Days', val: tot.avgDays, suffix: 'd' } : null].filter(Boolean).map(r => (
+                    <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text3)', lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
           )}
       </div>

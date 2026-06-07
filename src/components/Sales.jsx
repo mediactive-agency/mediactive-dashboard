@@ -310,13 +310,12 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           {[5,4,3,2,1].map(q => {
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0
             return (
-              <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                <div style={{ fontSize: 12, color: Q_COLORS[q], fontWeight: 700, width: 16, textAlign: 'right', flexShrink: 0 }}>{q}</div>
-                <div style={{ fontSize: 11, color: 'var(--text4)', width: 44, flexShrink: 0 }}>{Q_LABELS[q]}</div>
+              <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <span style={{ fontSize: 13, color: Q_COLORS[q], background: Q_COLORS[q] + '18', border: `1px solid ${Q_COLORS[q]}33`, padding: '3px 12px', borderRadius: 20, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, minWidth: 72, textAlign: 'center' }}>{Q_LABELS[q]}</span>
                 <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2 }} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
               </div>
             )
           })}

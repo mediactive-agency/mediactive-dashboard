@@ -283,9 +283,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
-                <span style={{ fontSize: 11, color: 'var(--text3)' }}>{m.A.toLocaleString()} sent</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
                 {[
                   { val: m.A, lbl: 'INIT', color: '#60A5FA' },
                   { val: m.msr + '%', lbl: 'MSR', color: '#F472B6' },

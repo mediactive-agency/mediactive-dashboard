@@ -151,3 +151,9 @@ a { text-decoration: none; }
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+@media (max-width: 767px) {
+  .sales-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

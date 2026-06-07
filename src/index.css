@@ -68,7 +68,6 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   transition: background 0.3s ease, color 0.3s ease;
-  overflow-x: hidden;
 }
 
 button { font-family: 'Inter', sans-serif; cursor: pointer; }
@@ -156,4 +155,9 @@ a { text-decoration: none; }
   .sales-kpi-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+}
+
+/* Monthly stats - always 4 columns */
+.monthly-stats-grid {
+  grid-template-columns: repeat(4, 1fr) !important;
 }

@@ -34,19 +34,15 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
         allRows.push({ r, date: d })
       }
     }
-
     const dailyInitiated = {}, dailyFUDone = {}, dailyFUTotal = {}, dailyPFUDone = {}, dailyPFUTotal = {}
     const calDays = []
     { const start = new Date('2026-03-01T12:00:00'); const end = new Date(todayStr+'T12:00:00')
       for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) { if (d.getDay() !== 0 && d.getDay() !== 6) calDays.push(dateStr(d)) } }
-
     allRows.forEach(x => { dailyInitiated[x.date] = (dailyInitiated[x.date]||0) + 1 })
     allRows.forEach(x => {
-      const r = x.r
-      const varN = String(r[4]||'').toLowerCase()
+      const r = x.r; const varN = String(r[4]||'').toLowerCase()
       if (varN.includes('inmail')) return
-      const bookedDate = toDateStr(r[27])
-      const hasPositiveReply = !!(r[14] && toDateStr(r[14]))
+      const bookedDate = toDateStr(r[27]); const hasPositiveReply = !!(r[14] && toDateStr(r[14]))
       if (!hasPositiveReply) {
         const fuDoneDate = r[5] ? toDateStr(r[5]) : null
         if ((r[6]||r[7]||r[8]||r[9]) && !fuDoneDate) return
@@ -83,33 +79,23 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
         }
       }
     })
-
     const dailyFollowupTotal = {}, dailyFollowupDone = {}
     calDays.forEach(D => {
-      const t = (dailyFUTotal[D]||0) + (dailyPFUTotal[D]||0)
-      const d = (dailyFUDone[D]||0) + (dailyPFUDone[D]||0)
-      if (t > 0) dailyFollowupTotal[D] = t
-      if (d > 0) dailyFollowupDone[D] = d
+      const t = (dailyFUTotal[D]||0)+(dailyPFUTotal[D]||0), d2 = (dailyFUDone[D]||0)+(dailyPFUDone[D]||0)
+      if (t > 0) dailyFollowupTotal[D] = t; if (d2 > 0) dailyFollowupDone[D] = d2
     })
-
-    const checkDate = todayStr
-    const outreachCount = allRows.filter(x => x.date === checkDate).length
-    const fuTotal = dailyFUTotal[checkDate]||0, fuDone = dailyFUDone[checkDate]||0
-    const pfuTotal = dailyPFUTotal[checkDate]||0, pfuDone = dailyPFUDone[checkDate]||0
-
+    const outreachCount = allRows.filter(x => x.date === todayStr).length
+    const fuTotal = dailyFUTotal[todayStr]||0, fuDone = dailyFUDone[todayStr]||0
+    const pfuTotal = dailyPFUTotal[todayStr]||0, pfuDone = dailyPFUDone[todayStr]||0
     let streak = 0
     for (let i = 89; i >= 1; i--) {
       const d = new Date(today); d.setDate(d.getDate()-i)
       if (d.getDay() === 0 || d.getDay() === 6) continue
       const ds2 = dateStr(d)
-      const initiated = dailyInitiated[ds2]||0
-      const total = dailyFollowupTotal[ds2]||0
-      const done = dailyFollowupDone[ds2]||0
-      if (initiated >= 20 && (total === 0 || done >= total)) streak++
+      if ((dailyInitiated[ds2]||0) >= 20 && ((dailyFollowupTotal[ds2]||0) === 0 || (dailyFollowupDone[ds2]||0) >= (dailyFollowupTotal[ds2]||0))) streak++
       else break
     }
-
-    return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, checkDate }
+    return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak }
   }, [data])
 
   useMemo(() => {
@@ -117,9 +103,9 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
   }, [stats])
 
   if (!stats) return null
-  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, checkDate } = stats
+  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak } = stats
 
-  const checkDay = new Date(checkDate+'T12:00:00').getDay()
+  const checkDay = new Date(todayStr+'T12:00:00').getDay()
   const isCheckWeekend = checkDay === 0 || checkDay === 6
   const task1Done = outreachCount >= 20
   const task2Done = fuTotal === 0 || fuDone >= fuTotal
@@ -127,14 +113,12 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
   const task1Color = task1Done ? '#34D399' : '#EF4444'
   const task2Color = task2Done ? '#34D399' : fuTotal === 0 ? 'var(--text4)' : '#EF4444'
   const pfuColor = pfuTask3Done ? (pfuTotal === 0 ? 'var(--text4)' : '#34D399') : '#EF4444'
-
   const NOT_TODAY = <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--text4)', lineHeight: 1 }}>Not today</span>
 
   const AVAILABLE_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06']
   const showMonths = (filter === '30d') ? ['2026-05', '2026-06']
-    : (filter === '7d' || filter === '14d' || filter === 'today' || filter === 'yesterday')
-      ? [todayStr.slice(0, 7)]
-      : AVAILABLE_MONTHS
+    : (filter === '7d' || filter === '14d' || filter === 'today' || filter === 'yesterday') ? [todayStr.slice(0, 7)]
+    : AVAILABLE_MONTHS
 
   const cellH = isMobile ? 64 : 90
 
@@ -142,15 +126,11 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     const isWeekend = d.getDay() === 0 || d.getDay() === 6
     const isToday = ds2 === todayStr
     const initiated = dailyInitiated[ds2]||0
-    const total = dailyFollowupTotal[ds2]||0
-    const done = dailyFollowupDone[ds2]||0
+    const total = dailyFollowupTotal[ds2]||0, done = dailyFollowupDone[ds2]||0
     const fuT = dailyFUTotal[ds2]||0, fuD = dailyFUDone[ds2]||0
     const pfuT = dailyPFUTotal[ds2]||0, pfuD = dailyPFUDone[ds2]||0
-    const t1 = initiated >= 20
-    const t2 = total === 0 || done >= total
-    const complete = t1 && (isWeekend || t2)
-    const partial = (t1 || (!isWeekend && t2)) && !complete
-
+    const t1 = initiated >= 20, t2 = total === 0 || done >= total
+    const complete = t1 && (isWeekend || t2), partial = (t1 || (!isWeekend && t2)) && !complete
     let bg, textC, numC
     if (isWeekend)         { bg='var(--cal-weekend)'; textC='var(--cal-weekend-text)'; numC='var(--cal-weekend-text)' }
     else if (isToday)      { bg=complete?'#34D399':partial?'#F59E0B':'#EF4444'; textC='#000'; numC='rgba(0,0,0,0.7)' }
@@ -158,7 +138,6 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     else if (partial)      { bg='#F59E0B28'; textC='#F59E0B'; numC='#F59E0B88' }
     else if (initiated===0){ bg='var(--card)'; textC='var(--text5)'; numC='var(--border2)' }
     else                   { bg='#EF444420'; textC='#EF4444'; numC='#EF444488' }
-
     return (
       <div style={{ height: cellH, borderRadius: 6, background: bg, padding: isMobile ? '5px 5px' : '7px 8px', outline: isToday ? '2px solid var(--text)' : 'none', outlineOffset: -2, overflow: 'hidden' }}>
         <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: textC, lineHeight: 1 }}>{d.getDate()}</div>
@@ -175,8 +154,7 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
 
   function MonthGrid({ ym }) {
     const [yr, mo] = ym.split('-').map(Number)
-    const firstDay = new Date(yr, mo-1, 1)
-    const lastDay = new Date(yr, mo, 0)
+    const firstDay = new Date(yr, mo-1, 1), lastDay = new Date(yr, mo, 0)
     const padStart = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1
     const cells = []
     for (let i = 0; i < padStart; i++) cells.push(null)
@@ -184,24 +162,19 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     while (cells.length % 7 !== 0) cells.push(null)
     return (
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: isMobile ? 20 : 20, fontWeight: 800, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.02em' }}>{MONTHS_LONG[mo-1]} {yr}</div>
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: isMobile ? 10 : 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isMobile ? 2 : 4, marginBottom: 4 }}>
             {WDAYS.map(d => <div key={d} style={{ fontSize: isMobile ? 8 : 10, color: 'var(--text4)', textAlign: 'center', fontWeight: 600 }}>{d}</div>)}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: isMobile ? 2 : 4 }}>
-            {cells.map((d, i) => {
-              if (!d) return <div key={`e${i}`} style={{ height: cellH }} />
-              const ds2 = dateStr(d)
-              return <div key={ds2}>{buildDayCell(ds2, d)}</div>
-            })}
+            {cells.map((d, i) => { if (!d) return <div key={`e${i}`} style={{ height: cellH }} />; const ds2 = dateStr(d); return <div key={ds2}>{buildDayCell(ds2, d)}</div> })}
           </div>
         </div>
       </div>
     )
   }
 
-  // Task widget card
   const TaskCard = ({ label, color, checkIcon, value, total, showBar }) => (
     <div style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -214,44 +187,61 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
             <span style={{ fontSize: 40, fontWeight: 800, color, lineHeight: 1 }}>{value}</span>
             <span style={{ fontSize: 16, color: 'var(--text3)' }}>/ {total || '—'}</span>
           </div>
-          {showBar && (
-            <div style={{ height: 5, background: 'var(--border)', borderRadius: 3 }}>
-              <div style={{ height: '100%', width: `${Math.min((value / (total||1))*100, 100)}%`, background: color, borderRadius: 3, transition: 'width 0.5s' }} />
-            </div>
-          )}
+          {showBar && <div style={{ height: 5, background: 'var(--border)', borderRadius: 3 }}><div style={{ height: '100%', width: `${Math.min((value/(total||1))*100,100)}%`, background: color, borderRadius: 3 }} /></div>}
         </>
       )}
     </div>
   )
 
+  const StreakCard = () => (
+    <div style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ color: '#FB923C' }}>{ICO_FIRE}</span>
+        <span style={{ fontSize: 40, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{streak}</span>
+        <span style={{ fontSize: 14, color: 'var(--text3)' }}>days</span>
+      </div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {[['#34D39930','#34D399','Done'],['#F59E0B28','#F59E0B','Partial'],['#EF444420','#EF4444','Missed']].map(([bg,c,lbl]) => (
+          <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text4)' }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: bg, border: `1px solid ${c}40`, flexShrink: 0 }} />{lbl}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  if (isMobile) {
+    // Mobile: task cards 2x2 grid, then calendar full width
+    return (
+      <div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+          <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={20} showBar={true} />
+          <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
+          <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
+          <StreakCard />
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
+        {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
+      </div>
+    )
+  }
+
+  // Desktop: calendar left (flex:1), sticky sidebar right (fixed width 260px)
   return (
-    <div>
-      {/* TODAY'S TASKS — top priority */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
+    <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+      {/* Calendar */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
+        {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
+      </div>
+      {/* Sticky widgets */}
+      <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
         <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={20} showBar={true} />
         <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
         <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
-        {/* Streak card */}
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '18px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ color: '#FB923C' }}>{ICO_FIRE}</span>
-            <span style={{ fontSize: 40, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{streak}</span>
-            <span style={{ fontSize: 14, color: 'var(--text3)' }}>days</span>
-          </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {[['#34D39930','#34D399','Done'], ['#F59E0B28','#F59E0B','Partial'], ['#EF444420','#EF4444','Missed']].map(([bg, c, lbl]) => (
-              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text4)' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: bg, border: `1px solid ${c}40`, flexShrink: 0 }} />{lbl}
-              </div>
-            ))}
-          </div>
-        </div>
+        <StreakCard />
       </div>
-
-      {/* STREAK CALENDAR */}
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
-      {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
     </div>
   )
 }

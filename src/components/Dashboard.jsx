@@ -285,11 +285,11 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
-                {[
-                  { val: m.A, lbl: 'INIT', color: '#60A5FA' },
-                  { val: m.msr + '%', lbl: 'MSR', color: '#F472B6' },
-                  { val: m.C, lbl: 'BOOKED', color: '#34D399' },
-                  { val: m.abr + '%', lbl: 'ABR', color: '#F59E0B' },
+                 {[
+                   { val: m.A,  lbl: 'INIT',    color: '#60A5FA' },
+                   { val: m.MS, lbl: 'SEEN',    color: '#F472B6' },
+                   { val: m.B,  lbl: 'REPLIES', color: '#FB923C' },
+                   { val: m.C,  lbl: 'BOOKED',  color: '#34D399' },
                 ].map(x => (
                   <div key={x.lbl} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>

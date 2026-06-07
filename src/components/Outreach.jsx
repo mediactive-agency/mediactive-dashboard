@@ -249,11 +249,17 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
   const selVars = [...activeVars, ...inactiveVars].filter(v => selected.has(v.name))
   const agg = selVars.reduce((acc, v) => ({ A: acc.A+v.A, MS: acc.MS+v.MS, B: acc.B+v.B, C: acc.C+v.C }), { A:0,MS:0,B:0,C:0 })
 
+  const ICONS_OUT = {
+    initiated: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+    seen:      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+    reply:     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+    booked:    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  }
   const mainSteps = [
-    { val: tot.A, label: 'Initiated',  color: '#60A5FA' },
-    { val: tot.MS, label: 'Media Seen', color: '#F472B6' },
-    { val: tot.B, label: 'Pos. Replies', color: '#FB923C' },
-    { val: tot.C, label: 'Appt. Booked', color: '#A78BFA' },
+    { val: tot.A,  label: 'Initiated',    color: '#60A5FA', icon: ICONS_OUT.initiated },
+    { val: tot.MS, label: 'Media Seen',   color: '#F472B6', icon: ICONS_OUT.seen },
+    { val: tot.B,  label: 'Pos. Replies', color: '#FB923C', icon: ICONS_OUT.reply },
+    { val: tot.C,  label: 'Appt. Booked', color: '#A78BFA', icon: ICONS_OUT.booked },
   ]
   const mainRates = [
     { label: 'MSR', val: tot.msr, color: '#F472B6', suffix: '%' },
@@ -310,49 +316,24 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
               </div>
             </div>
           ) : (
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-              {mainSteps.map((step, i) => (
-                <>
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                    <div style={{ fontSize: 30, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text4)', whiteSpace: 'nowrap' }}>{step.label}</div>
-                  </div>
-                  {i < mainSteps.length - 1 && (
-                    <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
-                      {ARROW(false)}
+          <div style={{ display: 'flex', alignItems: 'stretch', overflow: 'hidden' }}>
+            {mainSteps.map((step, i) => (
+              <>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px' }}>
+                  <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
+                </div>
+                {i < mainSteps.length - 1 && (
+                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--border)' , gap: 4, flexShrink: 0, width: 80, borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
+                      {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
                     </div>
-                  )}
-                </>
-              ))}
-            </div>
-            <div style={{ width: 1, background: 'var(--border2)', height: 52, margin: '0 32px', flexShrink: 0 }} />
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {mainRates.map((r, i) => (
-                <>
-                  {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 40, background: 'var(--border2)', margin: '0 24px', flexShrink: 0 }} />}
-                  <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                    <div style={{ fontSize: 28, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
+                    {ARROW(false)}
                   </div>
-                </>
-              ))}
-              {(tot.avgFu !== null || tot.avgDays !== null) && (
-                <>
-                  <div style={{ width: 1, height: 40, background: 'var(--upcoming-card-bg)', margin: '0 24px', flexShrink: 0 }} />
-                  {[tot.avgFu !== null ? { label: 'Avg FU', val: tot.avgFu, suffix: 'x' } : null, tot.avgDays !== null ? { label: 'Avg Days', val: tot.avgDays, suffix: 'd' } : null].filter(Boolean).map((r, i) => (
-                    <>
-                      {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 36, background: 'var(--border2)', margin: '0 20px', flexShrink: 0 }} />}
-                      <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <div style={{ fontSize: 24, fontWeight: 700, color: '#888889', lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                        <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
-                      </div>
-                    </>
-                  ))}
-                </>
-              )}
-            </div>
+                )}
+              </>
+            ))}
           </div>
           )}
       </div>

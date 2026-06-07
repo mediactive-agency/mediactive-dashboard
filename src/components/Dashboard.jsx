@@ -305,9 +305,9 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
           {[
-            { l: 'Closed / Won', v: closed,   c: '#F59E0B' },
-            { l: 'Follow-up',    v: followUp,  c: '#FB923C' },
-            { l: 'Lost / No',    v: lost,      c: '#EF4444' },
+            { l: 'Closed',    v: closed,   c: '#34D399' },
+            { l: 'Follow-up', v: followUp,  c: '#F59E0B' },
+            { l: 'Lost',      v: lost,      c: '#EF4444' },
           ].map(x => (
             <div key={x.l} style={{ marginBottom: 11 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>

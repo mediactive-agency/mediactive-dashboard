@@ -16,6 +16,7 @@
   --sidebar-active: #0d1825;
   --nav-dot-active: #FFFFFF;
   --nav-dot:   #2a2a2c;
+  --bar-divider: #FFFFFF;
   --filter-bg: #161618;
   --filter-active-bg: #FFFFFF;
   --filter-active-text: #000000;
@@ -45,6 +46,7 @@ body.light {
   --sidebar-active: #EEF2FF;
   --nav-dot-active: #111827;
   --nav-dot:   #D1D5DB;
+  --bar-divider: #111827;
   --filter-bg: #FFFFFF;
   --filter-active-bg: #111827;
   --filter-active-text: #FFFFFF;

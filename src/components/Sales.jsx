@@ -290,13 +290,13 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Objections</div>
-          {OBJ_CATS.map(cat => {
+          {[...OBJ_CATS].sort((a, b) => (catCounts[b.key]||0) - (catCounts[a.key]||0)).map(cat => {
             const count = catCounts[cat.key]; const w = (count/maxCat)*100
             return (
               <div key={cat.key} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: 'var(--text2)', fontWeight: 500 }}>{cat.label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: count > 0 ? cat.color : '#333336', marginLeft: 8, flexShrink: 0 }}>{count}×</span>
+                  <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{cat.label}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: count > 0 ? cat.color : 'var(--text5)', marginLeft: 8, flexShrink: 0 }}>{count}×</span>
                 </div>
                 <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
                   <div style={{ height: '100%', width: `${w}%`, background: cat.color, borderRadius: 2, opacity: count > 0 ? 1 : 0.15 }} />
@@ -310,12 +310,14 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           {[5,4,3,2,1].map(q => {
             const count = qDist.find(d => d.score === q).count; const w = total > 0 ? (count/total)*100 : 0
             return (
-              <div key={q} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ fontSize: 13, color: Q_COLORS[q], background: Q_COLORS[q] + '18', border: `1px solid ${Q_COLORS[q]}33`, padding: '3px 12px', borderRadius: 20, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, minWidth: 72, textAlign: 'center' }}>{Q_LABELS[q]}</span>
-                <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2 }}>
-                  <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2 }} />
+              <div key={q} style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 500 }}>{Q_LABELS[q]}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: count > 0 ? Q_COLORS[q] : 'var(--text5)', marginLeft: 8, flexShrink: 0 }}>{count}×</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', width: 20, textAlign: 'right', flexShrink: 0 }}>{count}</div>
+                <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
+                  <div style={{ height: '100%', width: `${w}%`, background: Q_COLORS[q], borderRadius: 2, opacity: count > 0 ? 1 : 0.15 }} />
+                </div>
               </div>
             )
           })}

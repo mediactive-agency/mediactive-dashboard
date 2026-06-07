@@ -278,31 +278,33 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
   return (
     <div>
       <Divider label="Total Active Funnel" />
-      <div style={{ background: 'var(--card)', borderRadius: 14, padding: '12px 20px', marginBottom: 20, boxShadow: 'var(--card-shadow)' }}>
+      <div style={{ borderRadius: 12, marginBottom: 20, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
           : isMobile ? (
-            <div style={{ width: '100%' }}>
+            <div style={{ width: '100%', background: 'var(--card)' }}>
               {mainSteps.map((step, i) => {
                 const pct = i < mainSteps.length - 1 && step.val > 0
                   ? +((mainSteps[i+1].val / step.val)*100).toFixed(1)+'%' : null
                 return (
                   <div key={i}>
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 0', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 16 }}>
+                      <div style={{ color: step.color, opacity: 0.8, flexShrink: 0 }}>{step.icon}</div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 4 }}>{step.label}</div>
                         <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
                       </div>
                       {pct && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-                          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{pct}</span>
-                          <svg width="14" height="18" viewBox="0 0 14 22" fill="none" stroke="var(--text3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="7" y1="1" x2="7" y2="18"/><polyline points="2 13 7 19 12 13"/>
+                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{pct}</div>
+                          <svg width="16" height="22" viewBox="0 0 16 28" fill="none" stroke="var(--text3)" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="8" y1="2" x2="8" y2="22"/>
+                            <polyline points="2 16 8 23 14 16"/>
                           </svg>
                         </div>
                       )}
                     </div>
-                    {i < mainSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)' }} />}
+                    {i < mainSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)', marginLeft: 0 }} />}
                   </div>
                 )
               })}
@@ -319,13 +321,13 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
           <div style={{ display: 'flex', alignItems: 'stretch', overflow: 'hidden' }}>
             {mainSteps.map((step, i) => (
               <>
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px' }}>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px', background: 'var(--card)' }}>
                   <div style={{ marginBottom: 8, opacity: 0.5, color: step.color }}>{step.icon}</div>
                   <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
                   <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 5, textAlign: 'center', lineHeight: 1.3 }}>{step.label}</div>
                 </div>
                 {i < mainSteps.length - 1 && (
-                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--border)' , gap: 4, flexShrink: 0, width: 80, borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
+                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
                       {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
                     </div>

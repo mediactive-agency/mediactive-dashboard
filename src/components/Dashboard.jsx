@@ -284,7 +284,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4 }} className="monthly-stats-grid">
                  {[
                    { val: m.A,  lbl: 'INIT',    color: '#60A5FA' },
                    { val: m.MS, lbl: 'SEEN',    color: '#F472B6' },

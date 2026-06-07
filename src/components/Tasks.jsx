@@ -134,15 +134,15 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     let bg, textC, numC
     if (isWeekend)         { bg='var(--cal-weekend)'; textC='var(--cal-weekend-text)'; numC='var(--cal-weekend-text)' }
     else if (isToday)      { bg=complete?'#34D399':partial?'#F59E0B':'#EF4444'; textC='#000'; numC='rgba(0,0,0,0.7)' }
-    else if (complete)     { bg='#34D39930'; textC='#34D399'; numC='#34D39988' }
-    else if (partial)      { bg='#F59E0B28'; textC='#F59E0B'; numC='#F59E0B88' }
+    else if (complete)     { bg='#34D39918'; textC='#34D399'; numC='#34D399' }
+    else if (partial)      { bg='#F59E0B16'; textC='#F59E0B'; numC='#F59E0B' }
     else if (initiated===0){ bg='var(--card)'; textC='var(--text5)'; numC='var(--border2)' }
-    else                   { bg='#EF444420'; textC='#EF4444'; numC='#EF444488' }
+    else                   { bg='#EF444414'; textC='#EF4444'; numC='#EF4444' }
     return (
       <div style={{ height: cellH, borderRadius: 6, background: bg, padding: isMobile ? '5px 5px' : '7px 8px', outline: isToday ? '2px solid var(--text)' : 'none', outlineOffset: -2, overflow: 'hidden' }}>
-        <div style={{ fontSize: isMobile ? 11 : 13, fontWeight: 700, color: textC, lineHeight: 1 }}>{d.getDate()}</div>
+        <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: textC, lineHeight: 1 }}>{d.getDate()}</div>
         {!isWeekend && (
-          <div style={{ fontSize: isMobile ? 9 : 11, fontWeight: 600, color: numC, lineHeight: 1.4, marginTop: 3 }}>
+          <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, color: numC, lineHeight: 1.5, marginTop: 4 }}>
             <div>{initiated > 0 ? <>{initiated}<span style={{ fontWeight: 400, opacity: 0.7 }}>/20</span></> : <span style={{ opacity: 0.2 }}>—</span>}</div>
             {fuT > 0 && <div>{fuD}/{fuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> fu</span></div>}
             {pfuT > 0 && <div>{pfuD}/{pfuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> pfu</span></div>}

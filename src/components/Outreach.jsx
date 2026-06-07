@@ -318,8 +318,8 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
               </div>
             </div>
           ) : (
-          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--card)' }}>
-            {/* Funnel steps - left aligned */}
+          <div style={{ display: 'flex', alignItems: 'center', background: 'var(--card)', padding: '0 24px' }}>
+            {/* Funnel steps */}
             <div style={{ display: 'flex', alignItems: 'stretch' }}>
               {mainSteps.map((step, i) => (
                 <>
@@ -339,24 +339,32 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                 </>
               ))}
             </div>
+            {/* Space between - pushes stats to right */}
+            <div style={{ flex: 1 }} />
             {/* Separator */}
-            <div style={{ width: 1, background: 'var(--border)', height: 52, margin: '0 28px', flexShrink: 0 }} />
-            {/* Stats */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div style={{ width: 1, background: 'var(--border)', height: 44, margin: '0 28px', flexShrink: 0 }} />
+            {/* Stats - MSR PRR ABR */}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               {mainRates.map((r, i) => (
-                <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
-                </div>
+                <>
+                  {i > 0 && <div key={`d${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 20px', flexShrink: 0 }} />}
+                  <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
+                  </div>
+                </>
               ))}
               {(tot.avgFu !== null || tot.avgDays !== null) && (
                 <>
-                  <div style={{ width: 1, background: 'var(--border)', height: 36, flexShrink: 0 }} />
-                  {[tot.avgFu !== null ? { label: 'Avg FU', val: tot.avgFu, suffix: 'x' } : null, tot.avgDays !== null ? { label: 'Avg Days', val: tot.avgDays, suffix: 'd' } : null].filter(Boolean).map(r => (
-                    <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text3)', lineHeight: 1 }}>{r.val}{r.suffix}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
-                    </div>
+                  <div style={{ width: 1, height: 32, background: 'var(--bar-divider)', margin: '0 20px', flexShrink: 0 }} />
+                  {[tot.avgFu !== null ? { label: 'Avg FU', val: tot.avgFu, suffix: 'x' } : null, tot.avgDays !== null ? { label: 'Avg Days', val: tot.avgDays, suffix: 'd' } : null].filter(Boolean).map((r, i) => (
+                    <>
+                      {i > 0 && <div key={`sd${i}`} style={{ width: 1, height: 32, background: 'var(--border)', margin: '0 16px', flexShrink: 0 }} />}
+                      <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text3)', lineHeight: 1 }}>{r.val}{r.suffix}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.05em' }}>{r.label}</div>
+                      </div>
+                    </>
                   ))}
                 </>
               )}

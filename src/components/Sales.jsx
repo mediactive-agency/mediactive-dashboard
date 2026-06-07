@@ -241,16 +241,16 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', marginBottom: 28, overflow: 'hidden' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 28, overflow: 'hidden' }}>
         {upcomingNow.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div> : upcomingNow.map((c, ci) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           return (
             <div key={c.name} style={{ padding: '20px 24px', borderBottom: ci < upcomingNow.length-1 ? '1px solid var(--border)' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--upcoming-card-name)', marginBottom: 4 }}>{c.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--upcoming-card-meta)' }}>
-                    <span style={{ color: 'var(--text2)' }}>{ICO.calendar}</span>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
+                    <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
                     {c.date} · {c.time}
                   </div>
                 </div>
@@ -268,7 +268,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
         </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)', gap: 12, marginBottom: 14 }} className='sales-kpi-grid'>
         {[
           { label: 'Total Calls', value: total, suffix: '', sub: 'logged', color: '#60A5FA' },
           { label: 'Close Rate', value: closeRate, suffix: '%', sub: `${closed} closed`, color: '#34D399' },

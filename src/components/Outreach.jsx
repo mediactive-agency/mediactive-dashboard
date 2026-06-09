@@ -376,7 +376,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
       <Divider label="By Variable — click to compare" />
 
       {selected.size > 0 && (
-        <div style={{ background: 'var(--upcoming-card-bg)', borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
+        <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>

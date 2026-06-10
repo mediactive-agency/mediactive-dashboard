@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
 import { useTheme } from './hooks/useTheme'
@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard'
 import Outreach from './components/Outreach'
 import Sales from './components/Sales'
 import Tasks from './components/Tasks'
+import { computeTaskStats } from './utils/computeTaskStats'
 
 function getGreeting() {
   const h = parseInt(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', hour12: false }))
@@ -25,12 +26,20 @@ export default function App() {
   const [customTo, setCustomTo] = useState('')
   const [appliedFrom, setAppliedFrom] = useState('')
   const [appliedTo, setAppliedTo] = useState('')
-  const [dailyStats, setDailyStats] = useState(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const { data, loading, error, reload, loadedAt } = useData()
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
+
+  // Compute task stats directly here — no dependency on Tasks tab being visible
+  const taskStats = useMemo(() => computeTaskStats(data), [data])
+  const dailyStats = taskStats ? {
+    fuToday: taskStats.fuTotal,
+    fuDoneToday: taskStats.fuDone,
+    pfuToday: taskStats.pfuTotal,
+    pfuDoneToday: taskStats.pfuDone,
+  } : null
 
   function handleFilter(key) {
     setFilter(key)
@@ -88,10 +97,7 @@ export default function App() {
               {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
-              {/* Tasks always rendered (hidden when not active) so dailyStats populate on load */}
-              <div style={{ display: page === 'tasks' ? 'block' : 'none' }}>
-                <Tasks data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} isTablet={isTablet} />
-              </div>
+              {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} />}
             </>
           ) : null}
         </div>

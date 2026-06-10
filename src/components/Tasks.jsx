@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { TODAY, toDateStr, dateStr } from '../utils/data'
 
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -98,7 +98,7 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak }
   }, [data])
 
-  useMemo(() => {
+  useEffect(() => {
     if (stats && onDailyStats) onDailyStats({ fuToday: stats.fuTotal, fuDoneToday: stats.fuDone, pfuToday: stats.pfuTotal, pfuDoneToday: stats.pfuDone })
   }, [stats])
 
@@ -245,3 +245,4 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     </div>
   )
 }
+

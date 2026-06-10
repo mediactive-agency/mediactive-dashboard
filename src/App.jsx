@@ -88,7 +88,10 @@ export default function App() {
               {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
-              {page === 'tasks'     && <Tasks     data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
+              {/* Tasks always rendered (hidden when not active) so dailyStats populate on load */}
+              <div style={{ display: page === 'tasks' ? 'block' : 'none' }}>
+                <Tasks data={data} onDailyStats={setDailyStats} filter={filter} theme={theme} isMobile={isMobile} isTablet={isTablet} />
+              </div>
             </>
           ) : null}
         </div>

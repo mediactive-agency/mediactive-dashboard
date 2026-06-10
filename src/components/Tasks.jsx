@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import { TODAY, toDateStr, dateStr } from '../utils/data'
 
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -15,95 +15,10 @@ const ICO_CHECK = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" st
 const ICO_X     = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const ICO_FIRE  = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg>
 
-export default function Tasks({ data, onDailyStats, filter, isMobile }) {
-  const now = new Date(TODAY)
-  const today = new Date(now)
-  if (now.getHours() < 3) today.setDate(today.getDate() - 1)
-  const todayStr = dateStr(today)
-
-  const stats = useMemo(() => {
-    if (!data) return null
-    const allRows = []
-    for (const sheet of [data.mar, data.apr, data.may, data.jun||[]]) {
-      let ds = -1
-      for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
-      if (ds < 0) continue
-      for (let i = ds; i < sheet.length; i++) {
-        const r = sheet[i]; if (!r || !r[3]) continue
-        const d = toDateStr(r[3]); if (!d) continue
-        allRows.push({ r, date: d })
-      }
-    }
-    const dailyInitiated = {}, dailyFUDone = {}, dailyFUTotal = {}, dailyPFUDone = {}, dailyPFUTotal = {}
-    const calDays = []
-    { const start = new Date('2026-03-01T12:00:00'); const end = new Date(todayStr+'T12:00:00')
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) { if (d.getDay() !== 0 && d.getDay() !== 6) calDays.push(dateStr(d)) } }
-    allRows.forEach(x => { dailyInitiated[x.date] = (dailyInitiated[x.date]||0) + 1 })
-    allRows.forEach(x => {
-      const r = x.r; const varN = String(r[4]||'').toLowerCase()
-      if (varN.includes('inmail')) return
-      const bookedDate = toDateStr(r[27]); const hasPositiveReply = !!(r[14] && toDateStr(r[14]))
-      if (!hasPositiveReply) {
-        const fuDoneDate = r[5] ? toDateStr(r[5]) : null
-        if ((r[6]||r[7]||r[8]||r[9]) && !fuDoneDate) return
-        const dueDate = dateStr(nextBizDay(new Date(x.date+'T12:00:00')))
-        if (bookedDate && bookedDate <= dueDate) return
-        dailyFUTotal[dueDate] = (dailyFUTotal[dueDate]||0) + 1
-        if (fuDoneDate === dueDate) dailyFUDone[dueDate] = (dailyFUDone[dueDate]||0) + 1
-      } else {
-        const replyDate = toDateStr(r[14]); if (!replyDate) return
-        const slots = []
-        for (let i = 0; i < 7; i++) {
-          const v = String(r[16+i]||'').trim(); const sd = toDateStr(r[16+i])
-          if (!v) slots.push({ date: null, text: false })
-          else if (sd) slots.push({ date: sd, text: false })
-          else slots.push({ date: null, text: true })
-        }
-        const slotDueDates = []; let prevDate = replyDate
-        for (let i = 0; i < 7; i++) {
-          const due = dateStr(nextBizDay(new Date(prevDate+'T12:00:00')))
-          slotDueDates.push(due); prevDate = slots[i].date || due
-        }
-        const activeFrom = dateStr(nextBizDay(new Date(replyDate+'T12:00:00')))
-        for (const D of calDays) {
-          if (D < activeFrom) continue
-          if (bookedDate && bookedDate <= D) break
-          let endedAsOfD = false, filledAsOfD = 0
-          for (let i = 0; i < 7; i++) {
-            if (slots[i].text && slotDueDates[i] <= D) { endedAsOfD = true; break }
-            if (slots[i].date && slots[i].date <= D) filledAsOfD++
-          }
-          if (endedAsOfD) break; if (filledAsOfD === 7) break
-          dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
-          for (let i = 0; i < 7; i++) { if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; break } }
-        }
-      }
-    })
-    const dailyFollowupTotal = {}, dailyFollowupDone = {}
-    calDays.forEach(D => {
-      const t = (dailyFUTotal[D]||0)+(dailyPFUTotal[D]||0), d2 = (dailyFUDone[D]||0)+(dailyPFUDone[D]||0)
-      if (t > 0) dailyFollowupTotal[D] = t; if (d2 > 0) dailyFollowupDone[D] = d2
-    })
-    const outreachCount = allRows.filter(x => x.date === todayStr).length
-    const fuTotal = dailyFUTotal[todayStr]||0, fuDone = dailyFUDone[todayStr]||0
-    const pfuTotal = dailyPFUTotal[todayStr]||0, pfuDone = dailyPFUDone[todayStr]||0
-    let streak = 0
-    for (let i = 89; i >= 1; i--) {
-      const d = new Date(today); d.setDate(d.getDate()-i)
-      if (d.getDay() === 0 || d.getDay() === 6) continue
-      const ds2 = dateStr(d)
-      if ((dailyInitiated[ds2]||0) >= 20 && ((dailyFollowupTotal[ds2]||0) === 0 || (dailyFollowupDone[ds2]||0) >= (dailyFollowupTotal[ds2]||0))) streak++
-      else break
-    }
-    return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak }
-  }, [data])
-
-  useEffect(() => {
-    if (stats && onDailyStats) onDailyStats({ fuToday: stats.fuTotal, fuDoneToday: stats.fuDone, pfuToday: stats.pfuTotal, pfuDoneToday: stats.pfuDone })
-  }, [stats])
-
+export default function Tasks({ stats, filter, isMobile }) {
   if (!stats) return null
-  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak } = stats
+
+  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today } = stats
 
   const checkDay = new Date(todayStr+'T12:00:00').getDay()
   const isCheckWeekend = checkDay === 0 || checkDay === 6
@@ -212,7 +127,6 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
   )
 
   if (isMobile) {
-    // Mobile: task cards 2x2 grid, then calendar full width
     return (
       <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
@@ -227,15 +141,12 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     )
   }
 
-  // Desktop: calendar left (flex:1), sticky sidebar right (fixed width 260px)
   return (
     <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-      {/* Calendar */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
-      {/* Sticky widgets */}
       <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
         <StreakCard />
         <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={20} showBar={true} />
@@ -245,4 +156,3 @@ export default function Tasks({ data, onDailyStats, filter, isMobile }) {
     </div>
   )
 }
-

@@ -274,12 +274,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{dd.streak ?? 0}</span>
             <span style={{ fontSize: 13, color: 'var(--text3)' }}>days</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {[['#34D39930','#34D399','Done'],['#F59E0B28','#F59E0B','Partial'],['#EF444420','#EF4444','Missed']].map(([bg,c,lbl]) => (
-              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text4)' }}>
-                <div style={{ width: 8, height: 8, borderRadius: 2, background: bg, border: `1px solid ${c}40`, flexShrink: 0 }} />{lbl}
-              </div>
-            ))}
+          <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+            {(dd.streak ?? 0) === 0 ? "Let's get it" : (dd.streak ?? 0) < 3 ? 'You got this' : (dd.streak ?? 0) < 7 ? 'Keep it up' : (dd.streak ?? 0) < 14 ? "Keep 'em comin'" : (dd.streak ?? 0) < 30 ? 'Way to go' : 'Good shit'}
           </div>
         </div>
       </div>

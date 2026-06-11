@@ -268,12 +268,19 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             </div>
           ))}
         <div style={s({})}>
-          <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{dd.streak ?? 0}</div>
-            <div style={{ fontSize: 11, color: 'var(--text3)' }}>days</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ color: '#FB923C' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg></span>
+            <span style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{dd.streak ?? 0}</span>
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>days</span>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>In a row</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[['#34D39930','#34D399','Done'],['#F59E0B28','#F59E0B','Partial'],['#EF444420','#EF4444','Missed']].map(([bg,c,lbl]) => (
+              <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text4)' }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: bg, border: `1px solid ${c}40`, flexShrink: 0 }} />{lbl}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

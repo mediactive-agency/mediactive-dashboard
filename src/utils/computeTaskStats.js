@@ -85,16 +85,19 @@ export function computeTaskStats(data) {
   const pfuTotal = dailyPFUTotal[todayStr]||0, pfuDone = dailyPFUDone[todayStr]||0
 
   let streak = 0
-  for (let i = 89; i >= 0; i--) {
+  // Nejdřív dnešek - pokud splněný, připočti
+  const todayInitiated = dailyInitiated[todayStr]||0
+  const todayFuT = dailyFollowupTotal[todayStr]||0, todayFuD = dailyFollowupDone[todayStr]||0
+  const todayDone = todayInitiated >= 20 && (todayFuT === 0 || todayFuD >= todayFuT)
+  if (todayDone) streak++
+  // Od včerejška dozadu dokud nenajdeš nesplněný den
+  for (let i = 1; i <= 89; i++) {
     const d = new Date(today); d.setDate(d.getDate()-i)
     if (d.getDay() === 0 || d.getDay() === 6) continue
     const ds2 = dateStr(d)
     const initiated = dailyInitiated[ds2]||0
     const fuT = dailyFollowupTotal[ds2]||0, fuD = dailyFollowupDone[ds2]||0
-    const done = initiated >= 20 && (fuT === 0 || fuD >= fuT)
-    // Dnešek: připočti pokud splněný, ale nerozbíjej streak pokud ještě ne
-    if (i === 0) { if (done) streak++; break }
-    if (done) streak++
+    if (initiated >= 20 && (fuT === 0 || fuD >= fuT)) streak++
     else break
   }
 

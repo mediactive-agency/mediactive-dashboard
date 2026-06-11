@@ -189,8 +189,8 @@ function CallCard({ r, linkedinMap, isMobile }) {
 }
 
 export default function Sales({ data, filter, customFrom, customTo, isMobile, isTablet }) {
-  const { filtered, linkedinMap, stats } = useMemo(() => {
-    if (!data) return { filtered: [], linkedinMap: {}, stats: null }
+  const { filtered, linkedinMap, upcomingCalls, stats } = useMemo(() => {
+    if (!data) return { filtered: [], linkedinMap: {}, upcomingCalls: [], stats: null }
     const rows = data.sales.slice(1).filter(r => r && r[0])
     const filtered = rows.filter(r => inRange(toSalesDateStr(r[1]), filter, customFrom, customTo))
 
@@ -227,40 +227,48 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
 
     const qDist = [1,2,3,4,5].map(q => ({ score: q, count: filtered.filter(r => parseInt(r[9]) === q).length }))
 
-    return { filtered, linkedinMap, stats: { total, closed, followUp, closeRate, avgQ, catCounts, maxCat, qDist } }
+    // Upcoming calls z outreach sheetu (r[27] = booked date v budoucnosti)
+    const upcomingCalls = []
+    for (const r of allOutreach) {
+      if (!r || !r[1] || !r[27]) continue
+      const name = (r[1]||'').toString().trim()
+      if (!name) continue
+      const bookedStr = toDateStr(r[27])
+      if (!bookedStr) continue
+      const dt = new Date(bookedStr + 'T00:00:00')
+      if (dt <= new Date(TODAY)) continue
+      const account = String(r[4]||'').trim() || null
+      upcomingCalls.push({ name, account, date: bookedStr, datetime: dt })
+    }
+    upcomingCalls.sort((a, b) => a.datetime - b.datetime)
+
+    return { filtered, linkedinMap, upcomingCalls, stats: { total, closed, followUp, closeRate, avgQ, catCounts, maxCat, qDist } }
   }, [data, filter, customFrom, customTo])
 
   if (!stats) return null
   const { total, closed, followUp, closeRate, avgQ, catCounts, maxCat, qDist } = stats
   const avgQColor = avgQ !== null ? (Q_COLORS[Math.round(avgQ)] || '#A78BFA') : '#555558'
-  const upcomingNow = UPCOMING_CALLS.filter(c => c.datetime > TODAY)
-
   return (
     <div>
       {/* Upcoming */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 28, overflow: 'hidden' }}>
-        {upcomingNow.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div> : upcomingNow.map((c, ci) => {
+      <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', marginBottom: 28, overflow: 'hidden' }}>
+        {upcomingCalls.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div> : upcomingCalls.map((c, ci) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           return (
-            <div key={c.name} style={{ padding: '20px 24px', borderBottom: ci < upcomingNow.length-1 ? '1px solid var(--border)' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280' }}>
-                    <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
-                    {c.date} · {c.time}
-                  </div>
+            <div key={c.name + c.date} style={{ padding: '20px 24px', borderBottom: ci < upcomingCalls.length-1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{c.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)', flexWrap: 'wrap' }}>
+                  <span style={{ color: 'var(--text4)' }}>{ICO.calendar}</span>
+                  {c.date}
+                  {c.account && <><span style={{ color: 'var(--text4)' }}>·</span><span>{c.account}</span></>}
                 </div>
-                {c.confirmed
-                  ? <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '3px 8px', borderRadius: 20 }}>{ICO.check} Confirmed</div>
-                  : <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', background: '#FEF3C7', padding: '3px 8px', borderRadius: 20 }}>Not Confirmed</div>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>
-                {(c.linkedin || li.linkedin) && <><span style={{ color: 'var(--text2)' }}>·</span><a href={c.linkedin || li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a></>}
+                {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
               </div>
             </div>
           )
@@ -336,3 +344,4 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
     </div>
   )
 }
+

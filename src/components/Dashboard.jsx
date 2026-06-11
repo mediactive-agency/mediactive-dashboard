@@ -168,7 +168,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     for (let i = ds; i < sheet.length; i++) { const r = sheet[i]; if (!r || !r[3]) continue; if (toDateStr(r[3]) === todStr) outToday++ }
   }
   const isWeekend = new Date(todStr + 'T12:00:00').getDay() === 0 || new Date(todStr + 'T12:00:00').getDay() === 6
-  const dd = dailyStats || { fuToday: 0, fuDoneToday: 0, pfuToday: 0, pfuDoneToday: 0 }
+  const dd = dailyStats || { fuToday: 0, fuDoneToday: 0, pfuToday: 0, pfuDoneToday: 0, streak: 0 }
   const outColor = outToday >= 20 ? '#34D399' : outToday > 0 ? '#F59E0B' : '#EF4444'
   const fuColor = dd.fuToday === 0 ? '#34D399' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444'
   const pfuColor = dd.pfuToday === 0 ? '#555558' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B'
@@ -248,7 +248,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
             <div key={l} style={s({})}>
@@ -267,6 +267,14 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
               <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
             </div>
           ))}
+        <div style={s({})}>
+          <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{dd.streak ?? 0}</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>days</div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 8 }}>In a row</div>
+        </div>
       </div>
 
       {/* Breakdown */}
@@ -341,3 +349,4 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
 
 // Export computeStats for use in other pages  
 export { parseOutreachMonth }
+

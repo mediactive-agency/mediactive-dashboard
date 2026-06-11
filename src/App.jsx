@@ -39,6 +39,7 @@ export default function App() {
     fuDoneToday: taskStats.fuDone,
     pfuToday: taskStats.pfuTotal,
     pfuDoneToday: taskStats.pfuDone,
+    streak: taskStats.streak,
   } : null
 
   function handleFilter(key) {

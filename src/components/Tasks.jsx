@@ -48,7 +48,6 @@ export default function Tasks({ stats, filter, isMobile }) {
     const complete = t1 && (isWeekend || t2), partial = (t1 || (!isWeekend && t2)) && !complete
     let bg, textC, numC
     if (isWeekend)         { bg='var(--cal-weekend)'; textC='var(--cal-weekend-text)'; numC='var(--cal-weekend-text)' }
-    else if (isToday)      { bg=complete?'#34D399':partial?'#F59E0B':'#EF4444'; textC='#000'; numC='rgba(0,0,0,0.7)' }
     else if (complete)     { bg='#34D39918'; textC='#34D399'; numC='#34D399' }
     else if (partial)      { bg='#F59E0B16'; textC='#F59E0B'; numC='#F59E0B' }
     else if (initiated===0){ bg='var(--card)'; textC='var(--text5)'; numC='var(--border2)' }

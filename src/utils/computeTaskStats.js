@@ -67,7 +67,19 @@ export function computeTaskStats(data) {
           if (slots[i].text && slotDueDates[i] <= D) { endedAsOfD = true; break }
           if (slots[i].date && slots[i].date <= D) filledAsOfD++
         }
-        if (endedAsOfD) break; if (filledAsOfD === 7) break
+        if (endedAsOfD || filledAsOfD === 7) {
+          // Výjimka: pokud byl slot splněn právě dnes, ukáž ho v totalu i done
+          if (D === todayStr) {
+            for (let i = 0; i < 7; i++) {
+              if (slots[i].date === todayStr) {
+                dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
+                dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1
+                break
+              }
+            }
+          }
+          break
+        }
         dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
         for (let i = 0; i < 7; i++) { if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; break } }
       }

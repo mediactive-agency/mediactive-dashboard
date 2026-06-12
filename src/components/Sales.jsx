@@ -246,26 +246,22 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : upcomingCalls.length === 1 ? '1fr' : 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 28, overflow: 'hidden' }}>
         {upcomingCalls.length === 0
-          ? <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
-          : upcomingCalls.map((c) => {
+          ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div>
+          : upcomingCalls.map((c, ci) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           const rawAccount = li.account || c.account || ''
           const accountLabel = /2nd/i.test(rawAccount) ? '2nd Account' : /main/i.test(rawAccount) ? 'Main Account' : rawAccount || null
           return (
-            <div key={c.name + c.date} style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{c.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--text4)' }}>{ICO.calendar}</span>
-                    <span>{c.date} · {c.time}</span>
-                  </div>
+            <div key={c.name + c.date} style={{ padding: '20px 24px', borderBottom: ci < upcomingCalls.length-1 ? '1px solid #E5E7EB' : 'none' }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
+                  <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
+                  <span>{c.date} · {c.time}</span>
+                  {accountLabel && <><span style={{ color: '#D1D5DB' }}>·</span><span>{accountLabel}</span></>}
                 </div>
-                {accountLabel && (
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', background: 'var(--border)', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0 }}>{accountLabel}</div>
-                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 {c.meet && <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}

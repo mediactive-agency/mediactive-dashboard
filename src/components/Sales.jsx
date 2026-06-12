@@ -270,11 +270,11 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           return (
             <div key={c.name + c.date} style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', padding: '20px 24px' }}>
               <div style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: '#111827' }}>{c.name}</div>
-                  {accountLabel && <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280' }}>{accountLabel}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#111827' }}>{c.name}</div>
+                  {accountLabel && <><span style={{ color: '#D1D5DB', fontSize: 16 }}>·</span><div style={{ fontSize: 14, fontWeight: 600, color: '#6B7280' }}>{accountLabel}</div></>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#6B7280', flexWrap: 'wrap' }}>
                   <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
                   <span>{c.date} · {c.time}</span>
                   <span style={{ color: '#D1D5DB' }}>·</span>
@@ -282,8 +282,8 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                {meetLink && <a href={meetLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
-                {linkedinLink && <a href={linkedinLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
+                {meetLink && <a href={meetLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
+                {linkedinLink && <a href={linkedinLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 14, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
               </div>
             </div>
           )

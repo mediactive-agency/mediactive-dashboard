@@ -234,10 +234,10 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       .map(ev => {
         const dt = new Date(ev.start_time)
         const invitee = ev.name || ''
-        const dateStr = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        const timeStr = dt.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit' })
+        const calDate = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        const calTime = dt.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit' })
         const meetLink = (ev.location && ev.location.join_url) || null
-        return { name: invitee, date: dateStr, time: timeStr, datetime: dt, meet: meetLink, account: ev.event_type ? ev.event_type.split('/').pop() : null }
+        return { name: invitee, date: calDate, time: calTime, datetime: dt, meet: meetLink, account: ev.event_type ? ev.event_type.split('/').pop() : null }
       })
       .sort((a, b) => a.datetime - b.datetime)
 

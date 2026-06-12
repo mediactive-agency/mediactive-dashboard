@@ -11,8 +11,12 @@ async function fetchRange(id, range) {
 }
 
 async function fetchCalendly() {
-  const res = await fetch(`${PROXY}?calendly=1`)
-  return await res.json()
+  try {
+    const res = await fetch(`${PROXY}?calendly=1`)
+    return await res.json()
+  } catch (e) {
+    return { collection: [] }
+  }
 }
 
 export function useData() {

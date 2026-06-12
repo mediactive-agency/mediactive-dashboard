@@ -251,18 +251,34 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           ? <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
           : upcomingCalls.map((c) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
-          const rawAccount = li.account || c.account || ''
-          const accountLabel = /2nd/i.test(rawAccount) ? '2nd Account' : /main/i.test(rawAccount) ? 'Main Account' : rawAccount || null
-          const meetLink = c.meet || li.meet || null
+          const rawAccount = li.account || ''
+          const accountLabel = /2nd/i.test(rawAccount) ? '2nd Account' : /main/i.test(rawAccount) ? 'Main Account' : null
+          const meetLink = c.meet || null
           const linkedinLink = li.linkedin || null
+          const diffMs = c.datetime - new Date()
+          const diffMins = Math.round(diffMs / 60000)
+          const countdown = diffMins < 120
+            ? `${diffMins}m`
+            : diffMins < 1440
+            ? `${Math.round(diffMins/60)}h`
+            : `${Math.round(diffMins/1440)}d`
+          const countdownLabel = diffMins < 120
+            ? `Call in ${diffMins} minute${diffMins !== 1 ? 's' : ''}`
+            : diffMins < 1440
+            ? `Call in ${Math.round(diffMins/60)} hour${Math.round(diffMins/60) !== 1 ? 's' : ''}`
+            : `Call in ${Math.round(diffMins/1440)} day${Math.round(diffMins/1440) !== 1 ? 's' : ''}`
           return (
             <div key={c.name + c.date} style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', padding: '20px 24px' }}>
               <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: '#111827' }}>{c.name}</div>
+                  {accountLabel && <div style={{ fontSize: 11, fontWeight: 600, color: '#6B7280' }}>{accountLabel}</div>}
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
                   <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>
                   <span>{c.date} · {c.time}</span>
-                  {accountLabel && <><span style={{ color: '#D1D5DB' }}>·</span><span>{accountLabel}</span></>}
+                  <span style={{ color: '#D1D5DB' }}>·</span>
+                  <span style={{ color: diffMins < 120 ? '#EF4444' : diffMins < 1440 ? '#F59E0B' : '#6B7280', fontWeight: 600 }}>{countdownLabel}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

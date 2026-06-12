@@ -246,15 +246,17 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: 28, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
         {upcomingCalls.length === 0
-          ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div>
-          : upcomingCalls.map((c, ci) => {
+          ? <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
+          : upcomingCalls.map((c) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
           const rawAccount = li.account || c.account || ''
           const accountLabel = /2nd/i.test(rawAccount) ? '2nd Account' : /main/i.test(rawAccount) ? 'Main Account' : rawAccount || null
+          const meetLink = c.meet || li.meet || null
+          const linkedinLink = li.linkedin || null
           return (
-            <div key={c.name + c.date} style={{ padding: '20px 24px', borderBottom: ci < upcomingCalls.length-1 ? '1px solid #E5E7EB' : 'none' }}>
+            <div key={c.name + c.date} style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', padding: '20px 24px' }}>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 4 }}>{c.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6B7280', flexWrap: 'wrap' }}>
@@ -264,8 +266,8 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                {c.meet && <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
-                {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
+                {meetLink && <a href={meetLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
+                {linkedinLink && <a href={linkedinLink} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
               </div>
             </div>
           )

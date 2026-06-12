@@ -378,6 +378,37 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
       {selected.size > 0 && (
         <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
+          {isMobile ? (
+            <div>
+              {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},{val:agg.C,label:'Booked',color:'#A78BFA'}].map((step,i,arr) => {
+                const pct = i < arr.length-1 && step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : null
+                return (
+                  <div key={i}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '10px 0', gap: 14 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 3 }}>{step.label}</div>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>
+                      </div>
+                      {pct && <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>{pct}</div>}
+                    </div>
+                    {i < arr.length-1 && <div style={{ height: 1, background: 'var(--border)' }} />}
+                  </div>
+                )
+              })}
+              <div style={{ display: 'flex', gap: 20, marginTop: 14 }}>
+                {[
+                  { label:'MSR', val: agg.A>0 ? +((agg.MS/agg.A)*100).toFixed(1):0, color:'#F472B6' },
+                  { label:'PRR', val: agg.A>0 ? +((agg.B/agg.A)*100).toFixed(1):0, color:'#FB923C' },
+                  { label:'ABR', val: agg.A>0 ? +((agg.C/agg.A)*100).toFixed(1):0, color:'#A78BFA' },
+                ].map(r => (
+                  <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}%</div>
+                    <div style={{ fontSize: 10, color: 'var(--text4)' }}>{r.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
               {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},{val:agg.C,label:'Booked',color:'#A78BFA'}].map((step,i,arr) => (
@@ -387,7 +418,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
                     <div style={{ fontSize: 10, color: 'var(--text3)', whiteSpace: 'nowrap' }}>{step.label}</div>
                   </div>
                   {i < arr.length - 1 && (
-                    <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: isMobile ? '0 12px' : '0 48px' }}>
+                    <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
                       <svg width="44" height="14" viewBox="0 0 50 14" fill="none" style={{color:"var(--text3)"}}><line x1="0" y1="7" x2="42" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
@@ -412,6 +443,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
               ))}
             </div>
           </div>
+          )}
         </div>
       )}
 

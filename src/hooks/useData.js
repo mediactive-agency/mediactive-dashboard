@@ -10,16 +10,8 @@ async function fetchRange(id, range) {
   return json.values || []
 }
 
-async function fetchCalendly() {
-  try {
-    const res = await fetch(`${PROXY}?calendly=1`)
-    return await res.json()
-  } catch (e) {
-    return { collection: [] }
-  }
-}
-
 export function useData() {
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [loadedAt, setLoadedAt] = useState(null)
@@ -28,15 +20,14 @@ export function useData() {
     setLoading(true)
     setError(null)
     try {
-      const [mar, apr, may, jun, sales, calendly] = await Promise.all([
+      const [mar, apr, may, jun, sales] = await Promise.all([
         fetchRange(OUTREACH_ID, "Mar!A1:AZ600"),
         fetchRange(OUTREACH_ID, "Apr!A1:AZ700"),
         fetchRange(OUTREACH_ID, "May!A1:AZ700"),
         fetchRange(OUTREACH_ID, "Jun!A1:AZ700"),
         fetchRange(SALES_ID, "Sheet1!A:J"),
-        fetchCalendly(),
       ])
-      setData({ mar, apr, may, jun, sales, calendly })
+      setData({ mar, apr, may, jun, sales })
       setLoadedAt(new Date())
     } catch (e) {
       setError(e.message)

@@ -227,19 +227,20 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
 
     const qDist = [1,2,3,4,5].map(q => ({ score: q, count: filtered.filter(r => parseInt(r[9]) === q).length }))
 
-    // Upcoming calls z Calendly
-    const now = new Date()
-    const upcomingCalls = ((data.calendly && data.calendly.collection) || [])
-      .filter(ev => ev.status === 'active' && new Date(ev.start_time) > now)
-      .map(ev => {
-        const dt = new Date(ev.start_time)
-        const invitee = ev.name || ''
-        const calDate = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        const calTime = dt.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit' })
-        const meetLink = (ev.location && ev.location.join_url) || null
-        return { name: invitee, date: calDate, time: calTime, datetime: dt, meet: meetLink, account: ev.event_type ? ev.event_type.split('/').pop() : null }
-      })
-      .sort((a, b) => a.datetime - b.datetime)
+    // Upcoming calls z outreach sheetu (r[27] = booked date v budoucnosti)
+    const upcomingCalls = []
+    for (const r of allOutreach) {
+      if (!r || !r[1] || !r[27]) continue
+      const name = (r[1]||'').toString().trim()
+      if (!name) continue
+      const bookedStr = toDateStr(r[27])
+      if (!bookedStr) continue
+      const dt = new Date(bookedStr + 'T00:00:00')
+      if (dt <= new Date(TODAY)) continue
+      const account = String(r[4]||'').trim() || null
+      upcomingCalls.push({ name, account, date: bookedStr, datetime: dt })
+    }
+    upcomingCalls.sort((a, b) => a.datetime - b.datetime)
 
     return { filtered, linkedinMap, upcomingCalls, stats: { total, closed, followUp, closeRate, avgQ, catCounts, maxCat, qDist } }
   }, [data, filter, customFrom, customTo])
@@ -262,13 +263,12 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
                 <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{c.name}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)', flexWrap: 'wrap' }}>
                   <span style={{ color: 'var(--text4)' }}>{ICO.calendar}</span>
-                  {c.date}{c.time ? ` · ${c.time}` : ''}
+                  {c.date}
                   {c.account && <><span style={{ color: 'var(--text4)' }}>·</span><span>{c.account}</span></>}
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                {c.meet && <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
-                {li.linkedin && <><span style={{ color: 'var(--text4)' }}>·</span><a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a></>}
+                {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
               </div>
             </div>
           )

@@ -246,24 +246,30 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', marginBottom: 28, overflow: 'hidden' }}>
-        {upcomingCalls.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 13, padding: '20px 24px' }}>No upcoming calls scheduled</div> : upcomingCalls.map((c, ci) => {
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : upcomingCalls.length === 1 ? '1fr' : 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
+        {upcomingCalls.length === 0
+          ? <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
+          : upcomingCalls.map((c) => {
           const li = linkedinMap[c.name.toLowerCase()] || {}
+          const rawAccount = li.account || c.account || ''
+          const accountLabel = /2nd/i.test(rawAccount) ? '2nd Account' : /main/i.test(rawAccount) ? 'Main Account' : rawAccount || null
           return (
-            <div key={c.name + c.date} style={{ padding: '20px 24px', borderBottom: ci < upcomingCalls.length-1 ? '1px solid var(--border)' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div key={c.name + c.date} style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
-                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{c.name}</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{c.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--text4)' }}>{ICO.calendar}</span>
-                    {c.date} · {c.time}
-                    {c.account && <><span style={{ color: 'var(--text4)' }}>·</span><span>{c.account}</span></>}
+                    <span>{c.date} · {c.time}</span>
                   </div>
                 </div>
+                {accountLabel && (
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', background: 'var(--border)', padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0 }}>{accountLabel}</div>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 {c.meet && <a href={c.meet} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#2563EB', fontWeight: 600 }}>{ICO.meet} Join Meet</a>}
-                {li.linkedin && <><span style={{ color: 'var(--text4)', fontSize: 12 }}>·</span><a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a></>}
+                {li.linkedin && <a href={li.linkedin} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#0A66C2', fontWeight: 600 }}>{ICO.linkedin} LinkedIn</a>}
               </div>
             </div>
           )

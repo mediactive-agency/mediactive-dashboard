@@ -248,29 +248,32 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
       {/* 2. Monthly Performance + Daily Tasks vedle sebe */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, margin: '28px 0' }}>
 
-        {/* Monthly Performance — kompaktní tabulka */}
+        {/* Monthly Performance — zactly same layout as main dashboard */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${monthlyRows.length}, 1fr)`, gap: 8 }}>
-            {monthlyRows.map(m => (
-              <div key={m.month} style={{ borderRight: '1px solid var(--border)', paddingRight: 12 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 12 }}>{m.month}</div>
-                {[{v:m.A,l:'Init',c:'#60A5FA'},{v:m.MS,l:'Seen',c:'#F472B6'},{v:m.B,l:'Replies',c:'#FB923C'},{v:m.C,l:'Booked',c:'#A855F7'}].map(x => (
-                  <div key={x.l} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: x.c, lineHeight: 1 }}>{x.v}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
-                  </div>
-                ))}
-                <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
-                {[{v:m.msr+'%',l:'MSR',c:'#F472B6'},{v:m.prr+'%',l:'PRR',c:'#FB923C'},{v:m.abr+'%',l:'ABR',c:'#A855F7'}].map(x => (
-                  <div key={x.l} style={{ marginBottom: 6 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: x.c, lineHeight: 1 }}>{x.v}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
+          {monthlyRows.map(m => (
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
+                {[
+                  {val:m.A,  lbl:'INIT',    color:'#60A5FA'},
+                  {val:m.MS, lbl:'SEEN',    color:'#F472B6'},
+                  {val:m.B,  lbl:'REPLIES', color:'#FB923C'},
+                  {val:m.C,  lbl:'BOOKED',  color:'#A855F7'},
+                  {val:m.msr+'%', lbl:'MSR', color:'#F472B6'},
+                  {val:m.prr+'%', lbl:'PRR', color:'#FB923C'},
+                  {val:m.abr+'%', lbl:'ABR', color:'#A855F7'},
+                ].map(x => (
+                  <div key={x.lbl} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
         {/* Daily Tasks — standalone karty */}

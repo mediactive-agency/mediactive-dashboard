@@ -113,7 +113,48 @@ function AddClientWizard({ onClose, onAdded }) {
   )
 }
 
-function ClientCard({ client, onSelect }) {
+function calcStats(data, filter, customFrom, customTo) {
+  if (!data) return null
+  const allRows = []
+  for (const sheet of [data.mar||[], data.apr||[], data.may||[], data.jun||[]]) {
+    let ds = -1
+    for (let i = 0; i < sheet.length; i++) {
+      if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
+    }
+    if (ds < 0) continue
+    for (let i = ds; i < sheet.length; i++) {
+      const r = sheet[i]; if (!r || !r[3]) continue
+      allRows.push(r)
+    }
+  }
+  // Apply filter
+  let rows = allRows
+  if (filter && filter !== 'all') {
+    const now = new Date()
+    const days = filter === '7d' ? 7 : filter === '14d' ? 14 : filter === '30d' ? 30 : filter === 'today' ? 0 : filter === 'yesterday' ? 1 : null
+    rows = allRows.filter(r => {
+      const d = r[3] ? new Date(r[3]) : null
+      if (!d) return false
+      if (filter === 'custom' && customFrom && customTo) return r[3] >= customFrom && r[3] <= customTo
+      if (filter === 'today') return d.toDateString() === now.toDateString()
+      if (filter === 'yesterday') { const y = new Date(now); y.setDate(y.getDate()-1); return d.toDateString() === y.toDateString() }
+      if (days !== null) { const cutoff = new Date(now); cutoff.setDate(cutoff.getDate()-days); return d >= cutoff }
+      return true
+    })
+  }
+  let initiated = 0, replies = 0, booked = 0
+  rows.forEach(r => {
+    initiated++
+    if (r[14] && String(r[14]).trim()) replies++
+    if (r[27] && String(r[27]).trim()) booked++
+  })
+  const prr = initiated > 0 ? (replies/initiated*100).toFixed(1) : null
+  const abr = initiated > 0 ? (booked/initiated*100).toFixed(1) : null
+  return { initiated, replies, booked, prr, abr }
+}
+
+function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
+  const stats = calcStats(data, filter, customFrom, customTo)
   return (
     <div onClick={() => onSelect(client)} style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)' }}
@@ -131,16 +172,26 @@ function ClientCard({ client, onSelect }) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--border)', padding: '3px 8px', borderRadius: 20 }}>
-          {client['Sheet Tabs'] || 'No tabs'}
+      {!stats ? (
+        <div style={{ height: 32, display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: 16, height: 16, border: `2px solid ${client.Color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
-        {client['Calendly PAT'] && (
-          <div style={{ fontSize: 11, color: client.Color, background: client.Color + '20', padding: '3px 8px', borderRadius: 20 }}>
-            Calendly connected
-          </div>
-        )}
-      </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+          {[
+            { label: 'Init', val: stats.initiated, color: '#60A5FA' },
+            { label: 'Replies', val: stats.replies, color: '#FB923C' },
+            { label: 'Booked', val: stats.booked, color: '#A78BFA' },
+            { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#F472B6' },
+            { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#34D399' },
+          ].map(m => (
+            <div key={m.label}>
+              <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -255,8 +306,9 @@ function ClientStats({ client, isMobile }) {
   )
 }
 
-export default function Clients({ isMobile }) {
+export default function Clients({ isMobile, filter, customFrom, customTo }) {
   const [clients, setClients] = useState([])
+  const [clientData, setClientData] = useState({})
   const [loading, setLoading] = useState(true)
   const [showWizard, setShowWizard] = useState(false)
   const [selected, setSelected] = useState(null)
@@ -265,8 +317,30 @@ export default function Clients({ isMobile }) {
     setLoading(true)
     try {
       const res = await fetch(`${PROXY}?action=getClients`)
-      const data = await res.json()
-      setClients(data.clients || [])
+      const json = await res.json()
+      const list = json.clients || []
+      setClients(list)
+      // Load data for all clients
+      const dataMap = {}
+      await Promise.all(list.map(async c => {
+        try {
+          const tabs = (c['Sheet Tabs'] || 'Mar,Apr,May,Jun').split(',').map(t => t.trim())
+          const sheetId = c['Outreach Sheet ID']
+          const results = await Promise.all(tabs.map(tab =>
+            fetch(`${PROXY}?id=${sheetId}&range=${encodeURIComponent(tab + '!A1:AZ700')}`)
+              .then(r => r.json()).then(d => d.values || []).catch(() => [])
+          ))
+          const dataObj = {}
+          tabs.forEach((tab, i) => { dataObj[tab.toLowerCase().slice(0,3)] = results[i] })
+          dataMap[c.ID] = {
+            mar: dataObj['mar'] || results[0] || [],
+            apr: dataObj['apr'] || results[1] || [],
+            may: dataObj['may'] || results[2] || [],
+            jun: dataObj['jun'] || results[3] || [],
+          }
+        } catch(e) { dataMap[c.ID] = null }
+      }))
+      setClientData(dataMap)
     } catch(e) {
       setClients([])
     }
@@ -287,7 +361,7 @@ export default function Clients({ isMobile }) {
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
       </div>
-      <ClientStats client={selected} isMobile={isMobile} />
+      <ClientStats client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} />
     </div>
   )
 
@@ -314,7 +388,7 @@ export default function Clients({ isMobile }) {
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>
-          {clients.map(c => <ClientCard key={c.ID} client={c} onSelect={setSelected} />)}
+          {clients.map(c => <ClientCard key={c.ID} client={c} data={clientData[c.ID]} filter={filter} customFrom={customFrom} customTo={customTo} onSelect={setSelected} />)}
         </div>
       )}
 

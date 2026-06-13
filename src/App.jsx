@@ -100,7 +100,7 @@ export default function App() {
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} />}
-              {page === 'clients'   && <Clients   isMobile={isMobile} />}
+              {page === 'clients'   && <Clients   isMobile={isMobile} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
             </>
           ) : null}
         </div>

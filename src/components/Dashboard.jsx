@@ -32,6 +32,15 @@ function parseOutreachMonth(rows) {
       rawRows.push({ date, hasMS, hasB, hasC, hasD, followups, daysToBook })
     }
   }
+  if (!summary && rawRows.length > 0) {
+    summary = {
+      A: rawRows.length,
+      MS: rawRows.filter(r => r.hasMS).length,
+      B: rawRows.filter(r => r.hasB).length,
+      C: rawRows.filter(r => r.hasC).length,
+      D: rawRows.filter(r => r.hasD).length,
+    }
+  }
   return { summary, rawRows }
 }
 

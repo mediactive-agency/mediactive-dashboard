@@ -257,7 +257,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+                <div style={{ display: 'flex', gap: 32, flex: 1 }}>
                   {[
                     {val:m.A,  lbl:'INIT',    color:'#60A5FA'},
                     {val:m.MS, lbl:'SEEN',    color:'#F472B6'},
@@ -271,7 +271,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
                   ))}
                 </div>
                 <div style={{ width: 1, height: 36, background: 'var(--border)', margin: '0 20px', flexShrink: 0 }} />
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div style={{ display: 'flex', gap: 32 }}>
                   {[
                     {val:m.msr+'%', lbl:'MSR', color:'#F472B6'},
                     {val:m.prr+'%', lbl:'PRR', color:'#FB923C'},

@@ -9,21 +9,40 @@ const COLORS = [
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+function extractSheetId(input) {
+  if (!input) return ''
+  const m = input.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  if (m) return m[1]
+  // maybe they pasted just the ID
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(input.trim())) return input.trim()
+  return ''
+}
+
 function AddClientWizard({ onClose, onAdded }) {
-  const [step, setStep] = useState(1)
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
-  const [sheetId, setSheetId] = useState('')
-  const [tabs, setTabs] = useState('Mar,Apr,May,Jun')
+  const [link, setLink] = useState('')
+  const [showCalendly, setShowCalendly] = useState(false)
   const [calendlyPat, setCalendlyPat] = useState('')
   const [calendlyUri, setCalendlyUri] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function submit() {
-    if (!name || !sheetId) { setError('Name and Sheet ID are required'); return }
+    const sheetId = extractSheetId(link)
+    if (!name) { setError('Client name is required'); return }
+    if (!sheetId) { setError('Paste a valid Google Sheets link'); return }
     setLoading(true)
+    setError('')
     try {
+      // Auto-detect tabs from the sheet
+      let tabs = 'Mar,Apr,May,Jun'
+      try {
+        const tabRes = await fetch(`${PROXY}?action=getSheetTabs&sheetId=${encodeURIComponent(sheetId)}`)
+        const tabData = await tabRes.json()
+        if (tabData.tabs && tabData.tabs.length) tabs = tabData.tabs.join(',')
+      } catch(e) { /* fallback to default */ }
+
       const url = `${PROXY}?action=addClient&name=${encodeURIComponent(name)}&color=${encodeURIComponent(color)}&outreachSheetId=${encodeURIComponent(sheetId)}&sheetTabs=${encodeURIComponent(tabs)}&calendlyPat=${encodeURIComponent(calendlyPat)}&calendlyUserUri=${encodeURIComponent(calendlyUri)}`
       const res = await fetch(url)
       const data = await res.json()
@@ -41,76 +60,54 @@ function AddClientWizard({ onClose, onAdded }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ background: 'var(--card)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-          <div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Add New Client</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Step {step} of 2</div>
-          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Add New Client</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
-        {/* Progress */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 28 }}>
-          {[1,2].map(s => <div key={s} style={{ flex: 1, height: 3, borderRadius: 2, background: s <= step ? color : 'var(--border)' }} />)}
-        </div>
-
-        {step === 1 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div>
-              <label style={labelStyle}>CLIENT NAME</label>
-              <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Acme Bookkeeping" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <label style={labelStyle}>CLIENT NAME</label>
+            <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Acme Bookkeeping" />
+          </div>
+          <div>
+            <label style={labelStyle}>COLOR</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
+              ))}
             </div>
-            <div>
-              <label style={labelStyle}>COLOR</label>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {COLORS.map(c => (
-                  <button key={c} onClick={() => setColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
-                ))}
+          </div>
+          <div>
+            <label style={labelStyle}>TRACKING SHEET LINK</label>
+            <input style={inputStyle} value={link} onChange={e => setLink(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..." />
+            <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Paste the full Google Sheets link, the rest is detected automatically</div>
+          </div>
+
+          {!showCalendly ? (
+            <button onClick={() => setShowCalendly(true)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Calendly (optional)
+            </button>
+          ) : (
+            <>
+              <div>
+                <label style={labelStyle}>CALENDLY PAT</label>
+                <input style={inputStyle} value={calendlyPat} onChange={e => setCalendlyPat(e.target.value)} placeholder="eyJraWQi..." />
               </div>
-            </div>
-            <div>
-              <label style={labelStyle}>OUTREACH SHEET ID</label>
-              <input style={inputStyle} value={sheetId} onChange={e => setSheetId(e.target.value)} placeholder="From the Google Sheets URL" />
-              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Open their tracking sheet → copy the ID from the URL between /d/ and /edit</div>
-            </div>
-            <div>
-              <label style={labelStyle}>SHEET TABS</label>
-              <input style={inputStyle} value={tabs} onChange={e => setTabs(e.target.value)} placeholder="Mar,Apr,May,Jun" />
-              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Comma separated, same as your own sheet</div>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ background: 'var(--border)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: 'var(--text3)' }}>
-              Calendly is optional — skip if client doesn't use it or you don't have access.
-            </div>
-            <div>
-              <label style={labelStyle}>CALENDLY PERSONAL ACCESS TOKEN</label>
-              <input style={inputStyle} value={calendlyPat} onChange={e => setCalendlyPat(e.target.value)} placeholder="eyJraWQi..." />
-              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>calendly.com → Integrations → API & Webhooks</div>
-            </div>
-            <div>
-              <label style={labelStyle}>CALENDLY USER URI</label>
-              <input style={inputStyle} value={calendlyUri} onChange={e => setCalendlyUri(e.target.value)} placeholder="https://api.calendly.com/users/..." />
-              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Run GET /users/me with the PAT to get this</div>
-            </div>
-          </div>
-        )}
+              <div>
+                <label style={labelStyle}>CALENDLY USER URI</label>
+                <input style={inputStyle} value={calendlyUri} onChange={e => setCalendlyUri(e.target.value)} placeholder="https://api.calendly.com/users/..." />
+              </div>
+            </>
+          )}
+        </div>
 
         {error && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 16 }}>{error}</div>}
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
-          {step > 1 && <button onClick={() => setStep(s => s-1)} style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Back</button>}
-          {step < 2
-            ? <button onClick={() => { if (!name || !sheetId) { setError('Name and Sheet ID are required'); return }; setError(''); setStep(2) }} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Continue</button>
-            : <button onClick={submit} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
-          }
-        </div>
+        <button onClick={submit} disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, marginTop: 28, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
       </div>
     </div>
   )
@@ -164,13 +161,13 @@ function ClientStats({ client, isMobile }) {
             .then(r => r.json()).then(d => d.values || []).catch(() => [])
         ))
         const dataObj = {}
-        tabs.forEach((tab, i) => { dataObj[tab.toLowerCase()] = results[i] })
-        // Normalize to mar/apr/may/jun keys for computeTaskStats
+        tabs.forEach((tab, i) => { dataObj[tab.toLowerCase().slice(0,3)] = results[i] })
+        // computeTaskStats reads mar/apr/may/jun; map by month name, fall back to order
         const normalized = {
-          mar: dataObj['mar'] || dataObj[tabs[0]?.toLowerCase()] || [],
-          apr: dataObj['apr'] || dataObj[tabs[1]?.toLowerCase()] || [],
-          may: dataObj['may'] || dataObj[tabs[2]?.toLowerCase()] || [],
-          jun: dataObj['jun'] || dataObj[tabs[3]?.toLowerCase()] || [],
+          mar: dataObj['mar'] || results[0] || [],
+          apr: dataObj['apr'] || results[1] || [],
+          may: dataObj['may'] || results[2] || [],
+          jun: dataObj['jun'] || results[3] || [],
         }
         setData(normalized)
       } catch(e) {

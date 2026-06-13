@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
+import { parseOutreachMonth } from './Dashboard'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
@@ -181,8 +182,8 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 16, height: 16, border: `2px solid ${client.Color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 28, flex: 1 }}>
             {[
               { label: 'Init',    val: stats.initiated, color: '#60A5FA' },
               { label: 'Seen',    val: stats.mediaSeen, color: '#F472B6' },
@@ -196,7 +197,7 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
             ))}
           </div>
           <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
-          <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 28 }}>
             {[
               { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
               { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
@@ -226,28 +227,75 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
 
+  // Monthly performance
+  const MONTH_KEYS = ['mar','apr','may','jun']
+  const MONTH_LABELS = ['Mar','Apr','May','Jun']
+  const monthlyRows = MONTH_KEYS.map((k, i) => {
+    const pm = parseOutreachMonth(data[k]||[])
+    if (!pm || !pm.summary) return null
+    const s = pm.summary
+    return { month: MONTH_LABELS[i], A: s.A, MS: s.MS, B: s.B, C: s.C,
+      msr: s.A > 0 ? +((s.MS/s.A)*100).toFixed(1) : 0,
+      prr: s.A > 0 ? +((s.B/s.A)*100).toFixed(1) : 0,
+      abr: s.A > 0 ? +((s.C/s.A)*100).toFixed(1) : 0 }
+  }).filter(Boolean)
+
   return (
     <div>
-      {/* Daily Tasks — same cards as Dashboard tab */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
-        {[
-          { label: 'Outreach',       val: `${outreachCount}/20`,    color: outreachCount >= 20 ? '#34D399' : '#EF4444', sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
-          { label: 'Followups',      val: `${fuDone}/${fuTotal||'—'}`,  color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444', sub: 'Due today' },
-          { label: 'Pos. Followups', val: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B', sub: 'Active sequences' },
-        ].map(k => (
-          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
-            {isWeekend
-              ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
-              : <>
-                <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.val}</div>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
-              </>}
+      {/* Monthly Performance + Daily Tasks vedle sebe */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 28 }}>
+        {/* Monthly Performance */}
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
+          {monthlyRows.length === 0
+            ? <div style={{ color: 'var(--text4)', fontSize: 12 }}>No data</div>
+            : monthlyRows.map(m => (
+              <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13, marginBottom: 10 }}>{m.month} 2026</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, marginBottom: 6 }}>
+                  {[{v:m.A,l:'INIT',c:'#60A5FA'},{v:m.MS,l:'SEEN',c:'#F472B6'},{v:m.B,l:'REPLIES',c:'#FB923C'},{v:m.C,l:'BOOKED',c:'#A855F7'}].map(x => (
+                    <div key={x.l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: x.c }}>{x.v}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
+                  {[{v:m.msr+'%',l:'MSR',c:'#F472B6'},{v:m.prr+'%',l:'PRR',c:'#FB923C'},{v:m.abr+'%',l:'ABR',c:'#A855F7'}].map(x => (
+                    <div key={x.l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: x.c }}>{x.v}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </div>
+
+        {/* Daily Tasks */}
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Today's Tasks</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {[
+              { label: 'Outreach',       val: `${outreachCount}/20`,       color: outreachCount >= 20 ? '#34D399' : '#EF4444', sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
+              { label: 'Followups',      val: `${fuDone}/${fuTotal||'—'}`,  color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444', sub: 'Due today' },
+              { label: 'Pos. Followups', val: `${pfuDone}/${pfuTotal||'—'}`,color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B', sub: 'Active sequences' },
+            ].map(k => (
+              <div key={k.label}>
+                <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>{k.label}</div>
+                {isWeekend
+                  ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
+                  : <>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 4 }}>{k.val}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
+                  </>}
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Outreach analytics — funnel by variable is at the top */}
+      {/* Outreach — Total Active Funnel je nahoře automaticky */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
     </div>
   )

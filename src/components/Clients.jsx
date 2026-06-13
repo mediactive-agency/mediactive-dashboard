@@ -1,0 +1,318 @@
+import { useState, useEffect } from 'react'
+import { computeTaskStats } from '../utils/computeTaskStats'
+
+const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
+
+const COLORS = [
+  '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6', '#14B8A6'
+]
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+function AddClientWizard({ onClose, onAdded }) {
+  const [step, setStep] = useState(1)
+  const [name, setName] = useState('')
+  const [color, setColor] = useState(COLORS[0])
+  const [sheetId, setSheetId] = useState('')
+  const [tabs, setTabs] = useState('Mar,Apr,May,Jun')
+  const [calendlyPat, setCalendlyPat] = useState('')
+  const [calendlyUri, setCalendlyUri] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    if (!name || !sheetId) { setError('Name and Sheet ID are required'); return }
+    setLoading(true)
+    try {
+      const url = `${PROXY}?action=addClient&name=${encodeURIComponent(name)}&color=${encodeURIComponent(color)}&outreachSheetId=${encodeURIComponent(sheetId)}&sheetTabs=${encodeURIComponent(tabs)}&calendlyPat=${encodeURIComponent(calendlyPat)}&calendlyUserUri=${encodeURIComponent(calendlyUri)}`
+      const res = await fetch(url)
+      const data = await res.json()
+      if (data.success) { onAdded(); onClose() }
+      else setError('Failed to add client')
+    } catch(e) {
+      setError('Network error')
+    }
+    setLoading(false)
+  }
+
+  const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: 14, boxSizing: 'border-box', outline: 'none' }
+  const labelStyle = { fontSize: 12, fontWeight: 600, color: 'var(--text3)', marginBottom: 6, display: 'block', letterSpacing: '0.05em' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Add New Client</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Step {step} of 2</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        {/* Progress */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 28 }}>
+          {[1,2].map(s => <div key={s} style={{ flex: 1, height: 3, borderRadius: 2, background: s <= step ? color : 'var(--border)' }} />)}
+        </div>
+
+        {step === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <label style={labelStyle}>CLIENT NAME</label>
+              <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Acme Bookkeeping" />
+            </div>
+            <div>
+              <label style={labelStyle}>COLOR</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {COLORS.map(c => (
+                  <button key={c} onClick={() => setColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>OUTREACH SHEET ID</label>
+              <input style={inputStyle} value={sheetId} onChange={e => setSheetId(e.target.value)} placeholder="From the Google Sheets URL" />
+              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Open their tracking sheet → copy the ID from the URL between /d/ and /edit</div>
+            </div>
+            <div>
+              <label style={labelStyle}>SHEET TABS</label>
+              <input style={inputStyle} value={tabs} onChange={e => setTabs(e.target.value)} placeholder="Mar,Apr,May,Jun" />
+              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Comma separated, same as your own sheet</div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ background: 'var(--border)', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: 'var(--text3)' }}>
+              Calendly is optional — skip if client doesn't use it or you don't have access.
+            </div>
+            <div>
+              <label style={labelStyle}>CALENDLY PERSONAL ACCESS TOKEN</label>
+              <input style={inputStyle} value={calendlyPat} onChange={e => setCalendlyPat(e.target.value)} placeholder="eyJraWQi..." />
+              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>calendly.com → Integrations → API & Webhooks</div>
+            </div>
+            <div>
+              <label style={labelStyle}>CALENDLY USER URI</label>
+              <input style={inputStyle} value={calendlyUri} onChange={e => setCalendlyUri(e.target.value)} placeholder="https://api.calendly.com/users/..." />
+              <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 6 }}>Run GET /users/me with the PAT to get this</div>
+            </div>
+          </div>
+        )}
+
+        {error && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 16 }}>{error}</div>}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
+          {step > 1 && <button onClick={() => setStep(s => s-1)} style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Back</button>}
+          {step < 2
+            ? <button onClick={() => { if (!name || !sheetId) { setError('Name and Sheet ID are required'); return }; setError(''); setStep(2) }} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Continue</button>
+            : <button onClick={submit} disabled={loading} style={{ flex: 1, padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
+          }
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ClientCard({ client, onSelect }) {
+  return (
+    <div onClick={() => onSelect(client)} style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px', cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)' }}
+      onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+        <div style={{ width: 42, height: 42, borderRadius: '50%', background: client.Color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+          {client.Name.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>{client.Name}</div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Added {new Date(client['Created At']).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text4)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--border)', padding: '3px 8px', borderRadius: 20 }}>
+          {client['Sheet Tabs'] || 'No tabs'}
+        </div>
+        {client['Calendly PAT'] && (
+          <div style={{ fontSize: 11, color: client.Color, background: client.Color + '20', padding: '3px 8px', borderRadius: 20 }}>
+            Calendly connected
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ClientStats({ client, isMobile }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true); setError(null)
+      try {
+        const tabs = (client['Sheet Tabs'] || 'Mar,Apr,May,Jun').split(',').map(t => t.trim())
+        const sheetId = client['Outreach Sheet ID']
+        const results = await Promise.all(tabs.map(tab =>
+          fetch(`${PROXY}?id=${sheetId}&range=${encodeURIComponent(tab + '!A1:AZ700')}`)
+            .then(r => r.json()).then(d => d.values || []).catch(() => [])
+        ))
+        const dataObj = {}
+        tabs.forEach((tab, i) => { dataObj[tab.toLowerCase()] = results[i] })
+        // Normalize to mar/apr/may/jun keys for computeTaskStats
+        const normalized = {
+          mar: dataObj['mar'] || dataObj[tabs[0]?.toLowerCase()] || [],
+          apr: dataObj['apr'] || dataObj[tabs[1]?.toLowerCase()] || [],
+          may: dataObj['may'] || dataObj[tabs[2]?.toLowerCase()] || [],
+          jun: dataObj['jun'] || dataObj[tabs[3]?.toLowerCase()] || [],
+        }
+        setData(normalized)
+      } catch(e) {
+        setError('Failed to load data')
+      }
+      setLoading(false)
+    }
+    load()
+  }, [client])
+
+  if (loading) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+      <div style={{ width: 28, height: 28, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+  if (error) return <div style={{ color: '#EF4444', padding: 20 }}>{error}</div>
+  if (!data) return null
+
+  const stats = computeTaskStats(data)
+  if (!stats) return null
+
+  const { outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, dailyInitiated } = stats
+
+  // Total stats
+  const allRows = [...(data.mar||[]), ...(data.apr||[]), ...(data.may||[]), ...(data.jun||[])]
+  let initiated = 0, replies = 0, booked = 0
+  allRows.forEach(r => {
+    if (!r || !r[1]) return
+    initiated++
+    if (r[14]) replies++
+    if (r[27]) booked++
+  })
+
+  const s = (label, val, color) => (
+    <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{val}</div>
+    </div>
+  )
+
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Overall Pipeline</div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
+        {s('Initiated', initiated.toLocaleString(), '#60A5FA')}
+        {s('Replies', replies.toLocaleString(), '#FB923C')}
+        {s('Booked', booked.toLocaleString(), '#A78BFA')}
+        {s('Book Rate', initiated > 0 ? (booked/initiated*100).toFixed(1)+'%' : '—', '#34D399')}
+      </div>
+
+      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Today</div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Outreach</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: outreachCount >= 20 ? '#34D399' : '#EF4444', lineHeight: 1 }}>{outreachCount}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/20</span></div>
+        </div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Followups</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444', lineHeight: 1 }}>{fuDone}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{fuTotal||'—'}</span></div>
+        </div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Pos. Followups</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#EF4444', lineHeight: 1 }}>{pfuDone}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{pfuTotal||'—'}</span></div>
+        </div>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Streak</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#FB923C' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg></span>
+            <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{streak}</div>
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>days</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function Clients({ isMobile }) {
+  const [clients, setClients] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showWizard, setShowWizard] = useState(false)
+  const [selected, setSelected] = useState(null)
+
+  async function loadClients() {
+    setLoading(true)
+    try {
+      const res = await fetch(`${PROXY}?action=getClients`)
+      const data = await res.json()
+      setClients(data.clients || [])
+    } catch(e) {
+      setClients([])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => { loadClients() }, [])
+
+  if (selected) return (
+    <div>
+      <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+        All Clients
+      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: selected.Color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 800, color: '#fff' }}>
+          {selected.Name.charAt(0).toUpperCase()}
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
+      </div>
+      <ClientStats client={selected} isMobile={isMobile} />
+    </div>
+  )
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ fontSize: 13, color: 'var(--text3)' }}>{clients.length} active client{clients.length !== 1 ? 's' : ''}</div>
+        <button onClick={() => setShowWizard(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Client
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
+          <div style={{ width: 28, height: 28, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : clients.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>👥</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No clients yet</div>
+          <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>Add your first client to start tracking their outreach</div>
+          <button onClick={() => setShowWizard(true)} style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>
+          {clients.map(c => <ClientCard key={c.ID} client={c} onSelect={setSelected} />)}
+        </div>
+      )}
+
+      {showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} />}
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}

@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard'
 import Outreach from './components/Outreach'
 import Sales from './components/Sales'
 import Tasks from './components/Tasks'
+import Clients from './components/Clients'
 import { computeTaskStats } from './utils/computeTaskStats'
 
 function getGreeting() {
@@ -51,7 +52,7 @@ export default function App() {
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks' }
+  const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients' }
   const isDark = theme === 'dark'
 
   return (
@@ -99,6 +100,7 @@ export default function App() {
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} />}
+              {page === 'clients'   && <Clients   isMobile={isMobile} />}
             </>
           ) : null}
         </div>

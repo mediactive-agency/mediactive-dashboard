@@ -224,25 +224,30 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   const taskStats = computeTaskStats(data)
   const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0 } = taskStats || {}
 
-  const tc = (label, val, total, color) => (
-    <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>
-        {val}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{total || '—'}</span>
-      </div>
-    </div>
-  )
+  const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
 
   return (
     <div>
-      {/* Funnel + MSR/PRR/ABR rate cards via Dashboard clientMode */}
-      <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo}
-        dailyStats={{ fuToday: fuTotal, fuDoneToday: fuDone, pfuToday: pfuTotal, pfuDoneToday: pfuDone, streak: 0 }}
-        isMobile={isMobile} isTablet={isTablet} clientMode />
+      {/* Daily Tasks — same cards as Dashboard tab */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+        {[
+          { label: 'Outreach',       val: `${outreachCount}/20`,    color: outreachCount >= 20 ? '#34D399' : '#EF4444', sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
+          { label: 'Followups',      val: `${fuDone}/${fuTotal||'—'}`,  color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444', sub: 'Due today' },
+          { label: 'Pos. Followups', val: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B', sub: 'Active sequences' },
+        ].map(k => (
+          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)' }}>
+            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+            {isWeekend
+              ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
+              : <>
+                <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.val}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
+              </>}
+          </div>
+        ))}
+      </div>
 
-
-
-      {/* Variable funnels */}
+      {/* Outreach analytics — funnel by variable is at the top */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
     </div>
   )

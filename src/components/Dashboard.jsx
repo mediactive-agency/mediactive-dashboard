@@ -182,6 +182,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
   const fuColor = dd.fuToday === 0 ? '#34D399' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444'
   const pfuColor = dd.pfuToday === 0 ? '#555558' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B'
 
+  if (clientMode) return null
+
   return (
     <div>
       {/* Funnel */}

@@ -297,7 +297,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile || isTablet ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile || isTablet ? '1fr' : clientMode ? '1fr 1fr' : 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
@@ -322,6 +322,26 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             </div>
           ))}
         </div>
+
+        {clientMode && (
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Today's Tasks</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {[
+              { label: 'Outreach',      val: outToday, total: 20,      color: outToday >= 20 ? '#34D399' : '#EF4444' },
+              { label: 'Followups',     val: dd.fuDoneToday,  total: dd.fuToday,  color: dd.fuToday === 0 ? 'var(--text4)' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444' },
+              { label: 'Pos. Followups',val: dd.pfuDoneToday, total: dd.pfuToday, color: dd.pfuToday === 0 ? 'var(--text4)' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B' },
+            ].map(t => (
+              <div key={t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{t.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: t.color, lineHeight: 1 }}>
+                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
 
         {!clientMode && (
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>

@@ -144,15 +144,17 @@ function calcStats(data, filter, customFrom, customTo) {
       return true
     })
   }
-  let initiated = 0, replies = 0, booked = 0
+  let initiated = 0, mediaSeen = 0, replies = 0, booked = 0
   rows.forEach(r => {
     initiated++
+    if (String(r[10]||'').toUpperCase() === 'YES') mediaSeen++
     if (r[14] && String(r[14]).trim()) replies++
     if (r[27] && String(r[27]).trim()) booked++
   })
+  const msr = initiated > 0 ? (mediaSeen/initiated*100).toFixed(1) : null
   const prr = initiated > 0 ? (replies/initiated*100).toFixed(1) : null
   const abr = initiated > 0 ? (booked/initiated*100).toFixed(1) : null
-  return { initiated, replies, booked, prr, abr }
+  return { initiated, mediaSeen, replies, booked, msr, prr, abr }
 }
 
 function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
@@ -234,24 +236,11 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   return (
     <div>
       {/* Funnel + MSR/PRR/ABR rate cards via Dashboard clientMode */}
-      <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo} dailyStats={null} isMobile={isMobile} isTablet={isTablet} clientMode />
+      <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo}
+        dailyStats={{ fuToday: fuTotal, fuDoneToday: fuDone, pfuToday: pfuTotal, pfuDoneToday: pfuDone, streak: 0 }}
+        isMobile={isMobile} isTablet={isTablet} clientMode />
 
-      {/* Daily Tasks — same card style, next to Monthly Performance already rendered above */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 12, marginBottom: 28 }}>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Outreach</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: outreachCount >= 20 ? '#34D399' : '#EF4444', lineHeight: 1 }}>
-            {outreachCount}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/20</span>
-          </div>
-        </div>
-        {tc('Followups', fuDone, fuTotal, fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444')}
-        {tc('Pos. Followups', pfuDone, pfuTotal, pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B')}
-      </div>
+
 
       {/* Variable funnels */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />

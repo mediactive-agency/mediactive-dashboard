@@ -144,15 +144,17 @@ function calcStats(data, filter, customFrom, customTo) {
       return true
     })
   }
-  let initiated = 0, replies = 0, booked = 0
+  let initiated = 0, replies = 0, booked = 0, mediaSeen = 0
   rows.forEach(r => {
     initiated++
+    if (r[10] === 'YES' || (r[10] && String(r[10]).toUpperCase() === 'YES')) mediaSeen++
     if (r[14] && String(r[14]).trim()) replies++
     if (r[27] && String(r[27]).trim()) booked++
   })
+  const msr = initiated > 0 ? (mediaSeen/initiated*100).toFixed(1) : null
   const prr = initiated > 0 ? (replies/initiated*100).toFixed(1) : null
   const abr = initiated > 0 ? (booked/initiated*100).toFixed(1) : null
-  return { initiated, replies, booked, prr, abr }
+  return { initiated, replies, booked, mediaSeen, msr, prr, abr }
 }
 
 function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
@@ -179,19 +181,32 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 16, height: 16, border: `2px solid ${client.Color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-          {[
-            { label: 'Init', val: stats.initiated, color: '#60A5FA' },
-            { label: 'Replies', val: stats.replies, color: '#FB923C' },
-            { label: 'Booked', val: stats.booked, color: '#A78BFA' },
-            { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#F472B6' },
-            { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#34D399' },
-          ].map(m => (
-            <div key={m.label}>
-              <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
-            </div>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 14, flex: 1 }}>
+            {[
+              { label: 'Init', val: stats.initiated, color: '#60A5FA' },
+              { label: 'Replies', val: stats.replies, color: '#FB923C' },
+              { label: 'Booked', val: stats.booked, color: '#A78BFA' },
+            ].map(m => (
+              <div key={m.label}>
+                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
+          <div style={{ display: 'flex', gap: 14 }}>
+            {[
+              { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
+              { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
+              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#34D399' },
+            ].map(m => (
+              <div key={m.label}>
+                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -217,11 +232,12 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   return (
     <div>
       {/* Pipeline summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)', gap: 12, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(6,1fr)', gap: 12, marginBottom: 32 }}>
         {s('Initiated', stats.initiated.toLocaleString(), '#60A5FA')}
         {s('Replies', stats.replies.toLocaleString(), '#FB923C')}
         {s('Booked', stats.booked.toLocaleString(), '#A78BFA')}
-        {s('PRR', stats.prr !== null ? stats.prr+'%' : '—', '#F472B6')}
+        {s('MSR', stats.msr !== null ? stats.msr+'%' : '—', '#F472B6')}
+        {s('PRR', stats.prr !== null ? stats.prr+'%' : '—', '#FB923C')}
         {s('ABR', stats.abr !== null ? stats.abr+'%' : '—', '#34D399')}
       </div>
 

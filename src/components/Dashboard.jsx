@@ -112,7 +112,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       ? Math.round(bookedRows.filter(r => r.daysToBook !== null).reduce((s, r) => s + r.daysToBook, 0) / bookedRows.filter(r => r.daysToBook !== null).length)
       : null
 
-    const sf = (data.sales || []).slice(1).filter(r => r && r[0]).filter(r => inRange(toSalesDateStr(r[1]), filter, customFrom, customTo))
+    const sf = data.sales.slice(1).filter(r => r && r[0]).filter(r => inRange(toSalesDateStr(r[1]), filter, customFrom, customTo))
     const total = sf.length
     const closed = sf.filter(r => (r[5]||'').toLowerCase() === 'yes').length
     const followUp = sf.filter(r => (r[5]||'').toLowerCase() === 'follow-up').length
@@ -323,7 +323,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ))}
         </div>
 
-{!clientMode && (
+        {!clientMode && (
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
           {[
@@ -343,8 +343,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ))}
         </div>
         )}
-
-{!clientMode && (
+        {!clientMode && (
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Top Objections</div>
           {topObj.length === 0

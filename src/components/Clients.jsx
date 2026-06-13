@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
+import { parseOutreachMonth } from './Dashboard'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
@@ -181,29 +182,30 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 16, height: 16, border: `2px solid ${client.Color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 24, flex: 1 }}>
             {[
-              { label: 'Init',    val: stats.initiated, color: '#60A5FA' },
-              { label: 'Replies', val: stats.replies,   color: '#FB923C' },
-              { label: 'Booked',  val: stats.booked,    color: '#A78BFA' },
+              { label: 'Init',    val: stats.initiated,  color: '#60A5FA' },
+              { label: 'Seen',    val: stats.mediaSeen,  color: '#F472B6' },
+              { label: 'Replies', val: stats.replies,    color: '#FB923C' },
+              { label: 'Booked',  val: stats.booked,     color: '#A855F7' },
             ].map(m => (
               <div key={m.label}>
-                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 4, fontWeight: 600 }}>{m.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.val}</div>
+                <div style={{ fontSize: 11, color: 'var(--text4)', marginBottom: 5, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: m.color }}>{m.val}</div>
               </div>
             ))}
           </div>
           <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
-          <div style={{ display: 'flex', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 24 }}>
             {[
               { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
               { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
-              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#A78BFA' },
+              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#A855F7' },
             ].map(m => (
               <div key={m.label}>
-                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 4, fontWeight: 600 }}>{m.label}</div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.val}</div>
+                <div style={{ fontSize: 11, color: 'var(--text4)', marginBottom: 5, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: m.color }}>{m.val}</div>
               </div>
             ))}
           </div>
@@ -220,49 +222,155 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
     </div>
   )
 
-  const stats = calcStats(data, filter, customFrom, customTo)
-
-  const s = (label, val, color) => (
-    <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{val}</div>
-    </div>
-  )
-
   const taskStats = computeTaskStats(data)
-  const { outreachCount, fuTotal, fuDone, pfuTotal, pfuDone } = taskStats || {}
+  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0 } = taskStats || {}
+
+  // Funnel data
+  const sheets = [data.mar||[], data.apr||[], data.may||[], data.jun||[]]
+  const allRaw = []
+  sheets.forEach(sheet => {
+    let ds = -1
+    for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
+    if (ds < 0) return
+    for (let i = ds; i < sheet.length; i++) { const r = sheet[i]; if (!r || !r[3]) continue; allRaw.push(r) }
+  })
+  const filtered = filter === 'all' ? allRaw : allRaw.filter(r => {
+    const d = String(r[3]||'').slice(0,10)
+    if (filter === 'custom') return (!customFrom || d >= customFrom) && (!customTo || d <= customTo)
+    const now = new Date(); const ago = n => { const x = new Date(now); x.setDate(x.getDate()-n); return x.toISOString().slice(0,10) }
+    if (filter === '7d') return d >= ago(7)
+    if (filter === '14d') return d >= ago(14)
+    if (filter === '30d') return d >= ago(30)
+    return true
+  })
+  const A = filtered.length
+  const MS = filtered.filter(r => String(r[10]||'').toUpperCase() === 'YES').length
+  const B = filtered.filter(r => r[14] && String(r[14]).trim()).length
+  const C = filtered.filter(r => r[27] && String(r[27]).trim()).length
+  const msr = A > 0 ? +((MS/A)*100).toFixed(1) : null
+  const prr = A > 0 ? +((B/A)*100).toFixed(1) : null
+  const abr = A > 0 ? +((C/A)*100).toFixed(1) : null
+
+  // Monthly performance
+  const MONTHS = ['Mar','Apr','May','Jun']
+  const monthlyRows = MONTHS.map(m => {
+    const pm = parseOutreachMonth(data[m.toLowerCase()]||[])
+    if (!pm.summary) return null
+    const s = pm.summary
+    return { month: m, A: s.A, MS: s.MS, B: s.B, C: s.C, msr: s.A > 0 ? +((s.MS/s.A)*100).toFixed(1) : 0, prr: s.A > 0 ? +((s.B/s.A)*100).toFixed(1) : 0, abr: s.A > 0 ? +((s.C/s.A)*100).toFixed(1) : 0 }
+  }).filter(Boolean)
+
+  // Funnel steps
+  const funnelSteps = [
+    { label: 'Initiated',          count: A,  color: '#60A5FA' },
+    { label: 'Media Seen',         count: MS, color: '#F472B6' },
+    { label: 'Positive Replies',   count: B,  color: '#FB923C' },
+    { label: 'Appts Booked',       count: C,  color: '#A855F7' },
+  ]
+
+  const ARROW = <svg width="44" height="14" viewBox="0 0 50 14" fill="none" style={{color:"var(--text3)"}}><line x1="0" y1="7" x2="42" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
 
   return (
     <div>
-      {/* Funnel + MSR/PRR/ABR */}
-      <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo} dailyStats={null} isMobile={isMobile} isTablet={isTablet} clientMode />
-
-      {/* Daily Tasks */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 12, marginBottom: 32 }}>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Outreach</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: (outreachCount||0) >= 20 ? '#34D399' : '#EF4444', lineHeight: 1 }}>
-            {outreachCount||0}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/20</span>
+      {/* Funnel */}
+      <div style={{ marginBottom: 28 }}>
+        {isMobile ? (
+          <div style={{ background: 'var(--card)', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
+            {funnelSteps.map((step, i) => {
+              const pct = i < funnelSteps.length - 1 && step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : null
+              return (
+                <div key={i}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 16 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 4 }}>{step.label}</div>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                    </div>
+                    {pct && <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>{pct}</div>}
+                  </div>
+                  {i < funnelSteps.length - 1 && <div style={{ height: 1, background: 'var(--border)' }} />}
+                </div>
+              )
+            })}
           </div>
-        </div>
-        {['Followups','Pos. Followups'].map((lbl, i) => {
-          const done = i === 0 ? (fuDone||0) : (pfuDone||0)
-          const tot = i === 0 ? (fuTotal||0) : (pfuTotal||0)
-          const color = tot === 0 ? 'var(--text4)' : done >= tot ? '#34D399' : i === 0 ? '#EF4444' : '#F59E0B'
-          return (
-            <div key={lbl} style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{lbl}</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>
-                {done}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{tot||'—'}</span>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
+            {funnelSteps.map((step, i) => (
+              <>
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '22px 8px', background: 'var(--card)' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.count.toLocaleString()}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, textAlign: 'center' }}>{step.label}</div>
+                </div>
+                {i < funnelSteps.length - 1 && (
+                  <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
+                      {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
+                    </div>
+                    {ARROW}
+                  </div>
+                )}
+              </>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Monthly Performance + Tasks/Rates vedle sebe */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 28 }}>
+        {/* Monthly Performance */}
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
+          {monthlyRows.length === 0 ? <div style={{ color: 'var(--text4)', fontSize: 12 }}>No data</div> : monthlyRows.map(m => (
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13, marginBottom: 10 }}>{m.month} 2026</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, marginBottom: 6 }}>
+                {[{v:m.A,l:'INIT',c:'#60A5FA'},{v:m.MS,l:'SEEN',c:'#F472B6'},{v:m.B,l:'REPLIES',c:'#FB923C'},{v:m.C,l:'BOOKED',c:'#A855F7'}].map(x => (
+                  <div key={x.l} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: x.c }}>{x.v}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
+                {[{v:m.msr+'%',l:'MSR',c:'#F472B6'},{v:m.prr+'%',l:'PRR',c:'#FB923C'},{v:m.abr+'%',l:'ABR',c:'#A855F7'}].map(x => (
+                  <div key={x.l} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: x.c }}>{x.v}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
+                  </div>
+                ))}
               </div>
             </div>
-          )
-        })}
+          ))}
+        </div>
+
+        {/* Today's Tasks + MSR/PRR/ABR */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+            <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Today's Tasks</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[
+                { label: 'Outreach', val: outreachCount, total: 20, color: outreachCount >= 20 ? '#34D399' : '#EF4444' },
+                { label: 'Followups', val: fuDone, total: fuTotal, color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444' },
+                { label: 'Pos. Followups', val: pfuDone, total: pfuTotal, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B' },
+              ].map(t => (
+                <div key={t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text3)' }}>{t.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: t.color }}>{t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'—'}</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+            <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Overall Rates</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              {[{l:'MSR',v:msr,c:'#F472B6'},{l:'PRR',v:prr,c:'#FB923C'},{l:'ABR',v:abr,c:'#A855F7'}].map(r => (
+                <div key={r.l} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 32, fontWeight: 800, color: r.c }}>{r.v !== null ? r.v+'%' : '—'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>{r.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Variable funnels */}
@@ -270,6 +378,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
     </div>
   )
 }
+
 
 export default function Clients({ isMobile, isTablet, filter, customFrom, customTo }) {
   const [clients, setClients] = useState([])

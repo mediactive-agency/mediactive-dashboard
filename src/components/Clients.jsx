@@ -181,29 +181,29 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 16, height: 16, border: `2px solid ${client.Color}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', gap: 14, flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ display: 'flex', gap: 20, flex: 1 }}>
             {[
-              { label: 'Init', val: stats.initiated, color: '#60A5FA' },
-              { label: 'Replies', val: stats.replies, color: '#FB923C' },
-              { label: 'Booked', val: stats.booked, color: '#A78BFA' },
+              { label: 'Init',    val: stats.initiated, color: '#60A5FA' },
+              { label: 'Replies', val: stats.replies,   color: '#FB923C' },
+              { label: 'Booked',  val: stats.booked,    color: '#A78BFA' },
             ].map(m => (
               <div key={m.label}>
-                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
+                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 4, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.val}</div>
               </div>
             ))}
           </div>
           <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
-          <div style={{ display: 'flex', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 20 }}>
             {[
               { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
               { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
-              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#34D399' },
+              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#A78BFA' },
             ].map(m => (
               <div key={m.label}>
-                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 3, fontWeight: 600 }}>{m.label}</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: m.color }}>{m.val}</div>
+                <div style={{ fontSize: 10, color: 'var(--text4)', marginBottom: 4, fontWeight: 600 }}>{m.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: m.color }}>{m.val}</div>
               </div>
             ))}
           </div>
@@ -229,25 +229,44 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
     </div>
   )
 
+  const taskStats = computeTaskStats(data)
+  const { outreachCount, fuTotal, fuDone, pfuTotal, pfuDone } = taskStats || {}
+
   return (
     <div>
-      {/* Pipeline summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(6,1fr)', gap: 12, marginBottom: 32 }}>
-        {s('Initiated', stats.initiated.toLocaleString(), '#60A5FA')}
-        {s('Replies', stats.replies.toLocaleString(), '#FB923C')}
-        {s('Booked', stats.booked.toLocaleString(), '#A78BFA')}
-        {s('MSR', stats.msr !== null ? stats.msr+'%' : '—', '#F472B6')}
-        {s('PRR', stats.prr !== null ? stats.prr+'%' : '—', '#FB923C')}
-        {s('ABR', stats.abr !== null ? stats.abr+'%' : '—', '#34D399')}
-      </div>
-
-      {/* Full sales funnel from Dashboard */}
+      {/* Funnel + MSR/PRR/ABR */}
       <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo} dailyStats={null} isMobile={isMobile} isTablet={isTablet} clientMode />
 
-      {/* Outreach variable funnels */}
-      <div style={{ marginTop: 32 }}>
-        <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
+      {/* Daily Tasks */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 16px' }}>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
+        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
       </div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 12, marginBottom: 32 }}>
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Outreach</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: (outreachCount||0) >= 20 ? '#34D399' : '#EF4444', lineHeight: 1 }}>
+            {outreachCount||0}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/20</span>
+          </div>
+        </div>
+        {['Followups','Pos. Followups'].map((lbl, i) => {
+          const done = i === 0 ? (fuDone||0) : (pfuDone||0)
+          const tot = i === 0 ? (fuTotal||0) : (pfuTotal||0)
+          const color = tot === 0 ? 'var(--text4)' : done >= tot ? '#34D399' : i === 0 ? '#EF4444' : '#F59E0B'
+          return (
+            <div key={lbl} style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{lbl}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>
+                {done}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{tot||'—'}</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Variable funnels */}
+      <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
     </div>
   )
 }

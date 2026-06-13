@@ -135,7 +135,12 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
 
   const { A, MS, B, C, D, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj } = stats
 
-  const funnelSteps = [
+  const funnelSteps = clientMode ? [
+    { icon: ICONS.initiated, count: A,  label: 'Initiated',            color: '#60A5FA' },
+    { icon: ICONS.seen,      count: MS, label: 'Media Seen',           color: '#F472B6' },
+    { icon: ICONS.reply,     count: B,  label: 'Positive Replies',     color: '#FB923C' },
+    { icon: ICONS.booked,    count: C,  label: 'Appointments Booked',  color: '#A855F7' },
+  ] : [
     { icon: ICONS.initiated, count: A,      label: 'Initiated',            color: '#60A5FA' },
     { icon: ICONS.seen,      count: MS,     label: 'Media Seen',           color: '#F472B6' },
     { icon: ICONS.reply,     count: B,      label: 'Positive Replies',     color: '#FB923C' },
@@ -144,7 +149,11 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     { icon: ICONS.closed,    count: closed, label: 'Closed',               color: '#34D399' },
   ]
 
-  const rates = [
+  const rates = clientMode ? [
+    { label: 'Media Seen Rate',          value: A > 0 ? +((MS/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Seen',     color: '#F472B6' },
+    { label: 'Positive Reply Rate',      value: A > 0 ? +((B/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Replied',   color: '#FB923C' },
+    { label: 'Appointment Booking Rate', value: A > 0 ? +((C/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Booked',    color: '#A855F7' },
+  ] : [
     { label: 'Positive Reply Rate',      value: A > 0 ? +((B/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Replied',   color: '#FB923C' },
     { label: 'Avg Followups',            value: avgFollowups,                          suffix: 'x', sub: 'before booking',        color: '#A78BFA' },
     { label: 'Avg Days to Book',         value: avgDaysToBook,                         suffix: 'd', sub: 'from first contact',    color: '#FBBF24' },
@@ -314,7 +323,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ))}
         </div>
 
-        {/* Pipeline */}
+{!clientMode && (
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Pipeline Status</div>
           {[
@@ -333,8 +342,9 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
             </div>
           ))}
         </div>
+        )}
 
-        {/* Objections */}
+{!clientMode && (
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Top Objections</div>
           {topObj.length === 0
@@ -346,6 +356,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
               </div>
             ))}
         </div>
+        )}
       </div>
 
     </div>

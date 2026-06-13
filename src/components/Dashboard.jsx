@@ -101,8 +101,12 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     const C = filtered.filter(r => r.hasC).length
     const D = filtered.filter(r => r.hasD).length
 
-    const monthlyTable = ['Mar', 'Apr', 'May'].map(m => {
-      const s = M[m].summary; if (!s) return null
+    const ALL_MONTHS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb']
+    const currentMonthIdx = new Date().getMonth()
+    const MONTH_TO_KEY = { Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11, Jan:0, Feb:1 }
+    const lastThree = ALL_MONTHS.filter(m => MONTH_TO_KEY[m] <= currentMonthIdx && M[m]).slice(-3)
+    const monthlyTable = lastThree.map(m => {
+      const s = M[m] && M[m].summary; if (!s) return null
       return { month: m, ...s, msr: pct(s.MS, s.A), abr: pct(s.C, s.A) }
     }).filter(Boolean)
 

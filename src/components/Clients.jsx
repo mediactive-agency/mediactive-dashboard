@@ -252,8 +252,10 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
           {monthlyRows.map((m, mi) => (
-            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: mi < monthlyRows.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <div style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13, marginBottom: 10 }}>{m.month} 2026</div>
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: mi < monthlyRows.length - 1 ? 14 : 0, borderBottom: mi < monthlyRows.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, marginBottom: 8 }}>
                 {[
                   {val:m.A,  lbl:'INIT',    color:'#60A5FA'},
@@ -267,7 +269,6 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
                   </div>
                 ))}
               </div>
-              <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
                 {[
                   {val:m.msr+'%', lbl:'MSR', color:'#F472B6'},

@@ -316,8 +316,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
         {/* Monthly */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
-          {monthlyTable.map(m => (
-            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
+          {monthlyTable.map((m, mi) => (
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: mi < monthlyTable.length - 1 ? '1px solid var(--border)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
@@ -368,8 +368,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           ].map(x => (
             <div key={x.l} style={{ marginBottom: 11 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: isMobile ? 14 : 11, color: 'var(--text2)' }}>{x.l}</span>
-                <span style={{ fontSize: isMobile ? 15 : 12, color: x.c, fontWeight: 600 }}>{x.v}</span>
+                <span style={{ fontSize: isMobile ? 14 : 13, color: 'var(--text2)' }}>{x.l}</span>
+                <span style={{ fontSize: isMobile ? 15 : 14, color: x.c, fontWeight: 600 }}>{x.v}</span>
               </div>
               <div style={{ height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: total > 0 ? `${(x.v/total)*100}%` : 0, background: x.c, borderRadius: 2 }} />

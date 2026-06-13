@@ -228,8 +228,12 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
 
   // Monthly performance
-  const MONTH_KEYS = ['mar','apr','may','jun']
-  const MONTH_LABELS = ['Mar','Apr','May','Jun']
+  const ALL_MONTH_PAIRS = [['mar','Mar'],['apr','Apr'],['may','May'],['jun','Jun']]
+  const currentMonth = new Date().getMonth() // 0=Jan, 5=Jun
+  const MONTH_TO_IDX = { mar:2, apr:3, may:4, jun:5 }
+  const lastThreePairs = ALL_MONTH_PAIRS.filter(([k]) => MONTH_TO_IDX[k] <= currentMonth && data[k] && data[k].length > 1).slice(-3)
+  const MONTH_KEYS = lastThreePairs.map(([k]) => k)
+  const MONTH_LABELS = lastThreePairs.map(([,l]) => l)
   const monthlyRows = MONTH_KEYS.map((k, i) => {
     const pm = parseOutreachMonth(data[k]||[])
     if (!pm || !pm.summary) return null

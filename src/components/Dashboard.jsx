@@ -84,7 +84,7 @@ function getGreeting() {
   return 'Good night, Kryštof'
 }
 
-export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile, isTablet }) {
+export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile, isTablet, clientMode }) {
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -243,6 +243,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
       </div>
 
       {/* Today's Tasks */}
+      {!clientMode && <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
         <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
@@ -279,6 +280,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
           </div>
         </div>
       </div>
+      </>}
 
       {/* Breakdown */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>

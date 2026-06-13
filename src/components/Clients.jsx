@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
+import Dashboard from './Dashboard'
+import Outreach from './Outreach'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
@@ -196,71 +198,14 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
   )
 }
 
-function ClientStats({ client, isMobile }) {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  useEffect(() => {
-    async function load() {
-      setLoading(true); setError(null)
-      try {
-        const tabs = (client['Sheet Tabs'] || 'Mar,Apr,May,Jun').split(',').map(t => t.trim())
-        const sheetId = client['Outreach Sheet ID']
-        const results = await Promise.all(tabs.map(tab =>
-          fetch(`${PROXY}?id=${sheetId}&range=${encodeURIComponent(tab + '!A1:AZ700')}`)
-            .then(r => r.json()).then(d => d.values || []).catch(() => [])
-        ))
-        const dataObj = {}
-        tabs.forEach((tab, i) => { dataObj[tab.toLowerCase().slice(0,3)] = results[i] })
-        // computeTaskStats reads mar/apr/may/jun; map by month name, fall back to order
-        const normalized = {
-          mar: dataObj['mar'] || results[0] || [],
-          apr: dataObj['apr'] || results[1] || [],
-          may: dataObj['may'] || results[2] || [],
-          jun: dataObj['jun'] || results[3] || [],
-        }
-        setData(normalized)
-      } catch(e) {
-        setError('Failed to load data')
-      }
-      setLoading(false)
-    }
-    load()
-  }, [client])
-
-  if (loading) return (
+function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet }) {
+  if (!data) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
       <div style={{ width: 28, height: 28, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
-  if (error) return <div style={{ color: '#EF4444', padding: 20 }}>{error}</div>
-  if (!data) return null
 
-  const stats = computeTaskStats(data)
-  if (!stats) return null
-
-  const { outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, dailyInitiated } = stats
-
-  // Total stats
-  const allRows = []
-  for (const sheet of [data.mar||[], data.apr||[], data.may||[], data.jun||[]]) {
-    let ds = -1
-    for (let i = 0; i < sheet.length; i++) {
-      if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
-    }
-    if (ds < 0) continue
-    for (let i = ds; i < sheet.length; i++) {
-      const r = sheet[i]; if (!r || !r[3]) continue
-      allRows.push(r)
-    }
-  }
-  let initiated = 0, replies = 0, booked = 0
-  allRows.forEach(r => {
-    initiated++
-    if (r[14] && String(r[14]).trim()) replies++
-    if (r[27] && String(r[27]).trim()) booked++
-  })
+  const stats = calcStats(data, filter, customFrom, customTo)
 
   const s = (label, val, color) => (
     <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
@@ -271,42 +216,27 @@ function ClientStats({ client, isMobile }) {
 
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Overall Pipeline</div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
-        {s('Initiated', initiated.toLocaleString(), '#60A5FA')}
-        {s('Replies', replies.toLocaleString(), '#FB923C')}
-        {s('Booked', booked.toLocaleString(), '#A78BFA')}
-        {s('Book Rate', initiated > 0 ? (booked/initiated*100).toFixed(1)+'%' : '—', '#34D399')}
+      {/* Pipeline summary */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(5,1fr)', gap: 12, marginBottom: 32 }}>
+        {s('Initiated', stats.initiated.toLocaleString(), '#60A5FA')}
+        {s('Replies', stats.replies.toLocaleString(), '#FB923C')}
+        {s('Booked', stats.booked.toLocaleString(), '#A78BFA')}
+        {s('PRR', stats.prr !== null ? stats.prr+'%' : '—', '#F472B6')}
+        {s('ABR', stats.abr !== null ? stats.abr+'%' : '—', '#34D399')}
       </div>
 
-      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Today</div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 12, marginBottom: 28 }}>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Outreach</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: outreachCount >= 20 ? '#34D399' : '#EF4444', lineHeight: 1 }}>{outreachCount}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/20</span></div>
-        </div>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Followups</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444', lineHeight: 1 }}>{fuDone}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{fuTotal||'—'}</span></div>
-        </div>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Pos. Followups</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#EF4444', lineHeight: 1 }}>{pfuDone}<span style={{ fontSize: 14, color: 'var(--text3)', fontWeight: 400 }}>/{pfuTotal||'—'}</span></div>
-        </div>
-        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Streak</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#FB923C' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg></span>
-            <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>{streak}</div>
-            <div style={{ fontSize: 12, color: 'var(--text3)' }}>days</div>
-          </div>
-        </div>
+      {/* Full sales funnel from Dashboard */}
+      <Dashboard data={data} filter={filter} customFrom={customFrom} customTo={customTo} dailyStats={null} isMobile={isMobile} isTablet={isTablet} clientMode />
+
+      {/* Outreach variable funnels */}
+      <div style={{ marginTop: 32 }}>
+        <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
       </div>
     </div>
   )
 }
 
-export default function Clients({ isMobile, filter, customFrom, customTo }) {
+export default function Clients({ isMobile, isTablet, filter, customFrom, customTo }) {
   const [clients, setClients] = useState([])
   const [clientData, setClientData] = useState({})
   const [loading, setLoading] = useState(true)
@@ -361,7 +291,7 @@ export default function Clients({ isMobile, filter, customFrom, customTo }) {
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
       </div>
-      <ClientStats client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} />
+      <ClientStats client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
     </div>
   )
 

@@ -168,7 +168,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
   )
 }
 
-export default function Outreach({ data, filter, customFrom, customTo, isMobile }) {
+export default function Outreach({ data, filter, customFrom, customTo, isMobile, isTablet, mode }) {
   const [selected, setSelected] = useState(new Set())
 
   const { activeVars, inactiveVars, tot } = useMemo(() => {
@@ -277,7 +277,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
 
   return (
     <div>
-      <Divider label="Total Active Funnel" />
+      {mode !== 'variables' && (<><Divider label="Total Active Funnel" />
       <div style={{ borderRadius: 12, marginBottom: 20, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
@@ -371,10 +371,10 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
             </div>
           </div>
           )}
-      </div>
+      </div></>
+      )}
 
-      <Divider label="By Variable — click to compare" />
-
+      {mode !== 'funnel' && (<>
       {selected.size > 0 && (
         <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
@@ -459,6 +459,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile 
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} />)}
         </>
       )}
+      </>)}
     </div>
   )
 }

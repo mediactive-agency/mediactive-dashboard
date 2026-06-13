@@ -242,69 +242,63 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 
   return (
     <div>
-      {/* 1. Total Active Funnel + variable funnels — Outreach komponenta */}
-      <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
+      {/* 1. Total Active Funnel */}
+      <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="funnel" />
 
-      {/* 2. Daily Tasks — standalone karty stejný styl jako Dashboard tab */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '32px 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 12, marginBottom: 28 }}>
-        {[
-          { label: 'Outreach',       value: `${outreachCount}/20`,        color: outreachCount >= 20 ? '#34D399' : '#EF4444',                                                          sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
-          { label: 'Followups',      value: `${fuDone}/${fuTotal||'—'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                          sub: 'Due today' },
-          { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                       sub: 'Active sequences' },
-        ].map(k => (
-          <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
-            {isWeekend
-              ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
-              : <>
-                <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
-              </>}
-          </div>
-        ))}
-      </div>
+      {/* 2. Monthly Performance + Daily Tasks vedle sebe */}
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, margin: '28px 0' }}>
 
-      {/* 3. Monthly Performance */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Monthly Performance</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
-      <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
-        {monthlyRows.length === 0
-          ? <div style={{ color: 'var(--text4)', fontSize: 12 }}>No data</div>
-          : monthlyRows.map(m => (
-            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, marginBottom: 8 }}>
-                {[{v:m.A,l:'INIT',c:'#60A5FA'},{v:m.MS,l:'SEEN',c:'#F472B6'},{v:m.B,l:'REPLIES',c:'#FB923C'},{v:m.C,l:'BOOKED',c:'#A855F7'}].map(x => (
-                  <div key={x.l} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: x.c }}>{x.v}</div>
+        {/* Monthly Performance — kompaktní tabulka */}
+        <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${monthlyRows.length}, 1fr)`, gap: 8 }}>
+            {monthlyRows.map(m => (
+              <div key={m.month} style={{ borderRight: '1px solid var(--border)', paddingRight: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 12 }}>{m.month}</div>
+                {[{v:m.A,l:'Init',c:'#60A5FA'},{v:m.MS,l:'Seen',c:'#F472B6'},{v:m.B,l:'Replies',c:'#FB923C'},{v:m.C,l:'Booked',c:'#A855F7'}].map(x => (
+                  <div key={x.l} style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: x.c, lineHeight: 1 }}>{x.v}</div>
                     <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
                   </div>
                 ))}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
+                <div style={{ height: 1, background: 'var(--border)', margin: '10px 0' }} />
                 {[{v:m.msr+'%',l:'MSR',c:'#F472B6'},{v:m.prr+'%',l:'PRR',c:'#FB923C'},{v:m.abr+'%',l:'ABR',c:'#A855F7'}].map(x => (
-                  <div key={x.l} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: x.c }}>{x.v}</div>
+                  <div key={x.l} style={{ marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: x.c, lineHeight: 1 }}>{x.v}</div>
                     <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.l}</div>
                   </div>
                 ))}
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Daily Tasks — standalone karty */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[
+            { label: 'Outreach',       value: `${outreachCount}/20`,        color: outreachCount >= 20 ? '#34D399' : '#EF4444',                                                    sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
+            { label: 'Followups',      value: `${fuDone}/${fuTotal||'—'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
+            { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
+          ].map(k => (
+            <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
+              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+              {isWeekend
+                ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
+                : <>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
+                </>}
             </div>
           ))}
+        </div>
       </div>
+
+      {/* 3. Variable funnels */}
+      <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="variables" />
     </div>
   )
 }
+
 
 export default function Clients({ isMobile, isTablet, filter, customFrom, customTo }) {
   const [clients, setClients] = useState([])

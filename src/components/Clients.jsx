@@ -256,30 +256,33 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, marginBottom: 8 }}>
-                {[
-                  {val:m.A,  lbl:'INIT',    color:'#60A5FA'},
-                  {val:m.MS, lbl:'SEEN',    color:'#F472B6'},
-                  {val:m.B,  lbl:'REPLIES', color:'#FB923C'},
-                  {val:m.C,  lbl:'BOOKED',  color:'#A855F7'},
-                ].map(x => (
-                  <div key={x.lbl} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4 }}>
-                {[
-                  {val:m.msr+'%', lbl:'MSR', color:'#F472B6'},
-                  {val:m.prr+'%', lbl:'PRR', color:'#FB923C'},
-                  {val:m.abr+'%', lbl:'ABR', color:'#A855F7'},
-                ].map(x => (
-                  <div key={x.lbl} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: x.color }}>{x.val}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
-                  </div>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                <div style={{ display: 'flex', gap: 20, flex: 1 }}>
+                  {[
+                    {val:m.A,  lbl:'INIT',    color:'#60A5FA'},
+                    {val:m.MS, lbl:'SEEN',    color:'#F472B6'},
+                    {val:m.B,  lbl:'REPLIES', color:'#FB923C'},
+                    {val:m.C,  lbl:'BOOKED',  color:'#A855F7'},
+                  ].map(x => (
+                    <div key={x.lbl} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ width: 1, height: 36, background: 'var(--border)', margin: '0 20px', flexShrink: 0 }} />
+                <div style={{ display: 'flex', gap: 20 }}>
+                  {[
+                    {val:m.msr+'%', lbl:'MSR', color:'#F472B6'},
+                    {val:m.prr+'%', lbl:'PRR', color:'#FB923C'},
+                    {val:m.abr+'%', lbl:'ABR', color:'#A855F7'},
+                  ].map(x => (
+                    <div key={x.lbl} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: x.color }}>{x.val}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text4)', marginTop: 2 }}>{x.lbl}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

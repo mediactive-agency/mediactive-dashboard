@@ -192,13 +192,23 @@ function ClientStats({ client, isMobile }) {
   const { outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, dailyInitiated } = stats
 
   // Total stats
-  const allRows = [...(data.mar||[]), ...(data.apr||[]), ...(data.may||[]), ...(data.jun||[])]
+  const allRows = []
+  for (const sheet of [data.mar||[], data.apr||[], data.may||[], data.jun||[]]) {
+    let ds = -1
+    for (let i = 0; i < sheet.length; i++) {
+      if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
+    }
+    if (ds < 0) continue
+    for (let i = ds; i < sheet.length; i++) {
+      const r = sheet[i]; if (!r || !r[3]) continue
+      allRows.push(r)
+    }
+  }
   let initiated = 0, replies = 0, booked = 0
   allRows.forEach(r => {
-    if (!r || !r[1]) return
     initiated++
-    if (r[14]) replies++
-    if (r[27]) booked++
+    if (r[14] && String(r[14]).trim()) replies++
+    if (r[27] && String(r[27]).trim()) booked++
   })
 
   const s = (label, val, color) => (

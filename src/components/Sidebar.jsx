@@ -41,7 +41,7 @@ function TogglePill({ isDark, onToggle }) {
 
 export { TogglePill }
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, mobileOpen, onMobileClose }) {
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout }) {
   const isDark = theme === 'dark'
 
   return (

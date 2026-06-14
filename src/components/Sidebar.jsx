@@ -42,7 +42,7 @@ function TogglePill({ isDark, onToggle }) {
 
 export { TogglePill }
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout }) {
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl }) {
   const isDark = theme === 'dark'
 
   return (
@@ -62,7 +62,9 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
       }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
+          {logoUrl
+            ? <img src={logoUrl} alt="Logo" style={{ height: 28, maxWidth: 120, objectFit: 'contain' }} />
+            : <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />}
           <button onClick={onMobileClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', padding: 4, cursor: 'pointer' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -120,7 +122,9 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         transition: 'background 0.3s ease',
       }} className="sidebar-desktop">
         <div style={{ padding: '20px 20px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
+          {logoUrl
+            ? <img src={logoUrl} alt="Logo" style={{ height: 28, maxWidth: 120, objectFit: 'contain' }} />
+            : <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />}
         </div>
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
@@ -145,8 +149,8 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         </nav>
         <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           {onLogout && (
-            <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 10px', marginBottom: 10, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', borderRadius: 7, fontSize: 12, fontWeight: 600, textAlign: 'left' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 10px', marginBottom: 6, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', borderRadius: 7, fontSize: 13, fontWeight: 600, textAlign: 'left' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sign out
             </button>
           )}

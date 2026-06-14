@@ -73,6 +73,7 @@ export default function App() {
         theme={theme} onThemeToggle={toggle} isManualTheme={isManual}
         mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)}
         onLogout={logout}
+        logoUrl={config?.logoUrl}
       />
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>

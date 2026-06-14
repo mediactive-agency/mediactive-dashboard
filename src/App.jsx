@@ -15,12 +15,13 @@ import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
 import { computeTaskStats } from './utils/computeTaskStats'
 
-function getGreeting() {
+function getGreeting(name) {
   const h = parseInt(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', hour12: false }))
-  if (h >= 5 && h < 12) return 'Good morning, Kryštof'
-  if (h >= 12 && h < 18) return 'Good afternoon, Kryštof'
-  if (h >= 18 && h < 22) return 'Good evening, Kryštof'
-  return 'Good night, Kryštof'
+  const n = name || 'there'
+  if (h >= 5 && h < 12) return `Good morning, ${n}`
+  if (h >= 12 && h < 18) return `Good afternoon, ${n}`
+  if (h >= 18 && h < 22) return `Good evening, ${n}`
+  return `Good night, ${n}`
 }
 
 export default function App() {
@@ -56,7 +57,7 @@ export default function App() {
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients' }
+  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients' }
   const isDark = theme === 'dark'
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>

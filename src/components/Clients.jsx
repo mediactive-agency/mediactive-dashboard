@@ -5,6 +5,8 @@ import Outreach from './Outreach'
 import { parseOutreachMonth } from './Dashboard'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
+import { db } from '../firebase'
+import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
 
 const COLORS = [
   '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6', '#14B8A6'
@@ -46,11 +48,16 @@ function AddClientWizard({ onClose, onAdded }) {
         if (tabData.tabs && tabData.tabs.length) tabs = tabData.tabs.join(',')
       } catch(e) { /* fallback to default */ }
 
-      const url = `${PROXY}?action=addClient&name=${encodeURIComponent(name)}&color=${encodeURIComponent(color)}&outreachSheetId=${encodeURIComponent(sheetId)}&sheetTabs=${encodeURIComponent(tabs)}&calendlyPat=${encodeURIComponent(calendlyPat)}&calendlyUserUri=${encodeURIComponent(calendlyUri)}`
-      const res = await fetch(url)
-      const data = await res.json()
-      if (data.success) { onAdded(); onClose() }
-      else setError('Failed to add client')
+      await addDoc(collection(db, 'clients'), {
+        name, color,
+        outreachSheetId: sheetId,
+        sheetTabs: tabs,
+        calendlyPat: calendlyPat || '',
+        calendlyUserUri: calendlyUri || '',
+        active: true,
+        createdAt: serverTimestamp()
+      })
+      onAdded(); onClose()
     } catch(e) {
       setError('Network error')
     }
@@ -329,9 +336,8 @@ export default function Clients({ isMobile, isTablet, filter, customFrom, custom
   async function loadClients() {
     setLoading(true)
     try {
-      const res = await fetch(`${PROXY}?action=getClients`)
-      const json = await res.json()
-      const list = json.clients || []
+      const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true)))
+      const list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date() }))
       setClients(list)
       // Load data for all clients
       const dataMap = {}

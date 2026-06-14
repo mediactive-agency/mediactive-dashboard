@@ -10,6 +10,8 @@ import Outreach from './components/Outreach'
 import Sales from './components/Sales'
 import Tasks from './components/Tasks'
 import Clients from './components/Clients'
+import Login from './components/Login'
+import { useAuth } from './hooks/useAuth'
 import { computeTaskStats } from './utils/computeTaskStats'
 
 function getGreeting() {
@@ -32,6 +34,10 @@ export default function App() {
   const { data, loading, error, reload, loadedAt } = useData()
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
+  const { user, allowed, loading: authLoading, login, logout } = useAuth()
+
+  if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
+  if (!user || !allowed) return <Login onLogin={login} />
 
   // Compute task stats directly here — no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data), [data])

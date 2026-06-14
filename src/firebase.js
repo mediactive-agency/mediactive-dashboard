@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app"
+import { initializeApp, getApps, getApp } from "firebase/app"
 import { getAuth, GoogleAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
@@ -8,11 +8,10 @@ const firebaseConfig = {
   projectId: "mediactive-dashboard",
   storageBucket: "mediactive-dashboard.firebasestorage.app",
   messagingSenderId: "1001729311470",
-  appId: "1:1001729311470:web:87f04fa13a2d15d9c3a9ff",
-  measurementId: "G-NGHSXWC35J"
+  appId: "1:1001729311470:web:87f04fa13a2d15d9c3a9ff"
 }
 
-const app = initializeApp(firebaseConfig)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
 export const auth = getAuth(app)
 export const provider = new GoogleAuthProvider()
 export const db = getFirestore(app)

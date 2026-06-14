@@ -5,6 +5,7 @@ import { auth, provider } from '../firebase'
 // Allowed emails - přidej emailový adresy kdo má mít přístup
 const ALLOWED_EMAILS = [
   'krystof@mediactive.cz',
+  'fritsch.krystof@gmail.com',
 ]
 
 export function useAuth() {

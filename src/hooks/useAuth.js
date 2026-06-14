@@ -2,25 +2,15 @@ import { useState, useEffect } from 'react'
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
 import { auth, provider } from '../firebase'
 
-// Allowed emails - přidej emailový adresy kdo má mít přístup
-const ALLOWED_EMAILS = [
-  'krystof@mediactive.cz',
-  'fritsch.krystof@gmail.com',
-]
-
 export function useAuth() {
-  const [user, setUser] = useState(undefined) // undefined = loading
-  const [allowed, setAllowed] = useState(false)
+  const [user, setUser] = useState(undefined)
 
   useEffect(() => {
-    return onAuthStateChanged(auth, u => {
-      setUser(u || null)
-      setAllowed(u ? ALLOWED_EMAILS.includes(u.email) : false)
-    })
+    return onAuthStateChanged(auth, u => setUser(u || null))
   }, [])
 
   const login = () => signInWithPopup(auth, provider)
   const logout = () => signOut(auth)
 
-  return { user, allowed, loading: user === undefined, login, logout }
+  return { user, allowed: !!user, loading: user === undefined, login, logout }
 }

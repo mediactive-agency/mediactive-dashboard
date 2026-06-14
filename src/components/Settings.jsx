@@ -94,10 +94,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     reader.readAsDataURL(file)
   }
 
-  async function save() {
-    setSaving(true); setError(''); setSaved(false)
-    try {
-      async function loadNewSheetTabs() {
+  async function loadNewSheetTabs() {
     const id = extractSheetId(newSheetInput)
     if (!id) return
     setSheetBusy(true); setSheetStatus(null)
@@ -117,6 +114,9 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     setNewSheetInput(''); setNewSheetId(''); setNewSheetTabsAvail(null); setNewSheetTabs([]); setSheetStatus(null)
   }
 
+  async function save() {
+    setSaving(true); setError(''); setSaved(false)
+    try {
       await saveUserConfig(user.uid, {
         userName: userName.trim(),
         calendlyPat: calendlyPat.trim() || null,

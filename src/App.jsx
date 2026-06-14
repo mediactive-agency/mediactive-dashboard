@@ -70,6 +70,7 @@ export default function App() {
         loadedAt={loadedAt} loading={loading} error={error}
         theme={theme} onThemeToggle={toggle} isManualTheme={isManual}
         mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)}
+        onLogout={logout}
       />
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>

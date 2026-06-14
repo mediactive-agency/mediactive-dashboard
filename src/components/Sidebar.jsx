@@ -143,6 +143,12 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
           ))}
         </nav>
         <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          {onLogout && (
+            <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 10px', marginBottom: 10, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', borderRadius: 7, fontSize: 12, fontWeight: 600, textAlign: 'left' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </button>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981', animation: 'pulse-dot 2s infinite' }} />
             <span style={{ fontSize: 11, fontWeight: 600, flexShrink: 0, color: loading ? '#F59E0B' : error ? '#EF4444' : '#10B981' }}>

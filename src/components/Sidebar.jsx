@@ -42,7 +42,7 @@ function TogglePill({ isDark, onToggle }) {
 
 export { TogglePill }
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl }) {
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl, isAdmin }) {
   const isDark = theme === 'dark'
 
   return (
@@ -148,7 +148,16 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
           ))}
         </nav>
         <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-          {onLogout && (
+          {isAdmin && (
+          <>
+            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Admin</div>
+            <button onClick={() => onNav('members')} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 10px', background: active === 'members' ? 'var(--sidebar-active)' : 'transparent', border: 'none', color: active === 'members' ? 'var(--text)' : 'var(--text2)', cursor: 'pointer', borderRadius: 7, fontSize: 13, fontWeight: 600, textAlign: 'left', marginBottom: 2 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              AGP Members
+            </button>
+          </>
+        )}
+        {onLogout && (
             <button onClick={onLogout} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 10px', marginBottom: 6, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', borderRadius: 7, fontSize: 13, fontWeight: 600, textAlign: 'left' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Sign out

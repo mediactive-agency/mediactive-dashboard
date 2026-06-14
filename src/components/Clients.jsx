@@ -3,10 +3,10 @@ import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
 import { parseOutreachMonth } from './Dashboard'
-
-const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
+
+const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
 const COLORS = [
   '#6366F1', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6', '#14B8A6'

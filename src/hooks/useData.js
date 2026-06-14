@@ -1,44 +1,93 @@
 import { useState, useEffect } from 'react'
+import { db } from '../firebase'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
+const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
+const API_KEY = 'AIzaSyCp1H8a78aqz21-ztsOQ-yCRjZNyPxhZXM'
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
-const OUTREACH_ID = "1B5cc52T8mGLqcmvpBjneyb5v4N1W88ORrXz4JWfvZU0"
-const SALES_ID = "1Stqpv22BnAlU0OGf9fjRjaWDlDMwMC4M3Myhp09iP8E"
 
-async function fetchRange(id, range) {
-  const res = await fetch(`${PROXY}?id=${id}&range=${encodeURIComponent(range)}`)
+function extractSheetId(input) {
+  if (!input) return ''
+  const m = input.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  return m ? m[1] : input.trim()
+}
+
+async function fetchRange(sheetId, range) {
+  const url = `${SHEETS_API}/${sheetId}/values/${encodeURIComponent(range)}?key=${API_KEY}`
+  const res = await fetch(url)
   const json = await res.json()
+  if (json.error) throw new Error(json.error.message)
   return json.values || []
 }
 
-async function fetchCalendly() {
+async function fetchCalendly(pat) {
+  if (!pat) return { collection: [] }
   try {
+    // Calendly fetch stále přes proxy (potřebuje server-side kvůli CORS)
     const res = await fetch(`${PROXY}?calendly=1`)
-    const json = await res.json()
-    return json
+    return await res.json()
   } catch (e) {
     return { collection: [] }
   }
 }
 
-export function useData() {
+export async function saveUserConfig(userId, config) {
+  await setDoc(doc(db, 'users', userId), config, { merge: true })
+}
+
+export async function getUserConfig(userId) {
+  const snap = await getDoc(doc(db, 'users', userId))
+  return snap.exists() ? snap.data() : null
+}
+
+export function useData(user) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [loadedAt, setLoadedAt] = useState(null)
+  const [config, setConfig] = useState(null)
+  const [needsSetup, setNeedsSetup] = useState(false)
 
   async function load() {
+    if (!user) return
     setLoading(true)
     setError(null)
     try {
-      const [mar, apr, may, jun, sales, calendly] = await Promise.all([
-        fetchRange(OUTREACH_ID, "Mar!A1:AZ600"),
-        fetchRange(OUTREACH_ID, "Apr!A1:AZ700"),
-        fetchRange(OUTREACH_ID, "May!A1:AZ700"),
-        fetchRange(OUTREACH_ID, "Jun!A1:AZ700"),
-        fetchRange(SALES_ID, "Sheet1!A:J"),
-        fetchCalendly(),
-      ])
-      setData({ mar, apr, may, jun, sales, calendly })
+      // Načti user config z Firestore
+      const cfg = await getUserConfig(user.uid)
+      if (!cfg || !cfg.outreachSheetId) {
+        setNeedsSetup(true)
+        setLoading(false)
+        return
+      }
+      setConfig(cfg)
+      setNeedsSetup(false)
+
+      const outreachId = cfg.outreachSheetId
+      const salesId = cfg.salesSheetId
+      const tabs = cfg.outreachTabs || ['Mar', 'Apr', 'May', 'Jun']
+
+      // Fetch všechny taby dynamicky
+      const tabResults = await Promise.all(
+        tabs.map(tab => fetchRange(outreachId, `${tab}!A1:AZ700`).catch(() => []))
+      )
+      const tabData = {}
+      tabs.forEach((tab, i) => { tabData[tab.toLowerCase().slice(0,3)] = tabResults[i] })
+
+      const sales = salesId
+        ? await fetchRange(salesId, 'Sheet1!A:J').catch(() => [])
+        : []
+
+      const calendly = await fetchCalendly(cfg.calendlyPat)
+
+      setData({
+        mar: tabData['mar'] || [],
+        apr: tabData['apr'] || [],
+        may: tabData['may'] || [],
+        jun: tabData['jun'] || [],
+        sales,
+        calendly,
+      })
       setLoadedAt(new Date())
     } catch (e) {
       setError(e.message)
@@ -47,7 +96,7 @@ export function useData() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [user?.uid])
 
-  return { data, loading, error, reload: load, loadedAt }
+  return { data, loading, error, reload: load, loadedAt, config, needsSetup }
 }

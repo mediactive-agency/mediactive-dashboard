@@ -55,6 +55,7 @@ function AddClientWizard({ onClose, onAdded }) {
         calendlyPat: calendlyPat || '',
         calendlyUserUri: calendlyUri || '',
         active: true,
+        userId: user.uid,
         createdAt: serverTimestamp()
       })
       onAdded(); onClose()
@@ -326,7 +327,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 }
 
 
-export default function Clients({ isMobile, isTablet, filter, customFrom, customTo }) {
+export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo }) {
   const [clients, setClients] = useState([])
   const [clientData, setClientData] = useState({})
   const [loading, setLoading] = useState(true)
@@ -336,7 +337,7 @@ export default function Clients({ isMobile, isTablet, filter, customFrom, custom
   async function loadClients() {
     setLoading(true)
     try {
-      const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true)))
+      const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
       const list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date() }))
       setClients(list)
       // Load data for all clients

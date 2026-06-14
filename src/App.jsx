@@ -11,6 +11,7 @@ import Sales from './components/Sales'
 import Tasks from './components/Tasks'
 import Clients from './components/Clients'
 import Login from './components/Login'
+import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
 import { computeTaskStats } from './utils/computeTaskStats'
 
@@ -31,7 +32,7 @@ export default function App() {
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const { data, loading, error, reload, loadedAt } = useData()
+  const { data, loading, error, reload, loadedAt, needsSetup } = useData(user)
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
   const { user, allowed, loading: authLoading, login, logout } = useAuth()
@@ -60,6 +61,7 @@ export default function App() {
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   if (!user || !allowed) return <Login onLogin={login} />
+  if (needsSetup) return <Onboarding user={user} onComplete={reload} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -106,7 +108,7 @@ export default function App() {
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} />}
-              {page === 'clients'   && <Clients   isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
+              {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
             </>
           ) : null}
         </div>

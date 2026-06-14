@@ -13,6 +13,7 @@ import Clients from './components/Clients'
 import Login from './components/Login'
 import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
+import Settings from './components/Settings'
 import { computeTaskStats } from './utils/computeTaskStats'
 
 function getGreeting(name) {
@@ -57,7 +58,7 @@ export default function App() {
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients' }
+  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', settings: 'Settings' }
   const isDark = theme === 'dark'
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
@@ -111,6 +112,7 @@ export default function App() {
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
+              {page === 'settings'  && <Settings  user={user} config={config} onSaved={reload} isMobile={isMobile} />}
             </>
           ) : null}
         </div>

@@ -32,10 +32,10 @@ export default function App() {
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
 
+  const { user, allowed, loading: authLoading, login, logout } = useAuth()
   const { data, loading, error, reload, loadedAt, needsSetup } = useData(user)
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
-  const { user, allowed, loading: authLoading, login, logout } = useAuth()
 
   // Compute task stats directly here — no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data), [data])

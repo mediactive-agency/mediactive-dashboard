@@ -74,8 +74,9 @@ export function useData(user) {
       const tabData = {}
       tabs.forEach((tab, i) => { tabData[tab.toLowerCase().slice(0,3)] = tabResults[i] })
 
+      const salesTab = cfg.salesTab || 'Sheet1'
       const sales = salesId
-        ? await fetchRange(salesId, 'Sheet1!A:J').catch(() => [])
+        ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
         : []
 
       const calendly = await fetchCalendly(cfg.calendlyPat)

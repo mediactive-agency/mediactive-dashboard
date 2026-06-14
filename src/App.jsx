@@ -36,9 +36,6 @@ export default function App() {
   const { isMobile, isTablet } = useWindowSize()
   const { user, allowed, loading: authLoading, login, logout } = useAuth()
 
-  if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
-  if (!user || !allowed) return <Login onLogin={login} />
-
   // Compute task stats directly here — no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data), [data])
   const dailyStats = taskStats ? {
@@ -60,6 +57,9 @@ export default function App() {
 
   const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients' }
   const isDark = theme === 'dark'
+
+  if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
+  if (!user || !allowed) return <Login onLogin={login} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>

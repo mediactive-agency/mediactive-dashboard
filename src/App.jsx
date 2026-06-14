@@ -34,7 +34,7 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const { user, allowed, loading: authLoading, login, logout } = useAuth()
-  const { data, loading, error, reload, loadedAt, needsSetup } = useData(user)
+  const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user)
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
 

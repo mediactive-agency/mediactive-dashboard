@@ -63,16 +63,25 @@ export function useData(user) {
       setConfig(cfg)
       setNeedsSetup(false)
 
-      const outreachId = cfg.outreachSheetId
       const salesId = cfg.salesSheetId
-      const tabs = cfg.outreachTabs || ['Mar', 'Apr', 'May', 'Jun']
 
-      // Fetch všechny taby dynamicky
-      const tabResults = await Promise.all(
-        tabs.map(tab => fetchRange(outreachId, `${tab}!A1:AZ700`).catch(() => []))
-      )
+      // Podpora více outreach sheetů (multi-year)
+      const outreachSheets = cfg.outreachSheets || 
+        (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
+      
+      // Fetch všechny sheety, merguj taby — stejný tab z různých sheetů se sloučí
       const tabData = {}
-      tabs.forEach((tab, i) => { tabData[tab.toLowerCase().slice(0,3)] = tabResults[i] })
+      await Promise.all(outreachSheets.map(async sheet => {
+        const sheetTabs = sheet.tabs || []
+        const results = await Promise.all(
+          sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
+        )
+        sheetTabs.forEach((tab, i) => {
+          const key = tab.toLowerCase().slice(0, 3)
+          if (!tabData[key]) tabData[key] = []
+          tabData[key] = [...tabData[key], ...results[i]]
+        })
+      }))
 
       const salesTab = cfg.salesTab || 'Sheet1'
       const sales = salesId

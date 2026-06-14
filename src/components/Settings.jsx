@@ -1,6 +1,40 @@
 import { useState, useEffect } from 'react'
 import { saveUserConfig } from '../hooks/useData'
 
+const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
+const API_KEY = 'AIzaSyCp1H8a78aqz21-ztsOQ-yCRjZNyPxhZXM'
+
+async function fetchSheetTabs(sheetId) {
+  const url = `${SHEETS_API}/${sheetId}?key=${API_KEY}&fields=sheets.properties.title`
+  const res = await fetch(url)
+  const json = await res.json()
+  if (json.error) throw new Error(json.error.message)
+  return (json.sheets || []).map(s => s.properties.title)
+}
+
+function extractSheetId(input) {
+  if (!input) return ''
+  const m = input.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  return m ? m[1] : input.trim()
+}
+
+function TabPills({ tabs, isSelected, onPick }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+      {tabs.map(tab => {
+        const on = isSelected(tab)
+        return (
+          <button key={tab} onClick={() => onPick(tab)} style={{
+            padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+            cursor: 'pointer', border: '1px solid', borderColor: on ? 'var(--text)' : 'var(--border)',
+            background: on ? 'var(--text)' : 'transparent', color: on ? 'var(--bg)' : 'var(--text2)',
+          }}>{tab}</button>
+        )
+      })}
+    </div>
+  )
+}
+
 function Input({ label, value, onChange, placeholder, type = 'text', hint }) {
   return (
     <div style={{ marginBottom: 20 }}>
@@ -23,6 +57,13 @@ function Section({ title, children }) {
 
 export default function Settings({ user, config, onSaved, isMobile }) {
   const [userName, setUserName] = useState('')
+  const [outreachSheets, setOutreachSheets] = useState([])
+  const [newSheetInput, setNewSheetInput] = useState('')
+  const [newSheetTabs, setNewSheetTabs] = useState([])
+  const [newSheetTabsAvail, setNewSheetTabsAvail] = useState(null)
+  const [newSheetId, setNewSheetId] = useState('')
+  const [sheetBusy, setSheetBusy] = useState(false)
+  const [sheetStatus, setSheetStatus] = useState(null)
   const [calendlyPat, setCalendlyPat] = useState('')
   const [logoPreview, setLogoPreview] = useState(null)
   const [logoUrl, setLogoUrl] = useState('')
@@ -33,6 +74,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   useEffect(() => {
     if (config) {
       setUserName(config.userName || '')
+      setOutreachSheets(config.outreachSheets || (config.outreachSheetId ? [{ id: config.outreachSheetId, tabs: config.outreachTabs || [] }] : []))
       setCalendlyPat(config.calendlyPat || '')
       setLogoPreview(config.logoUrl || null)
       if (config.logoUrl && !config.logoUrl.startsWith('data:')) setLogoUrl(config.logoUrl)
@@ -55,6 +97,26 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   async function save() {
     setSaving(true); setError(''); setSaved(false)
     try {
+      async function loadNewSheetTabs() {
+    const id = extractSheetId(newSheetInput)
+    if (!id) return
+    setSheetBusy(true); setSheetStatus(null)
+    try {
+      const tabs = await fetchSheetTabs(id)
+      setNewSheetId(id); setNewSheetTabsAvail(tabs)
+      const monthTabs = tabs.filter(t => /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(t))
+      setNewSheetTabs(monthTabs.length > 0 ? monthTabs : tabs)
+      setSheetStatus({ type: 'ok', msg: `Found ${tabs.length} tabs.` })
+    } catch(e) { setSheetStatus({ type: 'err', msg: e.message }) }
+    setSheetBusy(false)
+  }
+
+  function addSheet() {
+    if (!newSheetId || newSheetTabs.length === 0) return
+    setOutreachSheets(prev => [...prev.filter(s => s.id !== newSheetId), { id: newSheetId, tabs: newSheetTabs }])
+    setNewSheetInput(''); setNewSheetId(''); setNewSheetTabsAvail(null); setNewSheetTabs([]); setSheetStatus(null)
+  }
+
       await saveUserConfig(user.uid, {
         userName: userName.trim(),
         calendlyPat: calendlyPat.trim() || null,
@@ -102,11 +164,35 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         />
       </Section>
 
-      <Section title="Sheets">
-        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 12 }}>
-          Connected sheets: <b style={{ color: 'var(--text)' }}>{config?.outreachSheetId ? 'Outreach ✓' : 'None'}</b>{config?.salesSheetId ? ', Sales calls ✓' : ''}
+      <Section title="Outreach Sheets">
+        {outreachSheets.map(s => (
+          <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 8 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace' }}>{s.id.slice(0, 24)}...</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{s.tabs.join(', ')}</div>
+            </div>
+            <button onClick={() => setOutreachSheets(prev => prev.filter(x => x.id !== s.id))} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+          </div>
+        ))}
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add another sheet</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input value={newSheetInput} onChange={e => setNewSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
+            style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+          <button onClick={loadNewSheetTabs} disabled={sheetBusy || !newSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+            {sheetBusy ? 'Loading...' : 'Load tabs'}
+          </button>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text4)' }}>To reconnect sheets, contact support or re-run the onboarding wizard.</div>
+        {newSheetTabsAvail && (
+          <>
+            <TabPills tabs={newSheetTabsAvail} isSelected={t => newSheetTabs.includes(t)} onPick={t => setNewSheetTabs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])} />
+            {newSheetId && newSheetTabs.length > 0 && (
+              <button onClick={addSheet} style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
+                + Add sheet
+              </button>
+            )}
+          </>
+        )}
+        {sheetStatus && <div style={{ fontSize: 12, color: sheetStatus.type === 'ok' ? '#10B981' : '#EF4444', marginTop: 8, fontWeight: 600 }}>{sheetStatus.msg}</div>}
       </Section>
 
       {error && <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>}

@@ -215,10 +215,11 @@ const STEPS = ['Welcome', 'Outreach sheet', 'Sales calls sheet', 'Claude skill',
 export default function Onboarding({ user, onComplete, isMobile }) {
   const [step, setStep] = useState(0)
   const [userName, setUserName] = useState('')
+  const [outreachSheets, setOutreachSheets] = useState([])
   const [outreachInput, setOutreachInput] = useState('')
-  const [outreachSheetId, setOutreachSheetId] = useState('')
-  const [outreachTabs, setOutreachTabs] = useState([])
   const [outreachTabsAvail, setOutreachTabsAvail] = useState(null)
+  const [outreachTabs, setOutreachTabs] = useState([])
+  const [outreachSheetId, setOutreachSheetId] = useState('')
   const [salesInput, setSalesInput] = useState('')
   const [salesSheetId, setSalesSheetId] = useState('')
   const [salesTabsAvail, setSalesTabsAvail] = useState(null)
@@ -236,6 +237,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
   async function loadOutreachTabs() {
     const id = extractSheetId(outreachInput)
     if (!id) { setStatus({ type: 'err', msg: 'Paste a valid Google Sheets URL' }); return }
+    if (outreachSheets.find(s => s.id === id)) { setStatus({ type: 'err', msg: 'This sheet is already connected.' }); return }
     setBusy(true); setStatus(null)
     try {
       const tabs = await fetchSheetTabs(id)
@@ -247,6 +249,16 @@ export default function Onboarding({ user, onComplete, isMobile }) {
     } catch (e) {
       setStatus({ type: 'err', msg: `Could not read sheet: ${e.message}. Make sure it's set to "Anyone with the link can view".` })
     } finally { setBusy(false) }
+  }
+
+  function addOutreachSheet() {
+    if (!outreachSheetId || outreachTabs.length === 0) return
+    setOutreachSheets(prev => [...prev, { id: outreachSheetId, tabs: outreachTabs }])
+    setOutreachInput(''); setOutreachSheetId(''); setOutreachTabsAvail(null); setOutreachTabs([]); setStatus(null)
+  }
+
+  function removeOutreachSheet(id) {
+    setOutreachSheets(prev => prev.filter(s => s.id !== id))
   }
 
   async function loadSalesTabs() {
@@ -282,6 +294,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
       await saveUserConfig(user.uid, {
         email: user.email,
         userName: userName || user.displayName || '',
+        outreachSheets: outreachSheets.length > 0 ? outreachSheets : [{ id: outreachSheetId, tabs: outreachTabs }],
         outreachSheetId,
         outreachTabs,
         salesSheetId: salesSheetId || null,
@@ -300,7 +313,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
 
   const canNext = {
     0: !!userName.trim(),
-    1: !!outreachSheetId && outreachTabs.length > 0,
+    1: outreachSheets.length > 0 || (!!outreachSheetId && outreachTabs.length > 0),
     2: !!salesSheetId,
     3: true,
     4: true,
@@ -355,7 +368,27 @@ export default function Onboarding({ user, onComplete, isMobile }) {
                 <>
                   <Label>Select outreach tabs</Label>
                   <TabPills tabs={outreachTabsAvail} isSelected={t => outreachTabs.includes(t)} onPick={toggleTab} />
+                  {outreachSheetId && outreachTabs.length > 0 && (
+                    <button onClick={addOutreachSheet} style={{ marginTop: 8, padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      + Add this sheet
+                    </button>
+                  )}
                 </>
+              )}
+              {outreachSheets.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <Label>Connected sheets</Label>
+                  {outreachSheets.map(s => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 6 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace' }}>{s.id.slice(0, 20)}...</div>
+                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>{s.tabs.join(', ')}</div>
+                      </div>
+                      <button onClick={() => removeOutreachSheet(s.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+                    </div>
+                  ))}
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>Add another year by pasting a new URL above.</div>
+                </div>
               )}
               <StatusMsg status={status} />
             </>

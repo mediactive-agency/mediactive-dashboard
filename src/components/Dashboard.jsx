@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct } from '../utils/data'
 
-function parseOutreachMonth(rows) {
+export function parseOutreachMonth(rows) {
   let summary = null
   for (let i = 0; i < Math.min(15, rows.length); i++) {
     const r = rows[i]
@@ -397,6 +397,4 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
   )
 }
 
-// Export computeStats for use in other pages  
-export { parseOutreachMonth }
 

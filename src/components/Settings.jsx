@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { saveUserConfig } from '../hooks/useData'
 
 const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
+const OUTREACH_TEMPLATE = 'https://docs.google.com/spreadsheets/d/1YtTplni2SkwMkNh7uKbVTTRbcsrpiLuUA-UDEKcEZo4/copy'
+const SALES_TEMPLATE = 'https://docs.google.com/spreadsheets/d/1tj37ympzYWEWjg3mHcJSUCrqbGZbEfe0fQK2NBdwlIs/copy'
 const API_KEY = 'AIzaSyCp1H8a78aqz21-ztsOQ-yCRjZNyPxhZXM'
 
 async function fetchSheetTabs(sheetId) {
@@ -58,6 +60,12 @@ function Section({ title, children }) {
 export default function Settings({ user, config, onSaved, isMobile }) {
   const [userName, setUserName] = useState('')
   const [outreachSheets, setOutreachSheets] = useState([])
+  const [salesSheetInput, setSalesSheetInput] = useState('')
+  const [salesSheetId, setSalesSheetId] = useState('')
+  const [salesTab, setSalesTab] = useState('')
+  const [salesTabsAvail, setSalesTabsAvail] = useState(null)
+  const [salesSheetBusy, setSalesSheetBusy] = useState(false)
+  const [salesSheetStatus, setSalesSheetStatus] = useState(null)
   const [newSheetInput, setNewSheetInput] = useState('')
   const [newSheetTabs, setNewSheetTabs] = useState([])
   const [newSheetTabsAvail, setNewSheetTabsAvail] = useState(null)
@@ -75,6 +83,8 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     if (config) {
       setUserName(config.userName || '')
       setOutreachSheets(config.outreachSheets || (config.outreachSheetId ? [{ id: config.outreachSheetId, tabs: config.outreachTabs || [] }] : []))
+      setSalesSheetId(config.salesSheetId || '')
+      setSalesTab(config.salesTab || 'Sheet1')
       setCalendlyPat(config.calendlyPat || '')
       setLogoPreview(config.logoUrl || null)
       if (config.logoUrl && !config.logoUrl.startsWith('data:')) setLogoUrl(config.logoUrl)
@@ -92,6 +102,18 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     const reader = new FileReader()
     reader.onload = ev => { setLogoPreview(ev.target.result); setLogoUrl('') }
     reader.readAsDataURL(file)
+  }
+
+  async function loadSalesSheetTabs() {
+    const id = extractSheetId(salesSheetInput)
+    if (!id) return
+    setSalesSheetBusy(true); setSalesSheetStatus(null)
+    try {
+      const tabs = await fetchSheetTabs(id)
+      setSalesSheetId(id); setSalesTabsAvail(tabs); setSalesTab(tabs[0] || 'Sheet1')
+      setSalesSheetStatus({ type: 'ok', msg: 'Connected. Pick the tab with your call log.' })
+    } catch(e) { setSalesSheetStatus({ type: 'err', msg: e.message }) }
+    setSalesSheetBusy(false)
   }
 
   async function loadNewSheetTabs() {
@@ -165,6 +187,12 @@ export default function Settings({ user, config, onSaved, isMobile }) {
       </Section>
 
       <Section title="Outreach Sheets">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <a href={OUTREACH_TEMPLATE} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', padding: '7px 12px', border: '1px solid var(--border)', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Outreach template
+          </a>
+        </div>
         {outreachSheets.map(s => (
           <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 8 }}>
             <div>
@@ -193,6 +221,33 @@ export default function Settings({ user, config, onSaved, isMobile }) {
           </>
         )}
         {sheetStatus && <div style={{ fontSize: 12, color: sheetStatus.type === 'ok' ? '#10B981' : '#EF4444', marginTop: 8, fontWeight: 600 }}>{sheetStatus.msg}</div>}
+      </Section>
+
+      <Section title="Sales Calls Sheet">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <a href={SALES_TEMPLATE} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', padding: '7px 12px', border: '1px solid var(--border)', borderRadius: 8, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Sales calls template
+          </a>
+        </div>
+        {salesSheetId && (
+          <div style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 12, fontSize: 12, color: 'var(--text3)' }}>
+            Connected: <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{salesSheetId.slice(0,24)}...</span>
+            <span style={{ marginLeft: 8, color: 'var(--text4)' }}>Tab: {salesTab}</span>
+          </div>
+        )}
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reconnect</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <input value={salesSheetInput} onChange={e => setSalesSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
+            style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+          <button onClick={loadSalesSheetTabs} disabled={salesSheetBusy || !salesSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+            {salesSheetBusy ? 'Loading...' : 'Connect'}
+          </button>
+        </div>
+        {salesTabsAvail && (
+          <TabPills tabs={salesTabsAvail} isSelected={t => salesTab === t} onPick={setSalesTab} />
+        )}
+        {salesSheetStatus && <div style={{ fontSize: 12, color: salesSheetStatus.type === 'ok' ? '#10B981' : '#EF4444', marginTop: 6, fontWeight: 600 }}>{salesSheetStatus.msg}</div>}
       </Section>
 
       {error && <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>}

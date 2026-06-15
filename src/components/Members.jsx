@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { db } from '../firebase'
 import { collection, getDocs } from 'firebase/firestore'
-import { computeTaskStats } from '../utils/computeTaskStats'
 import Outreach from './Outreach'
 
 const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
@@ -65,23 +64,8 @@ function MemberDashboard({ member, isMobile, isTablet }) {
   if (error) return <div style={{ color: '#EF4444', padding: 20 }}>{error}</div>
   if (!data) return null
 
-  const stats = computeTaskStats(data)
-  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0 } = stats || {}
-
-  const card = (label, val, color) => (
-    <div style={{ background: 'var(--card)', borderRadius: 12, padding: '16px 20px', boxShadow: 'var(--card-shadow)' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{val}</div>
-    </div>
-  )
-
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(3,1fr)', gap: 12, marginBottom: 28 }}>
-        {card('Outreach today', `${outreachCount}/20`, outreachCount >= 20 ? '#34D399' : '#EF4444')}
-        {card('Followups', `${fuDone}/${fuTotal||'—'}`, fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444')}
-        {card('Pos. Followups', `${pfuDone}/${pfuTotal||'—'}`, pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B')}
-      </div>
       <Outreach data={data} filter="all" isMobile={isMobile} isTablet={isTablet} />
     </div>
   )

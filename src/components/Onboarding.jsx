@@ -202,6 +202,25 @@ function TabPills({ tabs, isSelected, onPick }) {
   )
 }
 
+
+function ImportantWarning() {
+  return (
+    <div style={{
+      background: 'rgba(239,68,68,0.08)', border: '1.5px solid #EF4444',
+      borderRadius: 10, padding: '12px 14px', marginBottom: 16,
+      display: 'flex', gap: 10, alignItems: 'flex-start',
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div style={{ fontSize: 12.5, color: '#EF4444', lineHeight: 1.55, fontWeight: 600 }}>
+        You must use the template below. Your own spreadsheet will not work — the dashboard reads specific column positions and tab names. If the structure is different, data will be missing or broken.
+      </div>
+    </div>
+  )
+}
+
 async function fetchSheetTabs(sheetId) {
   const url = `${SHEETS_API}/${sheetId}?key=${API_KEY}&fields=sheets.properties.title`
   const res = await fetch(url)
@@ -350,6 +369,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
           {step === 1 && (
             <>
               <H2>Outreach sheet</H2>
+              <ImportantWarning />
               <P>This is where you track your daily outreach — connections, replies, and bookings, one tab per month.</P>
               <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Don't have one yet?</div>
@@ -398,6 +418,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
           {step === 2 && (
             <>
               <H2>Sales calls sheet</H2>
+              <ImportantWarning />
               <P>This is where every sales call gets logged — prospect, objections, outcome, lead quality.</P>
               <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Don't have one yet?</div>

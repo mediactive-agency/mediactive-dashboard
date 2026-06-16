@@ -100,15 +100,8 @@ const EDU_STEPS = [
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
     render: () => (
       <>
-        <P>One row per day. One tab per month.</P>
-        <Row col="Col B" desc="Name of the person you connected with" />
-        <Row col="Col C" desc="Link to their LinkedIn profile" />
-        <Row col="Col D" desc="Date you sent the connection request" />
-        <Row col="Col E" desc="Which account or variable this belongs to" />
-        <Row col="Col F–J" desc={<>Notes columns — write what they said. If someone replies, <Bold>log their response here</Bold>.</>} highlight />
-        <Row col="Col O" desc={<>Positive reply — mark the date here when someone shows genuine interest. This starts their positive followup tracking.</>} highlight />
-        <Row col="Col AB" desc={<>Booking date — when they book a call. This removes them from the positive followup queue.</>} highlight />
-        <P>The dashboard reads all tabs automatically.</P>
+        <P>The outreach sheet is where you track everyone you reach out to. If you have not downloaded it yet, find it in Settings.</P>
+        <P>One row per person. One tab per month. The dashboard reads it automatically — you never need to export anything.</P>
       </>
     ),
   },

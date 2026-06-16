@@ -19,7 +19,7 @@ function parseRawVars(rows, filterFn) {
     const date = toDateStr(r[3]); if (!date) continue
     if (!filterFn(date)) continue
     const varN = normName(String(r[4]||'').trim()); if (!varN) continue
-    if (!agg[varN]) agg[varN] = { name: varN, A: 0, MS: 0, B: 0, C: 0, D: 0, fuTotal: 0, fuCount: 0, daysTotal: 0, daysCount: 0 }
+    if (!agg[varN]) agg[varN] = { name: varN, A: 0, MS: 0, B: 0, C: 0, D: 0, E: 0, VSLB: 0, fuTotal: 0, fuCount: 0, daysTotal: 0, daysCount: 0 }
     agg[varN].A++
     if (r[10] === 'YES') agg[varN].MS++
     if (r[14] && toDateStr(r[14])) agg[varN].B++
@@ -33,6 +33,8 @@ function parseRawVars(rows, filterFn) {
       if (diff >= 0) { agg[varN].daysTotal += diff; agg[varN].daysCount++ }
     }
     if (r[40] && toDateStr(r[40])) agg[varN].D++
+    if (r[28] && String(r[28]).trim()) agg[varN].E++
+    if (r[41] && String(r[41]).trim()) agg[varN].VSLB++
   }
   return agg
 }
@@ -168,7 +170,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
   )
 }
 
-export default function Outreach({ data, filter, customFrom, customTo, isMobile, isTablet, mode }) {
+export default function Outreach({ data, filter, customFrom, customTo, isMobile, isTablet, mode, vslMode = false }) {
   const [selected, setSelected] = useState(new Set())
 
   const { activeVars, inactiveVars, tot } = useMemo(() => {
@@ -227,7 +229,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       }
     })
 
-    const tot = vars.reduce((acc, v) => ({ A: acc.A+v.A, MS: acc.MS+v.MS, B: acc.B+v.B, C: acc.C+v.C }), { A:0,MS:0,B:0,C:0 })
+    const tot = vars.reduce((acc, v) => ({ A: acc.A+v.A, MS: acc.MS+v.MS, B: acc.B+v.B, C: acc.C+v.C, E: acc.E+v.E, VSLB: acc.VSLB+v.VSLB }), { A:0,MS:0,B:0,C:0,E:0,VSLB:0 })
     const totFuTotal = vars.reduce((s,v) => s+(v.fuTotal||0), 0)
     const totFuCount = vars.reduce((s,v) => s+(v.fuCount||0), 0)
     const totDaysTotal = vars.reduce((s,v) => s+(v.daysTotal||0), 0)
@@ -247,7 +249,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
 
   // Combined selected
   const selVars = [...activeVars, ...inactiveVars].filter(v => selected.has(v.name))
-  const agg = selVars.reduce((acc, v) => ({ A: acc.A+v.A, MS: acc.MS+v.MS, B: acc.B+v.B, C: acc.C+v.C }), { A:0,MS:0,B:0,C:0 })
+  const agg = selVars.reduce((acc, v) => ({ A: acc.A+v.A, MS: acc.MS+v.MS, B: acc.B+v.B, C: acc.C+v.C, E: acc.E+v.E, VSLB: acc.VSLB+v.VSLB }), { A:0,MS:0,B:0,C:0,E:0,VSLB:0 })
 
   const ICONS_OUT = {
     initiated: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
@@ -255,13 +257,25 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
     reply:     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
     booked:    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
   }
-  const mainSteps = [
+  const mainSteps = vslMode ? [
+    { val: tot.A,    label: 'Initiated',    color: '#60A5FA', icon: ICONS_OUT.initiated },
+    { val: tot.MS,   label: 'Media Seen',   color: '#F472B6', icon: ICONS_OUT.seen },
+    { val: tot.B,    label: 'Pos. Replies', color: '#FB923C', icon: ICONS_OUT.reply },
+    { val: tot.E,    label: "Calendly'd",   color: '#34D399', icon: ICONS_OUT.booked },
+    { val: tot.VSLB, label: 'Booked',       color: '#A78BFA', icon: ICONS_OUT.booked },
+  ] : [
     { val: tot.A,  label: 'Initiated',    color: '#60A5FA', icon: ICONS_OUT.initiated },
     { val: tot.MS, label: 'Media Seen',   color: '#F472B6', icon: ICONS_OUT.seen },
     { val: tot.B,  label: 'Pos. Replies', color: '#FB923C', icon: ICONS_OUT.reply },
     { val: tot.C,  label: 'Appt. Booked', color: '#A78BFA', icon: ICONS_OUT.booked },
   ]
-  const mainRates = [
+  const bookedVal = vslMode ? tot.VSLB : tot.C
+  const mainRates = vslMode ? [
+    { label: 'MSR', val: tot.msr, color: '#F472B6', suffix: '%' },
+    { label: 'PRR', val: tot.prr, color: '#FB923C', suffix: '%' },
+    { label: 'CLR', val: tot.B > 0 ? +((tot.E/tot.B)*100).toFixed(1) : 0, color: '#34D399', suffix: '%' },
+    { label: 'ABR', val: tot.B > 0 ? +((tot.VSLB/tot.B)*100).toFixed(1) : 0, color: '#A78BFA', suffix: '%' },
+  ] : [
     { label: 'MSR', val: tot.msr, color: '#F472B6', suffix: '%' },
     { label: 'PRR', val: tot.prr, color: '#FB923C', suffix: '%' },
     { label: 'ABR', val: tot.abr, color: '#A78BFA', suffix: '%' },
@@ -380,7 +394,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
           {isMobile ? (
             <div>
-              {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},{val:agg.C,label:'Booked',color:'#A78BFA'}].map((step,i,arr) => {
+              {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},...(vslMode?[{val:agg.E,label:"Calendly'd",color:'#34D399'},{val:agg.VSLB,label:'Booked',color:'#A78BFA'}]:[{val:agg.C,label:'Booked',color:'#A78BFA'}])].map((step,i,arr) => {
                 const pct = i < arr.length-1 && step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : null
                 return (
                   <div key={i}>
@@ -411,7 +425,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
           ) : (
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-              {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},{val:agg.C,label:'Booked',color:'#A78BFA'}].map((step,i,arr) => (
+              {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},...(vslMode?[{val:agg.E,label:"Calendly'd",color:'#34D399'},{val:agg.VSLB,label:'Booked',color:'#A78BFA'}]:[{val:agg.C,label:'Booked',color:'#A78BFA'}])].map((step,i,arr) => (
                 <>
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                     <div style={{ fontSize: 28, fontWeight: 800, color: step.color, lineHeight: 1 }}>{step.val.toLocaleString()}</div>

@@ -81,25 +81,25 @@ function SectionLabel({ children }) {
 const EDU_STEPS = [
   {
     id: 'welcome',
-    title: 'Quick tour — 5 minutes',
+    title: 'Quick tour',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
     render: (name) => (
       <>
-        <P>Hey{name ? ` ${name}` : ''}, let's walk through how everything works. This takes about 5 minutes and will save you a lot of confusion later.</P>
+        <P>Hey{name ? ` ${name}` : ''}. This tour shows you how to use the dashboard. Takes 2 minutes.</P>
         <ImportantBox>
-          You <Bold>must</Bold> use the provided templates for the Outreach sheet, Sales Calls sheet, and the Claude skill. Your own sheet will not work — the dashboard reads specific columns and tab names. If the structure is different, data will be missing or broken.
+          Use the provided templates only. Your own sheet will not work. The dashboard reads specific columns and if the structure is different, data will break.
         </ImportantBox>
-        <P>You can replay this tour anytime using the <Bold>?</Bold> button in the top right corner.</P>
+        <P>You can replay this tour anytime with the <Bold>?</Bold> button.</P>
       </>
     ),
   },
   {
     id: 'outreach-sheet',
-    title: 'How to fill in the outreach sheet',
+    title: 'Outreach sheet',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
     render: () => (
       <>
-        <P>Every day you do outreach, add a row for that date. One row per day, one tab per month (Jan, Feb, Mar…).</P>
+        <P>One row per day. One tab per month.</P>
         <Row col="Col B" desc="Name of the person you connected with" />
         <Row col="Col C" desc="Link to their LinkedIn profile" />
         <Row col="Col D" desc="Date you sent the connection request" />
@@ -107,20 +107,20 @@ const EDU_STEPS = [
         <Row col="Col F–J" desc={<>Notes columns — write what they said. If someone replies, <Bold>log their response here</Bold>.</>} highlight />
         <Row col="Col O" desc={<>Positive reply — mark the date here when someone shows genuine interest. This starts their positive followup tracking.</>} highlight />
         <Row col="Col AB" desc={<>Booking date — when they book a call. This removes them from the positive followup queue.</>} highlight />
-        <P>The dashboard reads all tabs automatically — you never need to export or copy anything.</P>
+        <P>The dashboard reads all tabs automatically.</P>
       </>
     ),
   },
   {
     id: 'variables',
-    title: 'Variables — tracking by account',
+    title: 'Variables',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>,
     render: () => (
       <>
-        <P>Variables let you track your outreach in more detail — by LinkedIn account, by message type, or by anything else you want to split by.</P>
+        <P>Variables let you split your outreach by account, message type, or anything else.</P>
         <Screenshot src={IMG_VARIABLES} caption="Variables table at the top of each monthly tab" />
-        <P>Name your variables in the top table (rows 4–8). Then when you log a connection in row 11 onwards, pick the matching variable in column E. The summary at the top updates automatically.</P>
-        <P>You can add more variable rows if you need them — the app handles it. Shoutout Ghassan Jenedy for this feature.</P>
+        <P>Name your variables in the top table. When logging a connection, pick the matching variable in column E.</P>
+        <P>You can add more rows if needed. Shoutout Ghassan Jenedy for this feature.</P>
       </>
     ),
   },
@@ -131,9 +131,9 @@ const EDU_STEPS = [
     render: () => (
       <>
         <Screenshot src={IMG_NOTES} alt="Notes column" />
-        <P>If someone replies, write what they said in the <Bold>Notes column</Bold>. The app uses this to know their status.</P>
-        <CheckItem>Not interested → write it in Notes. They disappear from your followup queue.</CheckItem>
-        <CheckItem>All followups done for the day → Daily Tasks marks the task as complete.</CheckItem>
+        <P>Write every reply in the <Bold>Notes column</Bold>. This is how the app tracks their status.</P>
+        <CheckItem>Not interested: write it in Notes. They drop out of your queue.</CheckItem>
+        <CheckItem>All followups done: Daily Tasks marks it complete.</CheckItem>
       </>
     ),
   },
@@ -144,31 +144,31 @@ const EDU_STEPS = [
     render: () => (
       <>
         <Screenshot src={IMG_PFU} alt="Positive followups" />
-        <P>People who showed interest get tracked separately in columns <Bold>1B, 2B, 3B…</Bold></P>
-        <CheckItem>Not interested anymore → write it in the next followup column. They drop out automatically.</CheckItem>
-        <CheckItem>They book a call → log it and they are removed from the queue.</CheckItem>
+        <P>People who showed interest are tracked in columns <Bold>1B, 2B, 3B…</Bold></P>
+        <CheckItem>Not interested: write it in the next column. They drop out automatically.</CheckItem>
+        <CheckItem>Booked: log it and they are removed from the queue.</CheckItem>
       </>
     ),
   },
   {
     id: 'vsl-calendly',
     vslOnly: true,
-    title: 'VSL workflow — Calendly tracking',
+    title: 'VSL workflow',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
     render: () => (
       <>
-        <P>With VSL mode enabled, the sheet tracks a second round of followups after someone replies positively to your video.</P>
+        <P>After a positive reply to your VSL, the sheet tracks a second round of followups.</P>
         <Screenshot src={IMG_CALENDLY} alt="Calendly tracking columns" />
-        <P>The <Bold>Calendly'd</Bold> column (AC) tracks which variable you used to send the booking link. Once they book, log the date in <Bold>col AO</Bold> and the variable in <Bold>col AP</Bold>.</P>
-        <CheckItem>Replied to VSL → log date in <Bold>col AB</Bold>, followup in cols <Bold>AD–AJ</Bold></CheckItem>
-        <CheckItem>Booked → log date in <Bold>col AO</Bold>, variable in <Bold>col AP</Bold></CheckItem>
-        <CheckItem ok={false}>Do not fill col AB if they did not reply — the app will skip the first followup round and go straight to the second.</CheckItem>
+        <P>Column AC tracks which variable you used to send the Calendly link. Log the booking date in <Bold>col AO</Bold> and variable in <Bold>col AP</Bold>.</P>
+        <CheckItem>Replied to VSL: log date in <Bold>col AB</Bold>, followups in <Bold>AD–AJ</Bold></CheckItem>
+        <CheckItem>Booked: log date in <Bold>col AO</Bold>, variable in <Bold>col AP</Bold></CheckItem>
+        <CheckItem ok={false}>Only fill col AB if they actually replied to the VSL.</CheckItem>
       </>
     ),
   },
   {
     id: 'log-call',
-    title: 'How to log a sales call',
+    title: 'Logging sales calls',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
     render: () => (
       <>
@@ -183,7 +183,7 @@ const EDU_STEPS = [
         }}>
           "Log my last call"
         </div>
-        <P>Claude reads the Fathom recording and extracts everything — prospect name, current situation, goals, objections, whether it closed, and a lead quality score. It shows you a preview and asks for confirmation before writing anything to the sheet.</P>
+        <P>Claude reads your Fathom recording and logs everything automatically. You get a preview before anything is saved.</P>
 
         <SectionLabel>What gets logged automatically</SectionLabel>
         <CheckItem>Prospect name, call date, and duration</CheckItem>
@@ -196,15 +196,15 @@ const EDU_STEPS = [
   },
   {
     id: 'done',
-    title: 'You are all set',
+    title: "You're all set",
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>,
     render: (name) => (
       <>
-        <P>{"That's it"}{name ? `, ${name}` : ''}. The tour continues with a quick overlay showing you where everything lives in the dashboard.</P>
+        <P>{name ? `Good luck, ${name}.` : 'Good luck.'} The overlay below shows you where everything is.</P>
         <CheckItem>Fill in the outreach sheet every day</CheckItem>
         <CheckItem>After each sales call: "Log my last call" in Claude</CheckItem>
-        <CheckItem>Check the dashboard weekly to spot trends and fix weak points</CheckItem>
-        <CheckItem>Use the <Bold>?</Bold> button if you need this tour again</CheckItem>
+        <CheckItem>Check the dashboard weekly</CheckItem>
+        <CheckItem>Use <Bold>?</Bold> to replay this tour anytime</CheckItem>
       </>
     ),
   },
@@ -215,43 +215,43 @@ const OVERLAY_STEPS = [
   {
     target: '[data-tour="sidebar-dashboard"]',
     title: 'Dashboard',
-    body: 'Full-funnel overview: connections → replies → bookings → closed. Monthly performance chart and pipeline status.',
+    body: 'Full funnel overview and monthly performance.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-outreach"]',
     title: 'Outreach',
-    body: 'LinkedIn analytics by month. Connection rate, reply rate, and booking rate all in one view.',
+    body: 'LinkedIn analytics by month. Connection, reply and booking rates.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-sales"]',
     title: 'Sales Calls',
-    body: 'Every logged call appears here. Objections breakdown, lead quality scores, and upcoming booked calls.',
+    body: 'All logged calls with objections breakdown and lead quality scores.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-tasks"]',
     title: 'Daily Tasks',
-    body: 'Your streak calendar. See which days you hit your outreach and followup targets.',
+    body: 'Your streak calendar. See which days you hit your targets.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-settings"]',
     title: 'Settings',
-    body: 'Add a new outreach sheet here when a new year starts or you have data in a second spreadsheet. Download the Claude skill file again from here too.',
+    body: 'Add a new outreach sheet for a new year or second spreadsheet. Download the Claude skill here.',
     placement: 'right',
   },
   {
     target: '[data-tour="filter-bar"]',
     title: 'Date filter',
-    body: 'Filter all charts by time period — last 30 days, last quarter, or a custom date range.',
+    body: 'Filter all charts by time period.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="help-btn"]',
     title: 'This button',
-    body: 'Opens this tour again anytime. If you ever forget how something works, start here.',
+    body: 'Opens this tour again anytime.',
     placement: 'bottom-left',
   },
 ]

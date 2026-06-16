@@ -304,7 +304,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
         setupComplete: true,
         createdAt: new Date().toISOString(),
       })
-      onComplete()
+      onComplete({ showTour: true })
     } catch (e) {
       setStatus({ type: 'err', msg: e.message })
     }
@@ -505,8 +505,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
           {/* Step 7 — Done */}
           {step === 7 && (
             <>
-              <H2>You're all set</H2>
-              <P>Everything is connected. Your dashboard is ready to go.</P>
+              <H2>Setup complete</H2>
+              <P>Your sheets are connected. Next you'll get a quick tour of the dashboard so you know exactly how everything works.</P>
               <StatusMsg status={status} />
             </>
           )}
@@ -515,7 +515,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 28 }}>
             <div>{step > 0 && <Btn onClick={back}>Back</Btn>}</div>
             {step === 7
-              ? <Btn primary onClick={finish} disabled={saving}>{saving ? 'Setting up...' : 'Open dashboard'}</Btn>
+              ? <Btn primary onClick={finish} disabled={saving}>{saving ? 'Setting up...' : 'Start tour →'}</Btn>
               : <Btn primary onClick={next} disabled={!canNext}>Continue</Btn>}
           </div>
         </div>

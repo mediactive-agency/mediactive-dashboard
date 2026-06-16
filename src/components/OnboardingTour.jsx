@@ -120,7 +120,7 @@ const EDU_STEPS = [
     content: (name) => (
       <>
         <p style={P_STYLE}>
-          That's everything, {name ? name : 'you're all set'}. Start logging your outreach daily and Claude will handle the call logging automatically.
+          {"That's everything"}{name ? `, ${name}` : ''}. Start logging your outreach daily and Claude will handle the call logging automatically.
         </p>
         <div style={CHECKLIST_STYLE}>
           {[

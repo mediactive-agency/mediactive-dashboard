@@ -199,7 +199,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       for (const sheet of allSheets) {
         const vars = parseRawVars(sheet, filterFn)
         for (const [name, v] of Object.entries(vars)) {
-          if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
+          if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, E:0, VSLB:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
           for (const k of ['A','MS','B','C','D','fuTotal','fuCount','daysTotal','daysCount']) aggMap[name][k] += v[k]
         }
       }
@@ -213,7 +213,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
         if (from && end < from) continue
         const vars = parseRawVars(sheetMap[m], filterFn)
         for (const [name, v] of Object.entries(vars)) {
-          if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
+          if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, E:0, VSLB:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
           for (const k of ['A','MS','B','C','D','fuTotal','fuCount','daysTotal','daysCount']) aggMap[name][k] += v[k]
         }
       }

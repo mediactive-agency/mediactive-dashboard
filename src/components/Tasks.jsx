@@ -15,14 +15,14 @@ const ICO_CHECK = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" st
 const ICO_X     = <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 const ICO_FIRE  = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"/></svg>
 
-export default function Tasks({ stats, filter, isMobile }) {
+export default function Tasks({ stats, filter, isMobile, dailyGoal = 20 }) {
   if (!stats) return null
 
   const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today } = stats
 
   const checkDay = new Date(todayStr+'T12:00:00').getDay()
   const isCheckWeekend = checkDay === 0 || checkDay === 6
-  const task1Done = outreachCount >= 20
+  const task1Done = outreachCount >= dailyGoal
   const task2Done = fuTotal === 0 || fuDone >= fuTotal
   const pfuTask3Done = pfuTotal === 0 || pfuDone >= pfuTotal
   const task1Color = task1Done ? '#34D399' : '#EF4444'
@@ -44,7 +44,7 @@ export default function Tasks({ stats, filter, isMobile }) {
     const total = dailyFollowupTotal[ds2]||0, done = dailyFollowupDone[ds2]||0
     const fuT = dailyFUTotal[ds2]||0, fuD = dailyFUDone[ds2]||0
     const pfuT = dailyPFUTotal[ds2]||0, pfuD = dailyPFUDone[ds2]||0
-    const t1 = initiated >= 20, t2 = total === 0 || done >= total
+    const t1 = initiated >= dailyGoal, t2 = total === 0 || done >= total
     const complete = t1 && (isWeekend || t2), partial = (t1 || (!isWeekend && t2)) && !complete
     let bg, textC, numC
     if (isWeekend)         { bg='var(--cal-weekend)'; textC='var(--cal-weekend-text)'; numC='var(--cal-weekend-text)' }
@@ -57,7 +57,7 @@ export default function Tasks({ stats, filter, isMobile }) {
         <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: textC, lineHeight: 1 }}>{d.getDate()}</div>
         {!isWeekend && (
           <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, color: numC, lineHeight: 1.5, marginTop: 4 }}>
-            <div>{initiated > 0 ? <>{initiated}<span style={{ fontWeight: 400, opacity: 0.7 }}>/20</span></> : <span style={{ opacity: 0.2 }}>—</span>}</div>
+            <div>{initiated > 0 ? <>{initiated}<span style={{ fontWeight: 400, opacity: 0.7 }}>/{dailyGoal}</span></> : <span style={{ opacity: 0.2 }}>—</span>}</div>
             {fuT > 0 && <div>{fuD}/{fuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> fu</span></div>}
             {pfuT > 0 && <div>{pfuD}/{pfuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> pfu</span></div>}
           </div>
@@ -130,7 +130,7 @@ export default function Tasks({ stats, filter, isMobile }) {
       <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
           <StreakCard />
-          <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={20} showBar={true} />
+          <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={dailyGoal} showBar={true} />
           <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
           <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
         </div>
@@ -148,7 +148,7 @@ export default function Tasks({ stats, filter, isMobile }) {
       </div>
       <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
         <StreakCard />
-        <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={20} showBar={true} />
+        <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={dailyGoal} showBar={true} />
         <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
         <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
       </div>

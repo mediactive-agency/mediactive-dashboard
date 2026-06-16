@@ -131,6 +131,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
           {NAV_ITEMS.map(item => (
             <button
               key={item.key}
+              data-tour={`sidebar-${item.key}`}
               onClick={() => onNav(item.key)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',

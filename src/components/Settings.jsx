@@ -78,6 +78,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [dailyGoal, setDailyGoal] = useState(20)
+  const [vslMode, setVslMode] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
       setSalesTab(config.salesTab || 'Sheet1')
       setCalendlyPat(config.calendlyPat || '')
       setDailyGoal(config.dailyGoal ?? 20)
+      setVslMode(config.vslMode ?? false)
       setLogoPreview(config.logoUrl || null)
       if (config.logoUrl && !config.logoUrl.startsWith('data:')) setLogoUrl(config.logoUrl)
     }
@@ -144,6 +146,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
       await saveUserConfig(user.uid, {
         userName: userName.trim(),
         dailyGoal: Number(dailyGoal) || 20,
+        vslMode: vslMode,
         calendlyPat: calendlyPat.trim() || null,
         logoUrl: logoPreview || logoUrl || null,
       })
@@ -177,6 +180,31 @@ export default function Settings({ user, config, onSaved, isMobile }) {
             <span style={{ fontSize: 13, color: 'var(--text3)' }}>connections per day</span>
           </div>
           <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 5 }}>Used in Daily Tasks to mark the day as done. Default is 20.</div>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 8 }}>Outreach workflow</div>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
+            <div
+              onClick={() => setVslMode(v => !v)}
+              style={{
+                width: 40, height: 22, borderRadius: 11, flexShrink: 0, marginTop: 1,
+                background: vslMode ? '#B16CEA' : 'var(--border)',
+                position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
+              }}
+            >
+              <div style={{
+                position: 'absolute', top: 3, left: vslMode ? 20 : 3,
+                width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 3 }}>VSL workflow</div>
+              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>
+                Enable if you send a VSL (video sales letter) after the first positive reply. The app will track two rounds of followups before counting someone as booked.
+              </div>
+            </div>
+          </label>
         </div>
       </Section>
 

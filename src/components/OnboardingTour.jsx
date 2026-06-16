@@ -27,16 +27,9 @@ function ImportantBox({ children }) {
 function Screenshot({ src, alt, caption }) {
   if (!src) return null
   return (
-    <div style={{ marginBottom: 18, marginLeft: -36, marginRight: -36 }}>
-      <img
-        src={src} alt={alt || caption || 'Screenshot'}
-        style={{
-          width: '100%', display: 'block',
-          borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
-          imageRendering: 'crisp-edges',
-        }}
-      />
-      {caption && <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', marginTop: 6, paddingLeft: 36, paddingRight: 36 }}>{caption}</div>}
+    <div style={{ marginBottom: 18 }}>
+      <img src={src} alt={alt || caption || 'Screenshot'} style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', display: 'block' }} />
+      {caption && <div style={{ fontSize: 12, color: 'var(--text3)', textAlign: 'center', marginTop: 6 }}>{caption}</div>}
     </div>
   )
 }

@@ -62,7 +62,10 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
     { val: v.A, label: 'Initiated',  color: '#60A5FA' },
     { val: v.MS, label: 'Media Seen', color: '#F472B6' },
     { val: v.B, label: 'Replies',    color: '#FB923C' },
-    { val: v.C, label: 'Booked',     color: '#A78BFA' },
+    ...(vslMode
+      ? [{ val: v.E, label: "Calendly'd", color: '#34D399' }, { val: v.VSLB, label: 'Booked', color: '#A78BFA' }]
+      : [{ val: v.C, label: 'Booked',     color: '#A78BFA' }]
+    ),
   ]
   const rates = [
     { label: 'MSR', val: v.msr, color: '#F472B6', suffix: '%' },
@@ -413,7 +416,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
                 {[
                   { label:'MSR', val: agg.A>0 ? +((agg.MS/agg.A)*100).toFixed(1):0, color:'#F472B6' },
                   { label:'PRR', val: agg.A>0 ? +((agg.B/agg.A)*100).toFixed(1):0, color:'#FB923C' },
-                  { label:'ABR', val: agg.A>0 ? +((agg.C/agg.A)*100).toFixed(1):0, color:'#A78BFA' },
+                  { label:'ABR', val: agg.A>0 ? +((vslMode ? agg.VSLB : agg.C)/agg.A*100).toFixed(1):0, color:'#A78BFA' },
                 ].map(r => (
                   <div key={r.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                     <div style={{ fontSize: 22, fontWeight: 800, color: r.color, lineHeight: 1 }}>{r.val}%</div>
@@ -445,7 +448,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
               {[
                 { label:'MSR', val: agg.A>0 ? +((agg.MS/agg.A)*100).toFixed(1):0, color:'#F472B6' },
                 { label:'PRR', val: agg.A>0 ? +((agg.B/agg.A)*100).toFixed(1):0, color:'#FB923C' },
-                { label:'ABR', val: agg.A>0 ? +((agg.C/agg.A)*100).toFixed(1):0, color:'#A78BFA' },
+                { label:'ABR', val: agg.A>0 ? +((vslMode ? agg.VSLB : agg.C)/agg.A*100).toFixed(1):0, color:'#A78BFA' },
               ].map((r,i) => (
                 <>
                   {i > 0 && <div key={`rd${i}`} style={{ width: 1, height: 36, background: 'var(--border2)', margin: '0 20px' }} />}

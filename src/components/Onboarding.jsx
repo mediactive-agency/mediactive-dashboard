@@ -229,11 +229,12 @@ async function fetchSheetTabs(sheetId) {
   return (json.sheets || []).map(s => s.properties.title)
 }
 
-const STEPS = ['Welcome', 'VSL', 'Outreach sheet', 'Sales calls sheet', 'Claude skill', 'Fathom', 'Calendly', 'Logo', 'Done']
+const STEPS = ['Welcome', 'VSL', 'Weekends', 'Outreach sheet', 'Sales calls sheet', 'Claude skill', 'Fathom', 'Calendly', 'Logo', 'Done']
 
 export default function Onboarding({ user, onComplete, isMobile }) {
   const [step, setStep] = useState(0)
   const [vslMode, setVslMode] = useState(null) // null = not answered yet
+  const [weekendOutreach, setWeekendOutreach] = useState(null)
   const [userName, setUserName] = useState('')
   const [outreachSheets, setOutreachSheets] = useState([])
   const [outreachInput, setOutreachInput] = useState('')
@@ -323,6 +324,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
         logoUrl: logoPreview || logoUrl || null,
         setupComplete: true,
         vslMode: vslMode === true,
+        weekendOutreach: weekendOutreach === true,
         createdAt: new Date().toISOString(),
       })
       onComplete({ showTour: true })
@@ -335,13 +337,14 @@ export default function Onboarding({ user, onComplete, isMobile }) {
   const canNext = {
     0: !!userName.trim(),
     1: vslMode !== null,
-    2: outreachSheets.length > 0 || (!!outreachSheetId && outreachTabs.length > 0),
-    3: !!salesSheetId,
-    4: true,
+    2: weekendOutreach !== null,
+    3: outreachSheets.length > 0 || (!!outreachSheetId && outreachTabs.length > 0),
+    4: !!salesSheetId,
     5: true,
     6: true,
     7: true,
     8: true,
+    9: true,
   }[step]
 
   return (
@@ -407,8 +410,42 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </div>
           )}
 
-          {/* Step 2 — Outreach sheet */}
+          {/* Step 2 — Weekends */}
           {step === 2 && (
+            <div>
+              <H2>Do you do outreach on weekends?</H2>
+              <P>This affects your streak and daily task tracking.</P>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                <button
+                  onClick={() => setWeekendOutreach(false)}
+                  style={{
+                    padding: '16px 20px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                    border: `2px solid ${weekendOutreach === false ? 'var(--text)' : 'var(--border)'}`,
+                    background: weekendOutreach === false ? 'var(--bg)' : 'transparent',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Weekdays only</div>
+                  <div style={{ fontSize: 13, color: 'var(--text3)' }}>Saturday and Sunday are skipped in your streak and task tracking.</div>
+                </button>
+                <button
+                  onClick={() => setWeekendOutreach(true)}
+                  style={{
+                    padding: '16px 20px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                    border: `2px solid ${weekendOutreach === true ? 'var(--text)' : 'var(--border)'}`,
+                    background: weekendOutreach === true ? 'var(--bg)' : 'transparent',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Every day including weekends</div>
+                  <div style={{ fontSize: 13, color: 'var(--text3)' }}>All 7 days count toward your streak and daily tasks.</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 — Outreach sheet */}
+          {step === 3 && (
             <>
               <H2>Outreach sheet</H2>
               <ImportantWarning />
@@ -456,8 +493,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 3 — Sales calls sheet */}
-          {step === 3 && (
+          {/* Step 4 — Sales calls sheet */}
+          {step === 4 && (
             <>
               <H2>Sales calls sheet</H2>
               <ImportantWarning />
@@ -485,8 +522,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 4 — Claude skill */}
-          {step === 4 && (
+          {/* Step 5 — Claude skill */}
+          {step === 5 && (
             <>
               <H2>Claude call logging skill</H2>
               <P>This skill lets Claude automatically log your sales calls from Fathom straight into your sheet. After your next call, just tell Claude "log my last call" — it handles the rest.</P>
@@ -512,8 +549,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 5 — Fathom */}
-          {step === 5 && (
+          {/* Step 6 — Fathom */}
+          {step === 6 && (
             <>
               <H2>Fathom</H2>
               <P>Fathom records and summarizes your sales calls. Together with the Claude skill, it makes call logging completely automatic.</P>
@@ -526,8 +563,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 6 — Calendly */}
-          {step === 6 && (
+          {/* Step 7 — Calendly */}
+          {step === 7 && (
             <>
               <H2 optional>Calendly</H2>
               <P>Connect Calendly to see your upcoming booked calls on the dashboard. Create a personal access token at <a href="https://calendly.com/integrations/api_webhooks" target="_blank" rel="noreferrer" style={{ color: 'var(--text)', fontWeight: 700 }}>calendly.com/integrations</a> and paste it below.</P>
@@ -537,8 +574,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 7 — Logo */}
-          {step === 7 && (
+          {/* Step 8 — Logo */}
+          {step === 8 && (
             <>
               <H2 optional>Your logo</H2>
               <P>Add your company logo to personalise the dashboard. It will appear in the sidebar.</P>
@@ -565,8 +602,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 8 — Done */}
-          {step === 8 && (
+          {/* Step 9 — Done */}
+          {step === 9 && (
             <>
               <H2>Setup complete</H2>
               <P>Your sheets are connected. Next you'll get a quick tour of the dashboard so you know exactly how everything works.</P>

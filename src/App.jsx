@@ -43,7 +43,7 @@ export default function App() {
   const { isMobile, isTablet } = useWindowSize()
 
   // Compute task stats directly here — no dependency on Tasks tab being visible
-  const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false }), [data, config?.vslMode])
+  const taskStats = useMemo(() => computeTaskStats(data), [data])
   const dailyStats = taskStats ? {
     fuToday: taskStats.fuTotal,
     fuDoneToday: taskStats.fuDone,

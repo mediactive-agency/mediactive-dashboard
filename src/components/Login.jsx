@@ -42,7 +42,7 @@ export default function Login({ onLogin, loading }) {
           <p style={{
             fontSize: 15, color: 'var(--text3)', lineHeight: 1.7, margin: 0,
           }}>
-            One place for your LinkedIn outreach, sales calls, daily tasks and pipeline.
+            One place for your social outreach, sales calls, daily tasks and pipeline.
           </p>
 
           {/* Trust badges */}
@@ -56,6 +56,14 @@ export default function Login({ onLogin, loading }) {
                 {label}
               </div>
             ))}
+          </div>
+
+          {/* Quote */}
+          <div style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, margin: '0 0 12px', fontStyle: 'italic' }}>
+              "The best feedback is data. Make objective decisions, not emotional ones. Move faster."
+            </p>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>Mediactive</div>
           </div>
         </div>
       </div>

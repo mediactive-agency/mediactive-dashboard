@@ -79,6 +79,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   const [saved, setSaved] = useState(false)
   const [dailyGoal, setDailyGoal] = useState(20)
   const [vslMode, setVslMode] = useState(false)
+  const [weekendOutreach, setWeekendOutreach] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
       setCalendlyPat(config.calendlyPat || '')
       setDailyGoal(config.dailyGoal ?? 20)
       setVslMode(config.vslMode ?? false)
+      setWeekendOutreach(config.weekendOutreach ?? false)
       setLogoPreview(config.logoUrl || null)
       if (config.logoUrl && !config.logoUrl.startsWith('data:')) setLogoUrl(config.logoUrl)
     }
@@ -147,6 +149,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         userName: userName.trim(),
         dailyGoal: Number(dailyGoal) || 20,
         vslMode: vslMode,
+        weekendOutreach: weekendOutreach,
         calendlyPat: calendlyPat.trim() || null,
         logoUrl: logoPreview || logoUrl || null,
       })

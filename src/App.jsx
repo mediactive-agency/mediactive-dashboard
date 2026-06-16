@@ -43,7 +43,7 @@ export default function App() {
   const { isMobile, isTablet } = useWindowSize()
 
   // Compute task stats directly here — no dependency on Tasks tab being visible
-  const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false }), [data, config?.vslMode])
+  const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false, weekendOutreach: config?.weekendOutreach ?? false }), [data, config?.vslMode, config?.weekendOutreach])
   const dailyStats = taskStats ? {
     fuToday: taskStats.fuTotal,
     fuDoneToday: taskStats.fuDone,
@@ -122,7 +122,7 @@ export default function App() {
               {page === 'dashboard' && <Dashboard data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} dailyStats={dailyStats} theme={theme} isMobile={isMobile} isTablet={isTablet} vslMode={config?.vslMode ?? false} />}
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} vslMode={config?.vslMode ?? false} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
-              {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} />}
+              {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
               {page === 'settings'  && <Settings  user={user} config={config} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}

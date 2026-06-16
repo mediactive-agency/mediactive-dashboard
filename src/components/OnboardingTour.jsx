@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IMG_VARIABLES } from '../tourImages'
+import { IMG_VARIABLES, IMG_NOTES } from '../tourImages'
 
 const GRADIENT = 'linear-gradient(90deg, #B16CEA, #FF5E69, #FFA84B)'
 
@@ -127,7 +127,7 @@ const EDU_STEPS = [
     render: () => (
       <>
         <P>The Daily Tasks tab tracks whether you are staying on top of your followups. Here is exactly what goes where:</P>
-
+        <Screenshot src={IMG_NOTES} caption="Notes column — log every reply so the app knows not to chase them again" />
         <SectionLabel>Regular followups</SectionLabel>
         <CheckItem>Someone replies → write their response in the <Bold>Notes column (F–J)</Bold> and set a followup date in <Bold>col D</Bold></CheckItem>
         <CheckItem>You send the followup → mark the date in <Bold>col E</Bold></CheckItem>

@@ -229,10 +229,11 @@ async function fetchSheetTabs(sheetId) {
   return (json.sheets || []).map(s => s.properties.title)
 }
 
-const STEPS = ['Welcome', 'Outreach sheet', 'Sales calls sheet', 'Claude skill', 'Fathom', 'Calendly', 'Logo', 'Done']
+const STEPS = ['Welcome', 'VSL', 'Outreach sheet', 'Sales calls sheet', 'Claude skill', 'Fathom', 'Calendly', 'Logo', 'Done']
 
 export default function Onboarding({ user, onComplete, isMobile }) {
   const [step, setStep] = useState(0)
+  const [vslMode, setVslMode] = useState(null) // null = not answered yet
   const [userName, setUserName] = useState('')
   const [outreachSheets, setOutreachSheets] = useState([])
   const [outreachInput, setOutreachInput] = useState('')
@@ -321,6 +322,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
         calendlyPat: calendlyPat.trim() || null,
         logoUrl: logoPreview || logoUrl || null,
         setupComplete: true,
+        vslMode: vslMode === true,
         createdAt: new Date().toISOString(),
       })
       onComplete({ showTour: true })
@@ -332,13 +334,14 @@ export default function Onboarding({ user, onComplete, isMobile }) {
 
   const canNext = {
     0: !!userName.trim(),
-    1: outreachSheets.length > 0 || (!!outreachSheetId && outreachTabs.length > 0),
-    2: !!salesSheetId,
-    3: true,
+    1: vslMode !== null,
+    2: outreachSheets.length > 0 || (!!outreachSheetId && outreachTabs.length > 0),
+    3: !!salesSheetId,
     4: true,
     5: true,
     6: true,
     7: true,
+    8: true,
   }[step]
 
   return (
@@ -365,8 +368,47 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 1 — Outreach sheet */}
+          {/* Step 1 — VSL */}
           {step === 1 && (
+            <div>
+              <H2>How do you send your booking link?</H2>
+              <P>This helps us set up the right tracking in your outreach sheet.</P>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                <button
+                  onClick={() => setVslMode(false)}
+                  style={{
+                    padding: '16px 20px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                    border: `2px solid ${vslMode === false ? 'var(--text)' : 'var(--border)'}`,
+                    background: vslMode === false ? 'var(--bg)' : 'transparent',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>I send the Calendly link directly</div>
+                  <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.5 }}>After a positive reply, you send the booking link straight away and followup until they book.</div>
+                </button>
+                <button
+                  onClick={() => setVslMode(true)}
+                  style={{
+                    padding: '16px 20px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
+                    border: `2px solid ${vslMode === true ? 'var(--text)' : 'var(--border)'}`,
+                    background: vslMode === true ? 'var(--bg)' : 'transparent',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>I send a VSL first</div>
+                  <div style={{ fontSize: 13, color: 'var(--text3)', lineHeight: 1.5 }}>After a positive reply, you send a video sales letter. Only after they react to that do you send the Calendly link. This adds a second followup round.</div>
+                </button>
+              </div>
+              {vslMode === false && (
+                <div style={{ marginTop: 14, padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--text3)', lineHeight: 1.5 }}>
+                  You can always enable VSL mode later in Settings if your workflow changes.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2 — Outreach sheet */}
+          {step === 2 && (
             <>
               <H2>Outreach sheet</H2>
               <ImportantWarning />
@@ -414,8 +456,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 2 — Sales calls sheet */}
-          {step === 2 && (
+          {/* Step 3 — Sales calls sheet */}
+          {step === 3 && (
             <>
               <H2>Sales calls sheet</H2>
               <ImportantWarning />
@@ -443,8 +485,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 3 — Claude skill */}
-          {step === 3 && (
+          {/* Step 4 — Claude skill */}
+          {step === 4 && (
             <>
               <H2>Claude call logging skill</H2>
               <P>This skill lets Claude automatically log your sales calls from Fathom straight into your sheet. After your next call, just tell Claude "log my last call" — it handles the rest.</P>
@@ -470,8 +512,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 4 — Fathom */}
-          {step === 4 && (
+          {/* Step 5 — Fathom */}
+          {step === 5 && (
             <>
               <H2>Fathom</H2>
               <P>Fathom records and summarizes your sales calls. Together with the Claude skill, it makes call logging completely automatic.</P>
@@ -484,8 +526,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 5 — Calendly */}
-          {step === 5 && (
+          {/* Step 6 — Calendly */}
+          {step === 6 && (
             <>
               <H2 optional>Calendly</H2>
               <P>Connect Calendly to see your upcoming booked calls on the dashboard. Create a personal access token at <a href="https://calendly.com/integrations/api_webhooks" target="_blank" rel="noreferrer" style={{ color: 'var(--text)', fontWeight: 700 }}>calendly.com/integrations</a> and paste it below.</P>
@@ -495,8 +537,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 6 — Logo */}
-          {step === 6 && (
+          {/* Step 7 — Logo */}
+          {step === 7 && (
             <>
               <H2 optional>Your logo</H2>
               <P>Add your company logo to personalise the dashboard. It will appear in the sidebar.</P>
@@ -523,8 +565,8 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 7 — Done */}
-          {step === 7 && (
+          {/* Step 8 — Done */}
+          {step === 8 && (
             <>
               <H2>Setup complete</H2>
               <P>Your sheets are connected. Next you'll get a quick tour of the dashboard so you know exactly how everything works.</P>

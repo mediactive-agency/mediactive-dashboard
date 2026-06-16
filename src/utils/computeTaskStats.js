@@ -7,7 +7,7 @@ function nextBizDay(d) {
   return n
 }
 
-export function computeTaskStats(data) {
+export function computeTaskStats(data, { vslMode = false } = {}) {
   if (!data) return null
 
   const now = new Date(TODAY)
@@ -36,7 +36,7 @@ export function computeTaskStats(data) {
   allRows.forEach(x => {
     const r = x.r; const varN = String(r[4]||'').toLowerCase()
     if (varN.includes('inmail')) return
-    const bookedDate = toDateStr(r[27]); const hasPositiveReply = !!(r[14] && toDateStr(r[14]))
+    const bookedDate = vslMode ? toDateStr(r[40]) : toDateStr(r[27]); const hasPositiveReply = !!(r[14] && toDateStr(r[14]))
     if (!hasPositiveReply) {
       const fuDoneDate = r[5] ? toDateStr(r[5]) : null
       if ((r[6]||r[7]||r[8]||r[9]) && !fuDoneDate) return
@@ -46,42 +46,64 @@ export function computeTaskStats(data) {
       if (fuDoneDate === dueDate) dailyFUDone[dueDate] = (dailyFUDone[dueDate]||0) + 1
     } else {
       const replyDate = toDateStr(r[14]); if (!replyDate) return
-      const slots = []
-      for (let i = 0; i < 7; i++) {
-        const v = String(r[16+i]||'').trim(); const sd = toDateStr(r[16+i])
-        if (!v) slots.push({ date: null, text: false })
-        else if (sd) slots.push({ date: sd, text: false })
-        else slots.push({ date: null, text: true })
-      }
-      const slotDueDates = []; let prevDate = replyDate
-      for (let i = 0; i < 7; i++) {
-        const due = dateStr(nextBizDay(new Date(prevDate+'T12:00:00')))
-        slotDueDates.push(due); prevDate = slots[i].date || due
-      }
-      const activeFrom = dateStr(nextBizDay(new Date(replyDate+'T12:00:00')))
-      for (const D of calDays) {
-        if (D < activeFrom) continue
-        if (bookedDate && bookedDate <= D) break
-        let endedAsOfD = false, filledAsOfD = 0
+
+      // Helper to track one PFU series
+      function trackSeries(startReplyDate, slotStartIdx, seriesBookedDate) {
+        const slots = []
         for (let i = 0; i < 7; i++) {
-          if (slots[i].text && slotDueDates[i] <= D) { endedAsOfD = true; break }
-          if (slots[i].date && slots[i].date <= D) filledAsOfD++
+          const v = String(r[slotStartIdx+i]||''  ).trim(); const sd = toDateStr(r[slotStartIdx+i])
+          if (!v) slots.push({ date: null, text: false })
+          else if (sd) slots.push({ date: sd, text: false })
+          else slots.push({ date: null, text: true })
         }
-        if (endedAsOfD || filledAsOfD === 7) {
-          // Výjimka: pokud byl slot splněn právě dnes, ukáž ho v totalu i done
-          if (D === todayStr) {
-            for (let i = 0; i < 7; i++) {
-              if (slots[i].date === todayStr) {
-                dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
-                dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1
-                break
+        const slotDueDates = []; let prevDate = startReplyDate
+        for (let i = 0; i < 7; i++) {
+          const due = dateStr(nextBizDay(new Date(prevDate+'T12:00:00')))
+          slotDueDates.push(due); prevDate = slots[i].date || due
+        }
+        const activeFrom = dateStr(nextBizDay(new Date(startReplyDate+'T12:00:00')))
+        for (const D of calDays) {
+          if (D < activeFrom) continue
+          if (seriesBookedDate && seriesBookedDate <= D) break
+          let endedAsOfD = false, filledAsOfD = 0
+          for (let i = 0; i < 7; i++) {
+            if (slots[i].text && slotDueDates[i] <= D) { endedAsOfD = true; break }
+            if (slots[i].date && slots[i].date <= D) filledAsOfD++
+          }
+          if (endedAsOfD || filledAsOfD === 7) {
+            if (D === todayStr) {
+              for (let i = 0; i < 7; i++) {
+                if (slots[i].date === todayStr) {
+                  dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
+                  dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1
+                  break
+                }
               }
             }
+            break
           }
-          break
+          dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
+          for (let i = 0; i < 7; i++) { if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; break } }
         }
-        dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
-        for (let i = 0; i < 7; i++) { if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; break } }
+      }
+
+      if (!vslMode) {
+        // Standard mode: 1 PFU series (slots Q-W = idx 16-22), booked = AB (idx 27)
+        trackSeries(replyDate, 16, bookedDate)
+      } else {
+        // VSL mode: 2 PFU series
+        // Series 1: slots Q-W (idx 16-22), ends when 2nd positive reply arrives or VSL booked
+        const vsl2ndReply = toDateStr(r[27])  // col AB = 2nd positive reply
+        const vslBooked = toDateStr(r[40])    // col AO = final booked
+        // Series 1 ends at 2nd reply or final booked (whichever comes first)
+        const series1End = vsl2ndReply && vslBooked
+          ? (vsl2ndReply < vslBooked ? vsl2ndReply : vslBooked)
+          : (vsl2ndReply || vslBooked || null)
+        trackSeries(replyDate, 16, series1End)
+        // Series 2: starts at 2nd positive reply, slots AC-AI (idx 28-34), booked = AO (idx 40)
+        if (vsl2ndReply) {
+          trackSeries(vsl2ndReply, 28, vslBooked)
+        }
       }
     }
   })

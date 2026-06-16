@@ -23,13 +23,15 @@ export function parseOutreachMonth(rows) {
       const hasB = !!(r[14] && toDateStr(r[14]))
       const hasC = !!(r[27] && toDateStr(r[27]))
       const hasD = !!(r[40] && toDateStr(r[40]))
+      const hasE = !!(r[28] && String(r[28]).trim())      // Calendly'd = AC
+      const hasVSLB = !!(r[41] && String(r[41]).trim())  // VSL Booked = AP
       let followups = 0
       if (hasC) {
         const calendlyDate = toDateStr(r[27])
         for (let fi = 16; fi <= 22; fi++) { if (r[fi]) { const fd = toDateStr(r[fi]); if (fd && fd <= calendlyDate) followups++ } }
       }
       const daysToBook = hasC && r[3] && r[27] ? (() => { const d1 = new Date(toDateStr(r[3])); const d2 = new Date(toDateStr(r[27])); const diff = Math.round((d2-d1)/(1000*60*60*24)); return diff >= 0 ? diff : null })() : null
-      rawRows.push({ date, hasMS, hasB, hasC, hasD, followups, daysToBook })
+      rawRows.push({ date, hasMS, hasB, hasC, hasD, hasE, hasVSLB, followups, daysToBook })
     }
   }
   if (!summary && rawRows.length > 0) {
@@ -39,6 +41,8 @@ export function parseOutreachMonth(rows) {
       B: rawRows.filter(r => r.hasB).length,
       C: rawRows.filter(r => r.hasC).length,
       D: rawRows.filter(r => r.hasD).length,
+      E: rawRows.filter(r => r.hasE).length,
+      VSLB: rawRows.filter(r => r.hasVSLB).length,
     }
   }
   return { summary, rawRows }
@@ -93,7 +97,7 @@ function getGreeting() {
   return 'Good night, Kryštof'
 }
 
-export default function Dashboard({ data, filter, customFrom, customTo, dailyStats, isMobile, isTablet, clientMode }) {
+export default function Dashboard({ data, filter, customFrom, customTo, vslMode = false, dailyStats, isMobile, isTablet, clientMode }) {
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -109,6 +113,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     const B = filtered.filter(r => r.hasB).length
     const C = filtered.filter(r => r.hasC).length
     const D = filtered.filter(r => r.hasD).length
+    const E = filtered.filter(r => r.hasE).length
+    const VSLB = filtered.filter(r => r.hasVSLB).length
 
     const ALL_MONTHS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb']
     const currentMonthIdx = new Date().getMonth()
@@ -141,25 +147,28 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     })
     const topObj = OBJ_CATS.map(c => ({ ...c, count: objCounts[c.key] })).filter(c => c.count > 0).sort((a, b) => b.count - a.count)
 
-    return { A, MS, B, C, D, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj }
+    return { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj }
   }, [data, filter, customFrom, customTo])
 
   if (!stats) return null
 
-  const { A, MS, B, C, D, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj } = stats
+  const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj } = stats
 
+  const bookedCount = vslMode ? VSLB : C
   const funnelSteps = clientMode ? [
-    { icon: ICONS.initiated, count: A,  label: 'Initiated',            color: '#60A5FA' },
-    { icon: ICONS.seen,      count: MS, label: 'Media Seen',           color: '#F472B6' },
-    { icon: ICONS.reply,     count: B,  label: 'Positive Replies',     color: '#FB923C' },
-    { icon: ICONS.booked,    count: C,  label: 'Appointments Booked',  color: '#A855F7' },
+    { icon: ICONS.initiated, count: A,          label: 'Initiated',            color: '#60A5FA' },
+    { icon: ICONS.seen,      count: MS,          label: 'Media Seen',           color: '#F472B6' },
+    { icon: ICONS.reply,     count: B,           label: 'Positive Replies',     color: '#FB923C' },
+    ...(vslMode ? [{ icon: ICONS.booked, count: E, label: "Calendly'd", color: '#34D399' }] : []),
+    { icon: ICONS.booked,    count: bookedCount, label: 'Appointments Booked',  color: '#A855F7' },
   ] : [
-    { icon: ICONS.initiated, count: A,      label: 'Initiated',            color: '#60A5FA' },
-    { icon: ICONS.seen,      count: MS,     label: 'Media Seen',           color: '#F472B6' },
-    { icon: ICONS.reply,     count: B,      label: 'Positive Replies',     color: '#FB923C' },
-    { icon: ICONS.booked,    count: C,      label: 'Appointments Booked',  color: '#A855F7' },
-    { icon: ICONS.call,      count: total,  label: 'Calls Held',           color: '#FBBF24' },
-    { icon: ICONS.closed,    count: closed, label: 'Closed',               color: '#34D399' },
+    { icon: ICONS.initiated, count: A,          label: 'Initiated',            color: '#60A5FA' },
+    { icon: ICONS.seen,      count: MS,         label: 'Media Seen',           color: '#F472B6' },
+    { icon: ICONS.reply,     count: B,          label: 'Positive Replies',     color: '#FB923C' },
+    ...(vslMode ? [{ icon: ICONS.booked, count: E, label: "Calendly'd", color: '#34D399' }] : []),
+    { icon: ICONS.booked,    count: bookedCount, label: 'Appointments Booked', color: '#A855F7' },
+    { icon: ICONS.call,      count: total,      label: 'Calls Held',           color: '#FBBF24' },
+    { icon: ICONS.closed,    count: closed,     label: 'Closed',               color: '#34D399' },
   ]
 
   const rates = clientMode ? [
@@ -170,7 +179,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, dailySta
     { label: 'Positive Reply Rate',      value: A > 0 ? +((B/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Replied',   color: '#FB923C' },
     { label: 'Avg Followups',            value: avgFollowups,                          suffix: 'x', sub: 'before booking',        color: '#A78BFA' },
     { label: 'Avg Days to Book',         value: avgDaysToBook,                         suffix: 'd', sub: 'from first contact',    color: '#FBBF24' },
-    { label: 'Appointment Booking Rate', value: A > 0 ? +((C/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Booked',    color: '#A855F7' },
+    { label: 'Appointment Booking Rate', value: A > 0 ? +((bookedCount/A)*100).toFixed(1) : 0, suffix: '%', sub: 'Initiated → Booked',    color: '#A855F7' },
     { label: 'Show Up Rate',             value: C > 0 ? +((total/C)*100).toFixed(1) : 0, suffix: '%', sub: 'Booked → Held',     color: '#FBBF24' },
     { label: 'Call Close Rate',          value: total > 0 ? +((closed/total)*100).toFixed(1) : 0, suffix: '%', sub: 'Held → Closed', color: '#34D399' },
   ].filter(r => r.value !== null && r.value !== undefined)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { IMG_VARIABLES, IMG_NOTES } from '../tourImages'
+import { IMG_VARIABLES, IMG_NOTES, IMG_PFU } from '../tourImages'
 
 const GRADIENT = 'linear-gradient(90deg, #B16CEA, #FF5E69, #FFA84B)'
 
@@ -126,17 +126,20 @@ const EDU_STEPS = [
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
     render: () => (
       <>
-        <P>The Daily Tasks tab tracks whether you are staying on top of your followups. Here is exactly what goes where:</P>
-        <Screenshot src={IMG_NOTES} caption="Notes column — log every reply so the app knows not to chase them again" />
+        <P>The Daily Tasks tab shows how many followups you still need to do today. Here is the exact logic:</P>
+
         <SectionLabel>Regular followups</SectionLabel>
-        <CheckItem>Someone replies → write their response in the <Bold>Notes column (F–J)</Bold> and set a followup date in <Bold>col D</Bold></CheckItem>
-        <CheckItem>You send the followup → mark the date in <Bold>col E</Bold></CheckItem>
-        <CheckItem ok={false}>They say they are not interested → write it in Notes but do <Bold>not</Bold> set a new followup date. This removes them from your queue automatically.</CheckItem>
+        <Screenshot src={IMG_NOTES} caption="Notes column — write what they said so the app knows their status" />
+        <CheckItem>Someone replies → write what they said in the <Bold>Notes column</Bold></CheckItem>
+        <CheckItem>They are not interested → write it in Notes. The app stops counting them as a pending followup.</CheckItem>
+        <CheckItem>You complete all followups for the day → the app marks the task as done.</CheckItem>
 
         <SectionLabel>Positive followups</SectionLabel>
-        <CheckItem>Someone shows real interest → mark the date in <Bold>col O</Bold></CheckItem>
-        <CheckItem>They stay in your positive followup list until you log a booking in <Bold>col AB</Bold></CheckItem>
-        <CheckItem ok={false}>Do not leave col O empty if they were interested — the dashboard will not count them and you will lose track of them.</CheckItem>
+        <Screenshot src={IMG_PFU} caption="Positive followups — booked or marked not interested = removed from queue" />
+        <CheckItem>Someone shows real interest → their followup dates appear in columns <Bold>1B, 2B, 3B…</Bold></CheckItem>
+        <CheckItem>They write they are not interested → write it in the next followup column. The app stops counting them.</CheckItem>
+        <CheckItem>They book a call → log the booking. The app removes them from the positive followup queue automatically.</CheckItem>
+        <CheckItem ok={false}>Do not leave followup columns empty if you sent them — the app will keep counting them as pending.</CheckItem>
       </>
     ),
   },

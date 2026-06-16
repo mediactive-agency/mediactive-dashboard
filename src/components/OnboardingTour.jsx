@@ -1,175 +1,199 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 
 const GRADIENT = 'linear-gradient(90deg, #B16CEA, #FF5E69, #FFA84B)'
 
-// ─── Educational steps (modal cards, no highlight target) ───────────────────
-const EDU_STEPS = [
-  {
-    id: 'welcome',
-    title: 'Quick tour — 5 minutes',
-    content: (name) => (
-      <>
-        <p style={P_STYLE}>
-          Hey{name ? ` ${name}` : ''}, let's get you up to speed. This tour covers how to track outreach, log calls, and read your dashboard.
-        </p>
-        <p style={P_STYLE}>
-          You can replay this tour anytime by clicking the <strong style={{ color: 'var(--text)' }}>?</strong> button in the top right corner.
-        </p>
-      </>
-    ),
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+// ─── Warning box component ────────────────────────────────────────────────────
+function ImportantBox({ children }) {
+  return (
+    <div style={{
+      background: 'rgba(239,68,68,0.08)', border: '1.5px solid #EF4444',
+      borderRadius: 10, padding: '12px 14px', marginBottom: 14,
+      display: 'flex', gap: 10, alignItems: 'flex-start',
+    }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}>
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
-    ),
-  },
-  {
-    id: 'outreach-sheet',
-    title: 'How to log outreach',
-    content: () => (
-      <>
-        <p style={P_STYLE}>Every day you do outreach, open your <strong style={{ color: 'var(--text)' }}>Outreach Google Sheet</strong> and fill in the row for today's date.</p>
-        <div style={GRID_STYLE}>
-          {[
-            { col: 'Col A — Date', desc: "Today's date, e.g. 15 Jun 2025" },
-            { col: 'Col B — Connections sent', desc: 'How many connection requests you sent' },
-            { col: 'Col C — Replies', desc: 'How many people replied to you' },
-            { col: 'Col D — Positive replies', desc: 'Replies that showed interest or booked a call' },
-            { col: 'Col E — Bookings', desc: 'Calls actually booked that day' },
-            { col: 'Col F — Followups done', desc: 'Followups sent to people who replied' },
-          ].map(({ col, desc }) => (
-            <div key={col} style={GRID_ITEM_STYLE}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{col}</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.4 }}>{desc}</div>
-            </div>
-          ))}
-        </div>
-        <p style={{ ...P_STYLE, marginTop: 10 }}>Each month has its own tab (Jan, Feb, Mar…). The dashboard reads all tabs automatically.</p>
-      </>
-    ),
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'log-call',
-    title: 'How to log a sales call',
-    content: () => (
-      <>
-        <p style={P_STYLE}>After every sales call, just open <strong style={{ color: 'var(--text)' }}>Claude</strong> and say:</p>
-        <div style={QUOTE_STYLE}>"Log my last call"</div>
-        <p style={P_STYLE}>Claude uses your Fathom recording to automatically extract:</p>
-        <div style={CHECKLIST_STYLE}>
-          {['Prospect name and call date', 'Their current situation and goals', 'All objections raised', 'Whether it closed or needs a follow-up', 'Lead quality score (1–5)', 'Duration and service pitched'].map(item => (
-            <div key={item} style={CHECKLIST_ITEM_STYLE}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-        <p style={P_STYLE}>Claude shows you a preview and asks for confirmation before logging anything. You stay in control.</p>
-      </>
-    ),
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'dashboard-tabs',
-    title: "What's in the dashboard",
-    content: (_, onNav) => (
-      <>
-        <p style={P_STYLE}>The sidebar has five sections. Here's what each one shows:</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[
-            { label: 'Dashboard', nav: 'dashboard', desc: 'Full-funnel overview: connections → replies → bookings → closed deals. Monthly performance chart.' },
-            { label: 'Outreach', nav: 'outreach', desc: 'LinkedIn analytics per month. Conversion rates at each step of the funnel.' },
-            { label: 'Sales Calls', nav: 'sales', desc: 'Call log with objections breakdown, lead quality distribution, and upcoming booked calls.' },
-            { label: 'Daily Tasks', nav: 'tasks', desc: 'Your streak calendar. Track outreach and followup consistency day by day.' },
-            { label: 'Clients', nav: 'clients', desc: 'All active clients and their revenue. Pipeline view of deals in progress.' },
-          ].map(({ label, nav, desc }) => (
-            <div key={label} style={TAB_ROW_STYLE}
-              onClick={() => onNav && onNav(nav)}
-              role={onNav ? 'button' : undefined}
-              tabIndex={onNav ? 0 : undefined}
-            >
-              <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{label}</div>
-              <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.4 }}>{desc}</div>
-              {onNav && (
-                <div style={{ fontSize: 11, color: 'var(--text4)', marginTop: 4 }}>Click to open →</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </>
-    ),
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'done',
-    title: "You're ready",
-    content: (name) => (
-      <>
-        <p style={P_STYLE}>
-          {"That's everything"}{name ? `, ${name}` : ''}. Start logging your outreach daily and Claude will handle the call logging automatically.
-        </p>
-        <div style={CHECKLIST_STYLE}>
-          {[
-            'Fill in your outreach sheet every day',
-            'After each sales call: "Log my last call" in Claude',
-            'Check your dashboard weekly to spot trends',
-            'Use the ? button if you need this tour again',
-          ].map(item => (
-            <div key={item} style={CHECKLIST_ITEM_STYLE}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </>
-    ),
-    icon: (
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>
-    ),
-  },
-]
+      <div style={{ fontSize: 12.5, color: '#EF4444', lineHeight: 1.55, fontWeight: 600 }}>{children}</div>
+    </div>
+  )
+}
 
-// ─── Overlay tour steps (highlight real UI elements) ──────────────────────
-// Each step points at a CSS data-tour attribute on a DOM element
+// ─── Screenshot placeholder (shown when no src yet) ──────────────────────────
+function Screenshot({ src, alt, caption }) {
+  if (!src) return null
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <img
+        src={src} alt={alt || caption || 'Screenshot'}
+        style={{ width: '100%', borderRadius: 10, border: '1px solid var(--border)', display: 'block' }}
+      />
+      {caption && (
+        <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', marginTop: 5 }}>{caption}</div>
+      )}
+    </div>
+  )
+}
+
+// ─── Shared mini components ───────────────────────────────────────────────────
+const P = ({ children }) => <p style={{ fontSize: 13.5, lineHeight: 1.65, color: 'var(--text2)', margin: '0 0 10px' }}>{children}</p>
+const Bold = ({ children }) => <strong style={{ color: 'var(--text)', fontWeight: 700 }}>{children}</strong>
+
+function Row({ col, desc, highlight }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 10, alignItems: 'flex-start',
+      padding: '8px 10px', borderRadius: 8,
+      background: highlight ? 'rgba(177,108,234,0.08)' : 'var(--bg)',
+      border: `1px solid ${highlight ? '#B16CEA' : 'var(--border)'}`,
+      marginBottom: 6,
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: highlight ? '#B16CEA' : 'var(--text)', minWidth: 56, flexShrink: 0, fontFamily: 'monospace', paddingTop: 1 }}>{col}</div>
+      <div style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.45 }}>{desc}</div>
+    </div>
+  )
+}
+
+function CheckItem({ children, ok = true }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text2)', lineHeight: 1.45, marginBottom: 7 }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ok ? '#10B981' : '#EF4444'} strokeWidth="3" style={{ flexShrink: 0, marginTop: 1 }}>
+        {ok ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+      </svg>
+      <span>{children}</span>
+    </div>
+  )
+}
+
+// ─── Educational steps ────────────────────────────────────────────────────────
+// screenshots prop is injected at render time so they can be updated later
+function buildEduSteps(screenshots) {
+  return [
+    {
+      id: 'welcome',
+      title: 'Quick tour — 5 minutes',
+      icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+      render: (name) => (
+        <>
+          <P>Hey{name ? ` ${name}` : ''}, let's walk through how everything works. This takes about 5 minutes and will save you a lot of confusion later.</P>
+          <ImportantBox>
+            You <Bold>must</Bold> use the provided templates for the Outreach sheet, Sales Calls sheet, and the Claude skill. Your own sheet will not work — the dashboard reads specific columns and tab names. If the structure is different, data will be missing or broken.
+          </ImportantBox>
+          <P>You can replay this tour anytime using the <Bold>?</Bold> button in the top right corner.</P>
+        </>
+      ),
+    },
+    {
+      id: 'outreach-sheet',
+      title: 'How to fill in the outreach sheet',
+      icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+      render: () => (
+        <>
+          <ImportantBox>Use the template only. The column order must be exact — do not add, move, or rename columns.</ImportantBox>
+          <P>Every day you do outreach, add a row for that date. Each row = one day.</P>
+          <Screenshot src={screenshots?.outreachSheet} alt="Outreach sheet" caption="Your outreach sheet — one row per day, one tab per month" />
+          <Row col="Col A" desc="Date — e.g. 15 Jun 2025" />
+          <Row col="Col B" desc="Connections sent that day" />
+          <Row col="Col C" desc="People who replied (any reply)" />
+          <Row col="Col D" desc="Followup date — when to follow up with this person" />
+          <Row col="Col E" desc="Followup done — date you actually sent the followup" />
+          <Row col="Col F–J" desc="Notes for each reply — write what they said" highlight />
+          <Row col="Col O" desc={<>Positive reply — someone showed interest. Mark it here so the dashboard tracks them as a <Bold>positive followup</Bold>.</>} highlight />
+          <Row col="Col AB" desc="Booking date — when they booked a call" highlight />
+          <P>Each month has its own tab (Jan, Feb, Mar…). The dashboard reads all tabs automatically.</P>
+        </>
+      ),
+    },
+    {
+      id: 'outreach-logic',
+      title: 'The followup logic',
+      icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
+      render: () => (
+        <>
+          <P>The dashboard tracks two types of followups. Here is exactly what goes where:</P>
+          <Screenshot src={screenshots?.outreachLogic} alt="Followup logic" caption="How replies and followups flow through the sheet" />
+
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', margin: '12px 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Regular followups (col D / E)</div>
+          <CheckItem>Someone replied → write their response in <Bold>col F–J (Notes)</Bold> and set a followup date in <Bold>col D</Bold></CheckItem>
+          <CheckItem>When you send the followup → mark the date in <Bold>col E</Bold></CheckItem>
+          <CheckItem ok={false}>They say they are not interested → write it in the Notes column, do not set a new followup date — this removes them from your queue</CheckItem>
+
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', margin: '12px 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Positive followups (col O → AB)</div>
+          <CheckItem>Someone says yes or asks for more info → mark the date in <Bold>col O</Bold></CheckItem>
+          <CheckItem>They stay in your positive followup list until a booking date appears in <Bold>col AB</Bold></CheckItem>
+          <CheckItem ok={false}>Do not leave col O empty if they showed interest — the dashboard will not count them</CheckItem>
+        </>
+      ),
+    },
+    {
+      id: 'log-call',
+      title: 'How to log a sales call',
+      icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>,
+      render: () => (
+        <>
+          <ImportantBox>You need the Claude skill installed and the Zapier connector enabled. If you skipped that during setup, go to Settings and download the skill file.</ImportantBox>
+          <P>After every sales call, open Claude and type:</P>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderLeft: '3px solid #B16CEA', borderRadius: 8, padding: '10px 14px', fontSize: 14, fontWeight: 600, color: 'var(--text)', fontStyle: 'italic', marginBottom: 12 }}>
+            "Log my last call"
+          </div>
+          <Screenshot src={screenshots?.logCall} alt="Claude logging a call" caption="Claude extracts everything from the Fathom recording automatically" />
+          <P>Claude reads the Fathom recording and extracts:</P>
+          <CheckItem>Prospect name, call date, and duration</CheckItem>
+          <CheckItem>Their current situation and what they want to achieve</CheckItem>
+          <CheckItem>Every objection raised (mapped to standard categories)</CheckItem>
+          <CheckItem>Whether it closed, needs a followup, or went nowhere</CheckItem>
+          <CheckItem>Lead quality score from 1 to 5</CheckItem>
+          <P>Claude shows you a preview and asks for confirmation before writing anything to the sheet.</P>
+        </>
+      ),
+    },
+    {
+      id: 'done',
+      title: "You are all set",
+      icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>,
+      render: (name) => (
+        <>
+          <P>{"That's it"}{name ? `, ${name}` : ''}. The tour continues with a quick overlay showing you where everything lives in the dashboard.</P>
+          <CheckItem>Fill in the outreach sheet every day</CheckItem>
+          <CheckItem>After each sales call: "Log my last call" in Claude</CheckItem>
+          <CheckItem>Check the dashboard weekly to spot trends and fix weak points</CheckItem>
+          <CheckItem>Use the <Bold>?</Bold> button if you need this tour again</CheckItem>
+        </>
+      ),
+    },
+  ]
+}
+
+// ─── Overlay tour steps ───────────────────────────────────────────────────────
 const OVERLAY_STEPS = [
   {
     target: '[data-tour="sidebar-dashboard"]',
-    title: 'Dashboard tab',
-    body: 'Your main overview. Funnel metrics, monthly performance, and pipeline status all in one place.',
+    title: 'Dashboard',
+    body: 'Full-funnel overview: connections → replies → bookings → closed. Monthly performance chart and pipeline status.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-outreach"]',
-    title: 'Outreach tab',
-    body: 'See your LinkedIn funnel by month. Track connection rate, reply rate, and booking rate.',
+    title: 'Outreach',
+    body: 'LinkedIn analytics by month. See your connection rate, reply rate, and booking rate at a glance.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-sales"]',
-    title: 'Sales Calls tab',
-    body: 'Every logged call appears here. Objections breakdown, lead quality scores, and upcoming calls.',
+    title: 'Sales Calls',
+    body: 'Every logged call appears here. Objections breakdown, lead quality scores, and upcoming booked calls.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-tasks"]',
-    title: 'Daily Tasks tab',
-    body: 'Your streak calendar. See at a glance which days you did outreach and followups.',
+    title: 'Daily Tasks',
+    body: 'Your streak calendar. See which days you hit your outreach and followup targets.',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="sidebar-settings"]',
+    title: 'Settings',
+    body: 'Add a new outreach sheet here when a new year starts or you have data in another spreadsheet. You can also download the Claude skill file again from here.',
     placement: 'right',
   },
   {
@@ -186,36 +210,7 @@ const OVERLAY_STEPS = [
   },
 ]
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
-const P_STYLE = { fontSize: 13.5, lineHeight: 1.65, color: 'var(--text2)', margin: '0 0 10px' }
-const QUOTE_STYLE = {
-  background: 'var(--bg)', border: '1px solid var(--border)', borderLeft: '3px solid #B16CEA',
-  borderRadius: 8, padding: '10px 14px', fontSize: 14, fontWeight: 600, color: 'var(--text)',
-  fontStyle: 'italic', margin: '0 0 12px',
-}
-const CHECKLIST_STYLE = { display: 'flex', flexDirection: 'column', gap: 7, margin: '0 0 10px' }
-const CHECKLIST_ITEM_STYLE = { display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--text2)', lineHeight: 1.45 }
-const GRID_STYLE = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, margin: '0 0 10px' }
-const GRID_ITEM_STYLE = { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 10px' }
-const TAB_ROW_STYLE = {
-  background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8,
-  padding: '8px 12px', cursor: 'pointer', transition: 'border-color 0.15s',
-}
-
-// ─── Tooltip positioning ─────────────────────────────────────────────────────
-function getTooltipPos(rect, placement, isMobile) {
-  if (!rect) return { top: 100, left: '50%', transform: 'translateX(-50%)' }
-  const GAP = 14
-  if (isMobile) {
-    return { bottom: 24, left: 16, right: 16, top: 'auto', transform: 'none', position: 'fixed' }
-  }
-  if (placement === 'right') return { top: rect.top + rect.height / 2, left: rect.right + GAP, transform: 'translateY(-50%)' }
-  if (placement === 'bottom') return { top: rect.bottom + GAP, left: rect.left + rect.width / 2, transform: 'translateX(-50%)' }
-  if (placement === 'bottom-left') return { top: rect.bottom + GAP, right: window.innerWidth - rect.right, transform: 'none' }
-  return { top: rect.bottom + GAP, left: rect.left }
-}
-
-// ─── Highlight box around target ─────────────────────────────────────────────
+// ─── Highlight box ────────────────────────────────────────────────────────────
 function Highlight({ rect }) {
   if (!rect) return null
   const PAD = 6
@@ -225,7 +220,7 @@ function Highlight({ rect }) {
       top: rect.top - PAD, left: rect.left - PAD,
       width: rect.width + PAD * 2, height: rect.height + PAD * 2,
       borderRadius: 10, border: '2px solid #B16CEA',
-      boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
+      boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
       zIndex: 1200, pointerEvents: 'none',
       transition: 'all 0.25s ease',
     }} />
@@ -233,6 +228,16 @@ function Highlight({ rect }) {
 }
 
 // ─── Overlay tooltip ──────────────────────────────────────────────────────────
+function getTooltipPos(rect, placement, isMobile) {
+  if (isMobile) return { bottom: 24, left: 16, right: 16, top: 'auto', transform: 'none', position: 'fixed' }
+  if (!rect) return { top: 100, left: '50%', transform: 'translateX(-50%)' }
+  const GAP = 14
+  if (placement === 'right') return { top: rect.top + rect.height / 2, left: rect.right + GAP, transform: 'translateY(-50%)' }
+  if (placement === 'bottom') return { top: rect.bottom + GAP, left: rect.left + rect.width / 2, transform: 'translateX(-50%)' }
+  if (placement === 'bottom-left') return { top: rect.bottom + GAP, right: window.innerWidth - rect.right, transform: 'none' }
+  return { top: rect.bottom + GAP, left: rect.left }
+}
+
 function OverlayTooltip({ step, total, stepData, onNext, onSkip, rect, isMobile }) {
   const pos = getTooltipPos(rect, stepData.placement, isMobile)
   return (
@@ -265,45 +270,33 @@ function OverlayTooltip({ step, total, stepData, onNext, onSkip, rect, isMobile 
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export default function OnboardingTour({ userName, onClose, onNav, isMobile, startAtOverlay = false }) {
-  const [phase, setPhase] = useState(startAtOverlay ? 'overlay' : 'edu') // 'edu' | 'overlay' | 'done'
+// screenshots = { outreachSheet, outreachLogic, logCall } — URLs or base64
+export default function OnboardingTour({ userName, onClose, onNav, isMobile, screenshots = {} }) {
+  const [phase, setPhase] = useState('edu')
   const [eduStep, setEduStep] = useState(0)
   const [overlayStep, setOverlayStep] = useState(0)
   const [rect, setRect] = useState(null)
 
-  // Measure target element for overlay steps
+  const EDU_STEPS = buildEduSteps(screenshots)
+
   useEffect(() => {
     if (phase !== 'overlay') return
-    const step = OVERLAY_STEPS[overlayStep]
-    const el = document.querySelector(step.target)
-    if (el) {
-      setRect(el.getBoundingClientRect())
-    } else {
-      setRect(null)
-    }
+    const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)
+    setRect(el ? el.getBoundingClientRect() : null)
   }, [phase, overlayStep])
 
-  // ── EDU phase ────────────────────────────────────────────────────────────
   function eduNext() {
-    if (eduStep < EDU_STEPS.length - 1) {
-      setEduStep(s => s + 1)
-    } else {
-      setPhase('overlay')
-      setOverlayStep(0)
-    }
+    if (eduStep < EDU_STEPS.length - 1) setEduStep(s => s + 1)
+    else { setPhase('overlay'); setOverlayStep(0) }
   }
   function eduBack() { setEduStep(s => Math.max(0, s - 1)) }
 
-  // ── OVERLAY phase ─────────────────────────────────────────────────────────
   function overlayNext() {
-    if (overlayStep < OVERLAY_STEPS.length - 1) {
-      setOverlayStep(s => s + 1)
-    } else {
-      onClose()
-    }
+    if (overlayStep < OVERLAY_STEPS.length - 1) setOverlayStep(s => s + 1)
+    else onClose()
   }
 
-  // ── EDU modal ─────────────────────────────────────────────────────────────
+  // ── EDU modal ────────────────────────────────────────────────────────────
   if (phase === 'edu') {
     const step = EDU_STEPS[eduStep]
     return (
@@ -311,42 +304,38 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, sta
         position: 'fixed', inset: 0, zIndex: 1100,
         background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: isMobile ? 16 : 32,
+        padding: isMobile ? 12 : 32,
       }}>
         <div style={{
-          width: '100%', maxWidth: 560,
+          width: '100%', maxWidth: 580,
           background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: 18, overflow: 'hidden',
           boxShadow: '0 24px 80px rgba(0,0,0,0.35)',
           display: 'flex', flexDirection: 'column',
-          maxHeight: '90vh',
+          maxHeight: '92vh',
         }}>
-          {/* Progress bar */}
           <div style={{ height: 3, background: GRADIENT, width: `${((eduStep + 1) / EDU_STEPS.length) * 100}%`, transition: 'width 0.3s ease', flexShrink: 0 }} />
 
-          <div style={{ padding: isMobile ? '24px 20px' : '32px 36px', overflowY: 'auto' }}>
+          <div style={{ padding: isMobile ? '22px 18px' : '30px 34px', overflowY: 'auto' }}>
             {/* Step dots */}
-            <div style={{ display: 'flex', gap: 5, marginBottom: 22 }}>
+            <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
               {EDU_STEPS.map((s, i) => (
                 <div key={s.id} style={{ width: i === eduStep ? 20 : 6, height: 6, borderRadius: 3, background: i <= eduStep ? 'var(--text)' : 'var(--border)', transition: 'all 0.25s' }} />
               ))}
             </div>
 
             {/* Icon */}
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', marginBottom: 16 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text)', marginBottom: 14 }}>
               {step.icon}
             </div>
 
-            {/* Title */}
-            <h2 style={{ fontSize: 21, fontWeight: 800, color: 'var(--text)', margin: '0 0 14px', letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 14px', letterSpacing: '-0.02em' }}>
               {step.title}
             </h2>
 
-            {/* Content */}
-            {step.content(userName, onNav)}
+            {step.render(userName, onNav)}
 
-            {/* Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
               <div>
                 {eduStep > 0
                   ? <button onClick={eduBack} style={{ fontSize: 13, color: 'var(--text2)', background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Back</button>
@@ -367,29 +356,24 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, sta
     )
   }
 
-  // ── OVERLAY phase ─────────────────────────────────────────────────────────
-  if (phase === 'overlay') {
-    const stepData = OVERLAY_STEPS[overlayStep]
-    return (
-      <>
-        <Highlight rect={rect} />
-        <OverlayTooltip
-          step={overlayStep}
-          total={OVERLAY_STEPS.length}
-          stepData={stepData}
-          onNext={overlayNext}
-          onSkip={onClose}
-          rect={rect}
-          isMobile={isMobile}
-        />
-      </>
-    )
-  }
-
-  return null
+  // ── OVERLAY ──────────────────────────────────────────────────────────────
+  return (
+    <>
+      <Highlight rect={rect} />
+      <OverlayTooltip
+        step={overlayStep}
+        total={OVERLAY_STEPS.length}
+        stepData={OVERLAY_STEPS[overlayStep]}
+        onNext={overlayNext}
+        onSkip={onClose}
+        rect={rect}
+        isMobile={isMobile}
+      />
+    </>
+  )
 }
 
-// ─── Help button (? icon) exported separately ─────────────────────────────────
+// ─── Help button ──────────────────────────────────────────────────────────────
 export function HelpButton({ onClick }) {
   return (
     <button
@@ -408,7 +392,7 @@ export function HelpButton({ onClick }) {
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
         <circle cx="12" cy="12" r="10"/>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
     </button>

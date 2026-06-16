@@ -64,6 +64,11 @@ export default function Login({ onLogin, loading }) {
               "The best feedback is data. Make objective decisions, not emotional ones. Move faster."
             </p>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>Mediactive</div>
+
+            <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, margin: '24px 0 12px', fontStyle: 'italic' }}>
+              "Don't be a nerd."
+            </p>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>Ethan Welby</div>
           </div>
         </div>
       </div>

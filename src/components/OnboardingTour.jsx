@@ -123,25 +123,28 @@ const EDU_STEPS = [
     ),
   },
   {
-    id: 'followup-logic',
-    title: 'The followup logic',
+    id: 'followup-regular',
+    title: 'Regular followups',
     icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
     render: () => (
       <>
-        <P>The Daily Tasks tab shows how many followups you still need to do today. Here is the exact logic:</P>
-
-        <SectionLabel>Regular followups</SectionLabel>
-        <Screenshot src={IMG_NOTES} caption="Notes column — write what they said so the app knows their status" />
-        <CheckItem>Someone replies → write what they said in the <Bold>Notes column</Bold></CheckItem>
-        <CheckItem>They are not interested → write it in Notes. The app stops counting them as a pending followup.</CheckItem>
-        <CheckItem>You complete all followups for the day → the app marks the task as done.</CheckItem>
-
-        <SectionLabel>Positive followups</SectionLabel>
-        <Screenshot src={IMG_PFU} caption="Positive followups — booked or marked not interested = removed from queue" />
-        <CheckItem>Someone shows real interest → their followup dates appear in columns <Bold>1B, 2B, 3B…</Bold></CheckItem>
-        <CheckItem>They write they are not interested → write it in the next followup column. The app stops counting them.</CheckItem>
-        <CheckItem>They book a call → log the booking. The app removes them from the positive followup queue automatically.</CheckItem>
-        <CheckItem ok={false}>Do not leave followup columns empty if you sent them — the app will keep counting them as pending.</CheckItem>
+        <Screenshot src={IMG_NOTES} alt="Notes column" />
+        <P>If someone replies, write what they said in the <Bold>Notes column</Bold>. The app uses this to know their status.</P>
+        <CheckItem>Not interested → write it in Notes. They disappear from your followup queue.</CheckItem>
+        <CheckItem>All followups done for the day → Daily Tasks marks the task as complete.</CheckItem>
+      </>
+    ),
+  },
+  {
+    id: 'followup-positive',
+    title: 'Positive followups',
+    icon: <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    render: () => (
+      <>
+        <Screenshot src={IMG_PFU} alt="Positive followups" />
+        <P>People who showed interest get tracked separately in columns <Bold>1B, 2B, 3B…</Bold></P>
+        <CheckItem>Not interested anymore → write it in the next followup column. They drop out automatically.</CheckItem>
+        <CheckItem>They book a call → log it and they are removed from the queue.</CheckItem>
       </>
     ),
   },

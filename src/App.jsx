@@ -136,7 +136,7 @@ export default function App() {
         <OnboardingTour
           userName={config?.userName}
           onClose={() => setTourOpen(false)}
-          onNav={(p) => { setPage(p); setTourOpen(false) }}
+          onNav={(p, keepTour) => { setPage(p); if (!keepTour) setTourOpen(false) }}
           isMobile={isMobile}
           vslMode={config?.vslMode ?? false}
         />

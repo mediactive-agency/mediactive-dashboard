@@ -11,6 +11,7 @@ import Sales from './components/Sales'
 import Tasks from './components/Tasks'
 import Clients from './components/Clients'
 import Login from './components/Login'
+import OnboardingTour, { HelpButton } from './components/OnboardingTour'
 import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
 import Settings from './components/Settings'
@@ -34,6 +35,7 @@ export default function App() {
   const [appliedFrom, setAppliedFrom] = useState('')
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
 
   const { user, isAdmin, allowed, loading: authLoading, login, logout } = useAuth()
   const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user)
@@ -64,7 +66,11 @@ export default function App() {
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   if (!user || !allowed) return <Login onLogin={login} />
-  if (needsSetup) return <Onboarding user={user} onComplete={reload} />
+  function handleSetupComplete(opts) {
+    reload()
+    if (opts?.showTour) setTourOpen(true)
+  }
+  if (needsSetup) return <Onboarding user={user} onComplete={handleSetupComplete} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -93,7 +99,10 @@ export default function App() {
           {/* Filter + toggle on desktop */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {!isMobile && <TogglePill isDark={isDark} onToggle={toggle} />}
+            <HelpButton onClick={() => setTourOpen(true)} />
+            <div data-tour="filter-bar">
             <FilterBar active={filter} onFilter={handleFilter} customFrom={customFrom} customTo={customTo} onCustomFrom={setCustomFrom} onCustomTo={setCustomTo} onCustomApply={applyCustom} isMobile={isMobile} />
+            </div>
           </div>
         </div>
 
@@ -123,6 +132,14 @@ export default function App() {
       </main>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      {tourOpen && (
+        <OnboardingTour
+          userName={config?.userName}
+          onClose={() => setTourOpen(false)}
+          onNav={(p) => { setPage(p); setTourOpen(false) }}
+          isMobile={isMobile}
+        />
+      )}
     </div>
   )
 }

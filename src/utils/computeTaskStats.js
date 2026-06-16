@@ -58,7 +58,7 @@ function trackPFUSeries(r, replyDate, slotStart, slotCount, bookedDate, calDays,
   }
 }
 
-export function computeTaskStats(data, { vslMode = false } = {}) {
+export function computeTaskStats(data, { vslMode = false, weekendOutreach = false } = {}) {
   if (!data) return null
 
   const now = new Date(TODAY)
@@ -82,7 +82,7 @@ export function computeTaskStats(data, { vslMode = false } = {}) {
   const calDays = []
   const start = new Date('2026-03-01T12:00:00'); const end = new Date(todayStr+'T12:00:00')
   for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-    if (d.getDay() !== 0 && d.getDay() !== 6) calDays.push(dateStr(d))
+    if (weekendOutreach || (d.getDay() !== 0 && d.getDay() !== 6)) calDays.push(dateStr(d))
   }
 
   allRows.forEach(x => { dailyInitiated[x.date] = (dailyInitiated[x.date]||0) + 1 })
@@ -143,11 +143,12 @@ export function computeTaskStats(data, { vslMode = false } = {}) {
   let streak = 0
   const todayInitiated = dailyInitiated[todayStr]||0
   const todayFuT = dailyFollowupTotal[todayStr]||0, todayFuD = dailyFollowupDone[todayStr]||0
-  const todayDone = todayInitiated >= 20 && (todayFuT === 0 || todayFuD >= todayFuT)
+  const isWeekend = today.getDay() === 0 || today.getDay() === 6
+  const todayDone = (!isWeekend || weekendOutreach) && todayInitiated >= 20 && (todayFuT === 0 || todayFuD >= todayFuT)
   if (todayDone) streak++
   for (let i = 1; i <= 89; i++) {
     const d = new Date(today); d.setDate(d.getDate()-i)
-    if (d.getDay() === 0 || d.getDay() === 6) continue
+    if (!weekendOutreach && (d.getDay() === 0 || d.getDay() === 6)) continue
     const ds2 = dateStr(d)
     const initiated = dailyInitiated[ds2]||0
     const fuT = dailyFollowupTotal[ds2]||0, fuD = dailyFollowupDone[ds2]||0

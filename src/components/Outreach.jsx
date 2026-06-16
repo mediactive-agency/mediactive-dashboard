@@ -276,7 +276,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
   const mainRates = vslMode ? [
     { label: 'MSR', val: tot.msr, color: '#F472B6', suffix: '%' },
     { label: 'PRR', val: tot.prr, color: '#FB923C', suffix: '%' },
-    { label: 'CLR', val: tot.B > 0 ? +((tot.E/tot.B)*100).toFixed(1) : 0, color: '#34D399', suffix: '%' },
+    { label: 'CSR', val: tot.B > 0 ? +((tot.E/tot.B)*100).toFixed(1) : 0, color: '#34D399', suffix: '%' },
     { label: 'ABR', val: tot.B > 0 ? +((tot.VSLB/tot.B)*100).toFixed(1) : 0, color: '#A78BFA', suffix: '%' },
   ] : [
     { label: 'MSR', val: tot.msr, color: '#F472B6', suffix: '%' },

@@ -57,7 +57,7 @@ const ARROW = (dimmed) => (
   </svg>
 )
 
-function VarCard({ v, dimmed, selected, onToggle, isMobile }) {  // mobile-aware
+function VarCard({ v, dimmed, selected, onToggle, isMobile, vslMode = false }) {
   const steps = [
     { val: v.A, label: 'Initiated',  color: '#60A5FA' },
     { val: v.MS, label: 'Media Seen', color: '#F472B6' },
@@ -464,7 +464,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
         </div>
       )}
 
-      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} />) : <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>}
+      {activeVars.length > 0 ? activeVars.map(v => <VarCard key={v.name} v={v} dimmed={false} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} vslMode={vslMode} />) : <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>}
 
       {inactiveVars.length > 0 && (
         <>
@@ -473,7 +473,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text5)' }}>Inactive — not used in last 14d</div>
             <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
           </div>
-          {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} />)}
+          {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} vslMode={vslMode} />)}
         </>
       )}
       </>)}

@@ -138,6 +138,7 @@ export default function App() {
           onClose={() => setTourOpen(false)}
           onNav={(p) => { setPage(p); setTourOpen(false) }}
           isMobile={isMobile}
+          vslMode={config?.vslMode ?? false}
         />
       )}
     </div>

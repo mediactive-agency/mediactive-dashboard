@@ -238,13 +238,13 @@ const OVERLAY_STEPS = [
   {
     target: '[data-tour="sidebar-dashboard"]',
     title: 'Dashboard',
-    body: 'Full funnel overview and monthly performance.',
+    body: 'Full funnel overview and key business analytics in one place.',
     placement: 'right',
   },
   {
     target: '[data-tour="sidebar-outreach"]',
     title: 'Outreach',
-    body: 'LinkedIn analytics by month. Connection, reply and booking rates.',
+    body: 'Social outreach analytics by variable. Connection, reply and booking rates.',
     placement: 'right',
   },
   {
@@ -257,6 +257,12 @@ const OVERLAY_STEPS = [
     target: '[data-tour="sidebar-tasks"]',
     title: 'Daily Tasks',
     body: 'Your streak calendar. See which days you hit your targets.',
+    placement: 'right',
+  },
+  {
+    target: '[data-tour="sidebar-clients"]',
+    title: 'Clients',
+    body: 'Log your active clients here for appointment booking tracking.',
     placement: 'right',
   },
   {
@@ -347,8 +353,12 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, vsl
 
   useEffect(() => {
     if (phase !== 'overlay') return
-    const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)
-    setRect(el ? el.getBoundingClientRect() : null)
+    const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'settings'}
+    if (navMap[overlayStep] && onNav) onNav(navMap[overlayStep])
+    setTimeout(() => {
+      const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)
+      setRect(el ? el.getBoundingClientRect() : null)
+    }, 80)
   }, [phase, overlayStep])
 
   const STEPS = EDU_STEPS.filter(s => !s.vslOnly || vslMode)

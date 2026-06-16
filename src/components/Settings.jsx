@@ -77,6 +77,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   const [logoUrl, setLogoUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [dailyGoal, setDailyGoal] = useState(20)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -86,6 +87,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
       setSalesSheetId(config.salesSheetId || '')
       setSalesTab(config.salesTab || 'Sheet1')
       setCalendlyPat(config.calendlyPat || '')
+      setDailyGoal(config.dailyGoal ?? 20)
       setLogoPreview(config.logoUrl || null)
       if (config.logoUrl && !config.logoUrl.startsWith('data:')) setLogoUrl(config.logoUrl)
     }
@@ -141,6 +143,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     try {
       await saveUserConfig(user.uid, {
         userName: userName.trim(),
+        dailyGoal: Number(dailyGoal) || 20,
         calendlyPat: calendlyPat.trim() || null,
         logoUrl: logoPreview || logoUrl || null,
       })
@@ -157,6 +160,24 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     <div style={{ maxWidth: 600 }}>
       <Section title="Profile">
         <Input label="First name" value={userName} onChange={setUserName} placeholder="e.g. Alex" />
+        <div style={{ marginTop: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', marginBottom: 6 }}>Daily outreach goal</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input
+              type="number" min="1" max="500"
+              value={dailyGoal}
+              onChange={e => setDailyGoal(e.target.value)}
+              style={{
+                width: 80, padding: '9px 12px', background: 'var(--bg)',
+                border: '1px solid var(--border)', borderRadius: 8,
+                color: 'var(--text)', fontSize: 14, fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            />
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>connections per day</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 5 }}>Used in Daily Tasks to mark the day as done. Default is 20.</div>
+        </div>
       </Section>
 
       <Section title="Logo">

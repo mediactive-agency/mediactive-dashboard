@@ -101,7 +101,7 @@ const EDU_STEPS = [
     render: () => (
       <>
         <P>The outreach sheet is where you track everyone you reach out to. If you have not downloaded it yet, find it in Settings.</P>
-        <P>One row per person. One tab per month. The dashboard reads it automatically — you never need to export anything.</P>
+        <P>One row per person. One tab per month. The dashboard reads it automatically you never need to export anything.</P>
       </>
     ),
   },
@@ -200,13 +200,6 @@ const EDU_STEPS = [
           "Log my last call"
         </div>
         <P>Claude reads your Fathom recording and logs everything automatically. You get a preview before anything is saved.</P>
-
-        <SectionLabel>What gets logged automatically</SectionLabel>
-        <CheckItem>Prospect name, call date, and duration</CheckItem>
-        <CheckItem>Current situation and goals</CheckItem>
-        <CheckItem>Objections (mapped to standard categories)</CheckItem>
-        <CheckItem>Closed / follow-up / no-show status</CheckItem>
-        <CheckItem>Lead quality score from 1 to 5</CheckItem>
       </>
     ),
   },
@@ -347,7 +340,7 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, vsl
   useEffect(() => {
     if (phase !== 'overlay') return
     const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'settings'}
-    if (navMap[overlayStep] && onNav) onNav(navMap[overlayStep])
+    if (navMap[overlayStep] && onNav) onNav(navMap[overlayStep], true)
     setTimeout(() => {
       const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)
       setRect(el ? el.getBoundingClientRect() : null)
@@ -386,7 +379,7 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, vsl
           maxHeight: '92vh',
         }}>
           {/* Progress bar */}
-          <div style={{ height: 3, background: GRADIENT, width: `${((eduStep + 1) / EDU_STEPS.length) * 100}%`, transition: 'width 0.3s ease', flexShrink: 0 }} />
+          <div style={{ height: 3, background: GRADIENT, width: `${((eduStep + 1) / STEPS.length) * 100}%`, transition: 'width 0.3s ease', flexShrink: 0 }} />
 
           <div style={{ padding: isMobile ? '22px 20px' : '32px 36px', overflowY: 'auto' }}>
             {/* Dots */}

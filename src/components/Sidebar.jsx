@@ -94,7 +94,22 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         </nav>
 
         {/* Footer — always at bottom */}
-        <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+        <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0, overflowY: 'auto' }}>
+          {isAdmin && (
+            <>
+              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '6px 10px 6px', fontWeight: 600 }}>Admin</div>
+              <button onClick={() => { onNav('members'); onMobileClose?.() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 10px', background: active === 'members' ? 'var(--sidebar-active)' : 'transparent', border: 'none', color: active === 'members' ? 'var(--text)' : 'var(--text2)', cursor: 'pointer', borderRadius: 7, fontSize: 15, fontWeight: 600, textAlign: 'left', marginBottom: 6 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                AGP Members
+              </button>
+            </>
+          )}
+          {onLogout && (
+            <button onClick={() => { onLogout(); onMobileClose?.() }} style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 10px', marginBottom: 8, background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', borderRadius: 7, fontSize: 15, fontWeight: 600, textAlign: 'left' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </button>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <TogglePill isDark={isDark} onToggle={onThemeToggle} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>

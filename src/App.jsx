@@ -70,7 +70,7 @@ export default function App() {
     reload()
     if (opts?.showTour) setTourOpen(true)
   }
-  if (needsSetup) return <Onboarding user={user} onComplete={handleSetupComplete} />
+  if (needsSetup) return <Onboarding user={user} onComplete={handleSetupComplete} isMobile={isMobile} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>

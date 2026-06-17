@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct } from '../utils/data'
 
@@ -32,7 +32,8 @@ export function parseOutreachMonth(rows) {
         for (let fi = 16; fi <= 22; fi++) { if (r[fi]) { const fd = toDateStr(r[fi]); if (fd && fd <= calendlyDate) followups++ } }
       }
       const daysToBook = hasC && r[3] && r[27] ? (() => { const d1 = new Date(toDateStr(r[3])); const d2 = new Date(toDateStr(r[27])); const diff = Math.round((d2-d1)/(1000*60*60*24)); return diff >= 0 ? diff : null })() : null
-      rawRows.push({ date, hasMS, hasB, hasC, hasD, hasE, hasVSLB, followups, daysToBook })
+      const varName = r[4] ? normName(String(r[4]).trim()) : null
+      rawRows.push({ date, hasMS, hasB, hasC, hasD, hasE, hasVSLB, followups, daysToBook, varName })
     }
   }
   if (!summary && rawRows.length > 0) {
@@ -48,6 +49,8 @@ export function parseOutreachMonth(rows) {
   }
   return { summary, rawRows }
 }
+
+const VAR_TREND_COLORS = ['#60A5FA', '#F472B6', '#FB923C', '#34D399', '#A78BFA', '#FBBF24', '#F87171']
 
 const OBJ_CATS = [
   { key: 'too_expensive',  label: 'Too Expensive',      color: '#EF4444' },
@@ -99,6 +102,7 @@ function getGreeting() {
 }
 
 export default function Dashboard({ data, filter, customFrom, customTo, vslMode = false, dailyStats, isMobile, isTablet, clientMode }) {
+  const [trendView, setTrendView] = useState('overall') // 'overall' | 'byVariable'
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -126,6 +130,35 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       return { month: m, ...s, msr: pct(s.MS, s.A), prr: pct(s.B, s.A), abr: pct(s.C, s.A) }
     }).filter(Boolean)
 
+    // Per-variable monthly trend (for "By Variable" toggle on Rate Trends)
+    const varTotals = {} // name -> total A across lastThree months, for sorting
+    const varMonthly = {} // name -> { month: { A, MS, B, C } }
+    lastThree.forEach(m => {
+      const rows = (M[m] && M[m].rawRows) || []
+      rows.forEach(r => {
+        if (!r.varName) return
+        if (!varMonthly[r.varName]) varMonthly[r.varName] = {}
+        if (!varMonthly[r.varName][m]) varMonthly[r.varName][m] = { A: 0, MS: 0, B: 0, C: 0 }
+        const vm = varMonthly[r.varName][m]
+        vm.A++
+        if (r.hasMS) vm.MS++
+        if (r.hasB) vm.B++
+        if (r.hasC) vm.C++
+        varTotals[r.varName] = (varTotals[r.varName] || 0) + 1
+      })
+    })
+    const topVariables = Object.keys(varTotals)
+      .sort((a, b) => varTotals[b] - varTotals[a])
+      .map(name => ({
+        name,
+        total: varTotals[name],
+        monthly: lastThree.map(m => {
+          const vm = varMonthly[name][m]
+          if (!vm) return { month: m, msr: null, prr: null, abr: null }
+          return { month: m, msr: pct(vm.MS, vm.A), prr: pct(vm.B, vm.A), abr: pct(vm.C, vm.A) }
+        }),
+      }))
+
     const bookedRows = filtered.filter(r => r.hasC)
     const avgFollowups = bookedRows.length > 0 ? +(bookedRows.reduce((s, r) => s + r.followups, 0) / bookedRows.length).toFixed(1) : null
     const avgDaysToBook = bookedRows.filter(r => r.daysToBook !== null).length > 0
@@ -148,12 +181,12 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     })
     const topObj = OBJ_CATS.map(c => ({ ...c, count: objCounts[c.key] })).filter(c => c.count > 0).sort((a, b) => b.count - a.count)
 
-    return { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj }
+    return { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, topVariables, avgFollowups, avgDaysToBook, topObj }
   }, [data, filter, customFrom, customTo])
 
   if (!stats) return null
 
-  const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj } = stats
+  const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, topVariables, avgFollowups, avgDaysToBook, topObj } = stats
 
   const bookedCount = vslMode ? VSLB : C
   const funnelSteps = clientMode ? [
@@ -319,25 +352,108 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       {/* Rate Trends */}
       {monthlyTable.length > 1 && (
       <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Rate Trends</div>
-        <div style={{ width: '100%', height: isMobile ? 220 : 280 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={monthlyTable} margin={{ top: 5, right: isMobile ? 10 : 20, left: isMobile ? -20 : 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="month" stroke="var(--text4)" fontSize={12} tickLine={false} axisLine={{ stroke: 'var(--border)' }} />
-              <YAxis stroke="var(--text4)" fontSize={12} tickLine={false} axisLine={false} unit="%" width={isMobile ? 36 : 40} />
-              <Tooltip
-                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
-                formatter={(value, name) => [`${value}%`, name]}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="msr" name="MSR" stroke="#F472B6" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
-              <Line type="monotone" dataKey="prr" name="PRR" stroke="#FB923C" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
-              <Line type="monotone" dataKey="abr" name="ABR" stroke="#A855F7" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
-            </LineChart>
-          </ResponsiveContainer>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Rate Trends</div>
+          <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 8, padding: 3, gap: 2 }}>
+            {[{ key: 'overall', label: 'Overall' }, { key: 'byVariable', label: 'By Variable' }].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setTrendView(opt.key)}
+                style={{
+                  border: 'none', borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  background: trendView === opt.key ? 'var(--card)' : 'transparent',
+                  color: trendView === opt.key ? 'var(--text)' : 'var(--text3)',
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {trendView === 'overall' ? (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 16 }}>
+            {[
+              { key: 'msr', label: 'MSR', color: '#F472B6' },
+              { key: 'prr', label: 'PRR', color: '#FB923C' },
+              { key: 'abr', label: 'ABR', color: '#A855F7' },
+            ].map(metric => (
+              <div key={metric.key}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: metric.color, marginBottom: 8 }}>{metric.label}</div>
+                <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={monthlyTable} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                      <XAxis dataKey="month" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} />
+                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={36} />
+                      <Tooltip
+                        contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                        formatter={(value) => [`${value}%`, metric.label]}
+                      />
+                      <Line type="monotone" dataKey={metric.key} name={metric.label} stroke={metric.color} strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          topVariables.length === 0 ? (
+            <div style={{ color: 'var(--text4)', fontSize: 12, textAlign: 'center', padding: 20 }}>No variable data for this period</div>
+          ) : (
+            <>
+            <div style={{ fontSize: 11, color: 'var(--text4)', marginBottom: 14 }}>Sorted by total Initiated, highest first</div>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 16 }}>
+              {[
+                { key: 'msr', label: 'MSR' },
+                { key: 'prr', label: 'PRR' },
+                { key: 'abr', label: 'ABR' },
+              ].map(metric => (
+                <div key={metric.key}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 8 }}>{metric.label}</div>
+                  <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                        <XAxis dataKey="month" type="category" allowDuplicatedCategory={false} stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} />
+                        <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={36} />
+                        <Tooltip
+                          contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                          labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                          formatter={(value, name) => [value === null ? '—' : `${value}%`, name]}
+                        />
+                        {topVariables.slice(0, 5).map((v, vi) => (
+                          <Line
+                            key={v.name}
+                            type="monotone"
+                            data={v.monthly}
+                            dataKey={metric.key}
+                            name={v.name}
+                            stroke={VAR_TREND_COLORS[vi % VAR_TREND_COLORS.length]}
+                            strokeWidth={2}
+                            dot={{ r: 2.5 }}
+                            activeDot={{ r: 4.5 }}
+                            connectNulls
+                          />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+              {topVariables.slice(0, 5).map((v, vi) => (
+                <div key={v.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text3)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: VAR_TREND_COLORS[vi % VAR_TREND_COLORS.length], display: 'inline-block' }} />
+                  {v.name}
+                </div>
+              ))}
+            </div>
+            </>
+          )
+        )}
       </div>
       )}
 

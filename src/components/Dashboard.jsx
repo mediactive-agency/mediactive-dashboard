@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct } from '../utils/data'
 
 export function parseOutreachMonth(rows) {
@@ -122,7 +123,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     const lastThree = ALL_MONTHS.filter(m => MONTH_TO_KEY[m] <= currentMonthIdx && M[m]).slice(-3)
     const monthlyTable = lastThree.map(m => {
       const s = M[m] && M[m].summary; if (!s) return null
-      return { month: m, ...s, msr: pct(s.MS, s.A), abr: pct(s.C, s.A) }
+      return { month: m, ...s, msr: pct(s.MS, s.A), prr: pct(s.B, s.A), abr: pct(s.C, s.A) }
     }).filter(Boolean)
 
     const bookedRows = filtered.filter(r => r.hasC)
@@ -314,6 +315,31 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
         </div>
       </div>
       </>}
+
+      {/* Rate Trends */}
+      {monthlyTable.length > 1 && (
+      <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 24 }}>
+        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Rate Trends</div>
+        <div style={{ width: '100%', height: isMobile ? 220 : 280 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={monthlyTable} margin={{ top: 5, right: isMobile ? 10 : 20, left: isMobile ? -20 : 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="month" stroke="var(--text4)" fontSize={12} tickLine={false} axisLine={{ stroke: 'var(--border)' }} />
+              <YAxis stroke="var(--text4)" fontSize={12} tickLine={false} axisLine={false} unit="%" width={isMobile ? 36 : 40} />
+              <Tooltip
+                contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                formatter={(value, name) => [`${value}%`, name]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Line type="monotone" dataKey="msr" name="MSR" stroke="#F472B6" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
+              <Line type="monotone" dataKey="prr" name="PRR" stroke="#FB923C" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
+              <Line type="monotone" dataKey="abr" name="ABR" stroke="#A855F7" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      )}
 
       {/* Breakdown */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>

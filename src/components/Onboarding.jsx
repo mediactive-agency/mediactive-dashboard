@@ -134,14 +134,18 @@ function Input({ value, onChange, placeholder, type = 'text' }) {
   )
 }
 
-function Btn({ children, onClick, primary, disabled, small, href }) {
+function Btn({ children, onClick, primary, disabled, small, href, fullWidth }) {
   const style = {
     padding: small ? '8px 14px' : '11px 22px',
     background: disabled ? 'var(--border)' : primary ? 'var(--text)' : 'transparent',
     color: disabled ? 'var(--text3)' : primary ? 'var(--bg)' : 'var(--text2)',
     border: primary ? 'none' : '1px solid var(--border)', borderRadius: 9,
     cursor: disabled ? 'default' : 'pointer', fontWeight: 700, fontSize: small ? 12 : 13,
-    fontFamily: 'inherit', flexShrink: 0, textDecoration: 'none', display: 'inline-block',
+    fontFamily: 'inherit', flexShrink: 0, textDecoration: 'none',
+    display: fullWidth ? 'block' : 'inline-block',
+    width: fullWidth ? '100%' : undefined,
+    textAlign: fullWidth ? 'center' : undefined,
+    boxSizing: 'border-box',
   }
   if (href) return <a href={href} target="_blank" rel="noreferrer" style={style}>{children}</a>
   return <button onClick={onClick} disabled={disabled} style={style}>{children}</button>
@@ -348,7 +352,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
   }[step]
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: isMobile ? 16 : 32 }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: isMobile ? 16 : 32 }}>
       <div style={{ width: '100%', maxWidth: 600, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 18, boxShadow: 'var(--card-shadow)', overflow: 'hidden', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
         {/* Progress bar */}
         <div style={{ height: 3, background: GRADIENT, width: `${((step + 1) / STEPS.length) * 100}%`, transition: 'width 0.3s ease', flexShrink: 0 }} />
@@ -458,9 +462,9 @@ export default function Onboarding({ user, onComplete, isMobile }) {
                 </div>
               </div>
               <Label>Paste your sheet URL</Label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12 }}>
                 <Input value={outreachInput} onChange={setOutreachInput} placeholder="https://docs.google.com/spreadsheets/d/..." />
-                <Btn small onClick={loadOutreachTabs} disabled={busy || !outreachInput.trim()}>{busy ? 'Loading...' : 'Connect'}</Btn>
+                <Btn small fullWidth={isMobile} onClick={loadOutreachTabs} disabled={busy || !outreachInput.trim()}>{busy ? 'Loading...' : 'Connect'}</Btn>
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 12 }}>Make sure the sheet is set to <b>Anyone with the link can view</b> (Share → Change → Anyone with the link).</div>
               {outreachTabsAvail && (
@@ -507,9 +511,9 @@ export default function Onboarding({ user, onComplete, isMobile }) {
                 </div>
               </div>
               <Label>Paste your sheet URL</Label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, marginBottom: 12 }}>
                 <Input value={salesInput} onChange={setSalesInput} placeholder="https://docs.google.com/spreadsheets/d/..." />
-                <Btn small onClick={loadSalesTabs} disabled={busy || !salesInput.trim()}>{busy ? 'Loading...' : 'Connect'}</Btn>
+                <Btn small fullWidth={isMobile} onClick={loadSalesTabs} disabled={busy || !salesInput.trim()}>{busy ? 'Loading...' : 'Connect'}</Btn>
               </div>
               <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 12 }}>Make sure the sheet is set to <b>Anyone with the link can view</b>.</div>
               {salesTabsAvail && (
@@ -614,7 +618,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
           {/* Footer */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 28 }}>
             <div>{step > 0 && <Btn onClick={back}>Back</Btn>}</div>
-            {step === 7
+            {step === STEPS.length - 1
               ? <Btn primary onClick={finish} disabled={saving}>{saving ? 'Setting up...' : 'Start tour →'}</Btn>
               : <Btn primary onClick={next} disabled={!canNext}>Continue</Btn>}
           </div>

@@ -101,6 +101,7 @@ function getGreeting() {
 
 export default function Dashboard({ data, filter, customFrom, customTo, vslMode = false, dailyStats, isMobile, isTablet, clientMode }) {
   const [selectedVars, setSelectedVars] = useState(['__all__'])
+  const [trendValueMode, setTrendValueMode] = useState('pct') // 'pct' | 'count'
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -178,7 +179,11 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
         const ms = inBucket.filter(r => r.hasMS).length
         const b_ = inBucket.filter(r => r.hasB).length
         const c = inBucket.filter(r => r.hasC).length
-        return { period: b.label, msr: a > 0 ? pct(ms, a) : null, prr: a > 0 ? pct(b_, a) : null, abr: a > 0 ? pct(c, a) : null }
+        return {
+          period: b.label,
+          msr: a > 0 ? pct(ms, a) : null, prr: a > 0 ? pct(b_, a) : null, abr: a > 0 ? pct(c, a) : null,
+          msrCount: a > 0 ? ms : null, prrCount: a > 0 ? b_ : null, abrCount: a > 0 ? c : null,
+        }
       })
     }
 
@@ -223,8 +228,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   if (!stats) return null
 
   const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyPerf, monthlyTable, allVariables, avgFollowups, avgDaysToBook, topObj } = stats
-  const top5Variables = allVariables.slice(0, 5)
-  const otherVariables = allVariables.slice(5)
+  const top4Variables = allVariables.slice(0, 4)
+  const otherVariables = allVariables.slice(4)
 
   const bookedCount = vslMode ? VSLB : C
   const funnelSteps = clientMode ? [
@@ -398,10 +403,27 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       {monthlyTable.length > 1 && (
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rate Trends</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rate Trends</div>
+            <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
+              {[{ key: 'pct', label: '%' }, { key: 'count', label: '#' }].map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setTrendValueMode(opt.key)}
+                  style={{
+                    border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: trendValueMode === opt.key ? 'var(--card)' : 'transparent',
+                    color: trendValueMode === opt.key ? 'var(--text)' : 'var(--text3)',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-            {[{ name: '__all__', label: 'All' }, ...top5Variables.map(v => ({ name: v.name, label: v.name }))].map(chip => {
+            {[{ name: '__all__', label: 'All', count: A }, ...top4Variables.map(v => ({ name: v.name, label: v.name, count: v.total }))].map(chip => {
               const isSel = selectedVars[0] === chip.name
               return (
                 <button
@@ -413,7 +435,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                     background: isSel ? 'var(--filter-active-bg)' : 'transparent', color: isSel ? 'var(--filter-active-text)' : 'var(--text3)',
                   }}
                 >
-                  {chip.label}
+                  {chip.label} <span style={{ opacity: 0.65, fontWeight: 500 }}>({chip.count})</span>
                 </button>
               )
             })}
@@ -435,7 +457,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                 >
                   <option value="">Other ({otherVariables.length})</option>
                   {otherVariables.map(v => (
-                    <option key={v.name} value={v.name}>{v.name}</option>
+                    <option key={v.name} value={v.name}>{v.name} ({v.total})</option>
                   ))}
                 </select>
               </div>
@@ -445,15 +467,16 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 28 }}>
           {[
-            { key: 'msr', label: 'MSR', color: '#F472B6' },
-            { key: 'prr', label: 'PRR', color: '#FB923C' },
-            { key: 'abr', label: 'ABR', color: '#34D399' },
+            { key: 'msr', countKey: 'msrCount', label: 'MSR', color: '#F472B6' },
+            { key: 'prr', countKey: 'prrCount', label: 'PRR', color: '#FB923C' },
+            { key: 'abr', countKey: 'abrCount', label: 'ABR', color: '#34D399' },
           ].map(metric => {
             const isAll = selectedVars[0] === '__all__'
             const series = isAll ? monthlyTable : (allVariables.find(x => x.name === selectedVars[0])?.series || [])
+            const dataKey = trendValueMode === 'pct' ? metric.key : metric.countKey
             return (
               <div key={metric.key}>
-                <div style={{ fontSize: 32, fontWeight: 800, color: metric.color, lineHeight: 1, marginBottom: 22 }}>{metric.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: metric.color, lineHeight: 1, marginBottom: 22 }}>{metric.label}</div>
                 <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -465,15 +488,15 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="period" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
-                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={44} />
+                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit={trendValueMode === 'pct' ? '%' : ''} width={44} allowDecimals={false} />
                       <Tooltip
                         contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                         labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
-                        formatter={(value) => [value === null ? '—' : `${value}%`, metric.label]}
+                        formatter={(value) => [value === null ? '—' : (trendValueMode === 'pct' ? `${value}%` : value), metric.label]}
                       />
                       <Area
-                        type="monotone" dataKey={metric.key} name={metric.label}
-                        stroke={metric.color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"
+                        type="natural" dataKey={dataKey} name={metric.label}
+                        stroke={metric.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
                         fill={`url(#fill-${metric.key})`} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls
                       />
                     </AreaChart>

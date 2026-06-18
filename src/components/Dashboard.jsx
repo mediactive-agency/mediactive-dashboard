@@ -404,7 +404,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rate Trends</div>
+            <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Rate Trends</div>
             <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
               {[{ key: 'pct', label: '%' }, { key: 'count', label: '#' }].map(opt => (
                 <button
@@ -488,14 +488,14 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="period" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
-                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit={trendValueMode === 'pct' ? '%' : ''} width={44} allowDecimals={false} />
+                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit={trendValueMode === 'pct' ? '%' : ''} width={44} allowDecimals={false} domain={[0, 'auto']} />
                       <Tooltip
                         contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                         labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
                         formatter={(value) => [value === null ? '—' : (trendValueMode === 'pct' ? `${value}%` : value), metric.label]}
                       />
                       <Area
-                        type="natural" dataKey={dataKey} name={metric.label}
+                        type="monotone" dataKey={dataKey} name={metric.label}
                         stroke={metric.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
                         fill={`url(#fill-${metric.key})`} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls
                       />

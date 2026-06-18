@@ -102,8 +102,7 @@ function getGreeting() {
 }
 
 export default function Dashboard({ data, filter, customFrom, customTo, vslMode = false, dailyStats, isMobile, isTablet, clientMode }) {
-  const [trendView, setTrendView] = useState('overall') // 'overall' | 'byVariable'
-  const [selectedVars, setSelectedVars] = useState([])
+  const [selectedVars, setSelectedVars] = useState(['__all__'])
   const stats = useMemo(() => {
     if (!data) return null
     const M = {
@@ -226,6 +225,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   if (!stats) return null
 
   const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyPerf, monthlyTable, allVariables, avgFollowups, avgDaysToBook, topObj } = stats
+  const top5Variables = allVariables.slice(0, 5)
+  const otherVariables = allVariables.slice(5)
 
   const bookedCount = vslMode ? VSLB : C
   const funnelSteps = clientMode ? [
@@ -390,156 +391,132 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
 
       {/* Rate Trends */}
       {monthlyTable.length > 1 && (
-      <div style={{ background: 'var(--card)', borderRadius: 16, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 24 }}>
+      <div style={{ background: 'var(--card)', borderRadius: 18, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rate Trends</div>
-            <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
-              {[{ key: 'overall', label: 'Overall' }, { key: 'byVariable', label: 'By Variable' }].map(opt => (
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Rate Trends</div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+            {[{ name: '__all__', label: 'All', color: 'var(--text)' }, ...top5Variables.map((v, vi) => ({ name: v.name, label: v.name, color: VAR_TREND_COLORS[vi % VAR_TREND_COLORS.length] }))].map(chip => {
+              const isSel = selectedVars.includes(chip.name)
+              return (
                 <button
-                  key={opt.key}
-                  onClick={() => setTrendView(opt.key)}
+                  key={chip.name}
+                  onClick={() => setSelectedVars(prev => prev.includes(chip.name) ? prev.filter(n => n !== chip.name) : [...prev, chip.name])}
                   style={{
-                    border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    background: trendView === opt.key ? 'var(--card)' : 'transparent',
-                    color: trendView === opt.key ? 'var(--text)' : 'var(--text3)',
+                    display: 'flex', alignItems: 'center', gap: 6, border: isSel ? `1px solid ${chip.color}` : '1px solid var(--border)',
+                    borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: isSel ? `${chip.color}1f` : 'transparent', color: isSel ? chip.color : 'var(--text3)',
                   }}
                 >
-                  {opt.label}
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: chip.color, display: 'inline-block', flexShrink: 0 }} />
+                  {chip.label}
                 </button>
-              ))}
-            </div>
+              )
+            })}
+            {otherVariables.length > 0 && (
+              <div style={{ position: 'relative' }}>
+                <select
+                  value=""
+                  onChange={(e) => { const name = e.target.value; if (name) setSelectedVars(prev => prev.includes(name) ? prev : [...prev, name]) }}
+                  style={{
+                    appearance: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 28px 6px 12px',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', background: 'transparent', color: 'var(--text3)',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2388888B' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+                  }}
+                >
+                  <option value="">Other ({otherVariables.length})</option>
+                  {otherVariables.map(v => (
+                    <option key={v.name} value={v.name} disabled={selectedVars.includes(v.name)}>
+                      {v.name}{selectedVars.includes(v.name) ? ' ✓' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
-
-          {trendView === 'byVariable' && allVariables.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-              {allVariables.slice(0, 7).map((v) => {
-                const isSel = selectedVars.includes(v.name)
-                const color = VAR_TREND_COLORS[allVariables.findIndex(x => x.name === v.name) % VAR_TREND_COLORS.length]
-                return (
-                  <button
-                    key={v.name}
-                    onClick={() => setSelectedVars(prev => prev.includes(v.name) ? prev.filter(n => n !== v.name) : [...prev, v.name])}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 6, border: isSel ? `1px solid ${color}` : '1px solid var(--border)',
-                      borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      background: isSel ? `${color}1f` : 'transparent', color: isSel ? color : 'var(--text3)',
-                    }}
-                  >
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
-                    {v.name}
-                  </button>
-                )
-              })}
-              {allVariables.length > 7 && (
-                <div style={{ position: 'relative' }}>
-                  <select
-                    value=""
-                    onChange={(e) => { const name = e.target.value; if (name) setSelectedVars(prev => prev.includes(name) ? prev : [...prev, name]) }}
-                    style={{
-                      appearance: 'none', border: '1px solid var(--border)', borderRadius: 20, padding: '6px 28px 6px 12px',
-                      fontSize: 12, fontWeight: 600, cursor: 'pointer', background: 'transparent', color: 'var(--text3)',
-                      backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2388888B' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
-                    }}
-                  >
-                    <option value="">Other ({allVariables.length - 7})</option>
-                    {allVariables.slice(7).map(v => (
-                      <option key={v.name} value={v.name} disabled={selectedVars.includes(v.name)}>
-                        {v.name}{selectedVars.includes(v.name) ? ' ✓' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {trendView === 'overall' ? (
+        {selectedVars.length === 0 ? (
+          <div style={{ color: 'var(--text4)', fontSize: 12, textAlign: 'center', padding: 20 }}>Select at least one chip above to see a trend</div>
+        ) : (
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 28 }}>
             {[
               { key: 'msr', label: 'MSR', color: '#F472B6' },
               { key: 'prr', label: 'PRR', color: '#FB923C' },
               { key: 'abr', label: 'ABR', color: '#34D399' },
-            ].map(metric => (
-              <div key={metric.key}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>{metric.label}</div>
-                <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={monthlyTable} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                      <defs>
-                        <linearGradient id={`fill-${metric.key}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={metric.color} stopOpacity={0.28} />
-                          <stop offset="100%" stopColor={metric.color} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                      <XAxis dataKey="period" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
-                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={44} />
-                      <Tooltip
-                        contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                        labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
-                        formatter={(value) => [value === null ? '—' : `${value}%`, metric.label]}
-                      />
-                      <Area type="monotone" dataKey={metric.key} name={metric.label} stroke={metric.color} strokeWidth={2.5} fill={`url(#fill-${metric.key})`} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          allVariables.length === 0 ? (
-            <div style={{ color: 'var(--text4)', fontSize: 12, textAlign: 'center', padding: 20 }}>No variable data for this period</div>
-          ) : selectedVars.length === 0 ? (
-            <div style={{ color: 'var(--text4)', fontSize: 12, textAlign: 'center', padding: 20 }}>Select a variable above to see its trend</div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 28 }}>
-              {[
-                { key: 'msr', label: 'MSR' },
-                { key: 'prr', label: 'PRR' },
-                { key: 'abr', label: 'ABR' },
-              ].map(metric => (
+            ].map(metric => {
+              const allSelected = selectedVars.includes('__all__')
+              const latestAllVal = allSelected ? [...monthlyTable].reverse().find(p => p[metric.key] !== null)?.[metric.key] : null
+              return (
                 <div key={metric.key}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>{metric.label}</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: metric.color, lineHeight: 1 }}>{metric.label}</div>
+                    {latestAllVal !== null && latestAllVal !== undefined && (
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text3)' }}>{latestAllVal}%</div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text4)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 14 }}>
+                    {allSelected ? 'Overall, latest period' : 'By variable'}
+                  </div>
                   <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                        <XAxis dataKey="period" type="category" allowDuplicatedCategory={false} stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
-                        <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={44} />
-                        <Tooltip
-                          contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                          labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
-                          formatter={(value, name) => [value === null ? '—' : `${value}%`, name]}
-                        />
-                        {selectedVars.map(name => {
-                          const v = allVariables.find(x => x.name === name)
-                          if (!v) return null
-                          const color = VAR_TREND_COLORS[allVariables.findIndex(x => x.name === name) % VAR_TREND_COLORS.length]
-                          return (
-                            <Line
-                              key={name}
-                              type="monotone"
-                              data={v.series}
-                              dataKey={metric.key}
-                              name={name}
-                              stroke={color}
-                              strokeWidth={2}
-                              dot={{ r: 2.5 }}
-                              activeDot={{ r: 4.5 }}
-                              connectNulls
-                            />
-                          )
-                        })}
-                      </LineChart>
+                      {selectedVars.length === 1 && selectedVars[0] === '__all__' ? (
+                        <AreaChart data={monthlyTable} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                          <defs>
+                            <linearGradient id={`fill-${metric.key}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={metric.color} stopOpacity={0.28} />
+                              <stop offset="100%" stopColor={metric.color} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                          <XAxis dataKey="period" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
+                          <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={44} />
+                          <Tooltip
+                            contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                            labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                            formatter={(value) => [value === null ? '—' : `${value}%`, metric.label]}
+                          />
+                          <Area type="monotone" dataKey={metric.key} name={metric.label} stroke={metric.color} strokeWidth={2.5} fill={`url(#fill-${metric.key})`} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls />
+                        </AreaChart>
+                      ) : (
+                        <LineChart margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                          <XAxis dataKey="period" type="category" allowDuplicatedCategory={false} stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
+                          <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit="%" width={44} />
+                          <Tooltip
+                            contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                            labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                            formatter={(value, name) => [value === null ? '—' : `${value}%`, name]}
+                          />
+                          {selectedVars.map(name => {
+                            const isAll = name === '__all__'
+                            const series = isAll ? monthlyTable : allVariables.find(x => x.name === name)?.series
+                            if (!series) return null
+                            const color = isAll ? 'var(--text)' : VAR_TREND_COLORS[allVariables.findIndex(x => x.name === name) % VAR_TREND_COLORS.length]
+                            return (
+                              <Line
+                                key={name}
+                                type="monotone"
+                                data={series}
+                                dataKey={metric.key}
+                                name={isAll ? 'All' : name}
+                                stroke={color}
+                                strokeWidth={2}
+                                dot={{ r: 2.5 }}
+                                activeDot={{ r: 4.5 }}
+                                connectNulls
+                              />
+                            )
+                          })}
+                        </LineChart>
+                      )}
                     </ResponsiveContainer>
                   </div>
                 </div>
-              ))}
-            </div>
-          )
+              )
+            })}
+          </div>
         )}
       </div>
       )}

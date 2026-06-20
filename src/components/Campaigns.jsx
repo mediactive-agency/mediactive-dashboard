@@ -71,13 +71,18 @@ function getPipeline(messages, name) {
 }
 
 // Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data — commitne se až na drop
-function previewReorder(pipeline, dragId, overId) {
-  if (!dragId || !overId || dragId === overId) return pipeline
+// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data — commitne se až na drop.
+// `over` je { id, before } — before/after rozlišuje, na kterou stranu cílového kroku se má prvek vložit.
+// Bez tohoto rozlišení by se prvek pri "splice insert" vždy octl AŽ ZA cílem, což dělalo posun nahoru nefunkční.
+function previewReorder(pipeline, dragId, over) {
+  if (!dragId || !over) return pipeline
   const arr = pipeline.slice()
   const from = arr.findIndex(s => s.id === dragId)
-  const to = arr.findIndex(s => s.id === overId)
-  if (from < 0 || to < 0) return pipeline
+  if (from < 0) return pipeline
   const [item] = arr.splice(from, 1)
+  let to = arr.findIndex(s => s.id === over.id)
+  if (to < 0) return pipeline
+  if (!over.before) to += 1
   arr.splice(to, 0, item)
   return arr
 }
@@ -256,10 +261,10 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [dragId, setDragId] = useState(null)
-  const [overId, setOverId] = useState(null)
+  const [overTarget, setOverTarget] = useState(null) // { id, before }
 
   // Při tažení se pipeline živě překresluje podle toho, kam zrovna draguju — commit teprve na drop
-  const pipeline = dragId ? previewReorder(realPipeline, dragId, overId) : realPipeline
+  const pipeline = dragId ? previewReorder(realPipeline, dragId, overTarget) : realPipeline
 
   function handlePick(type) {
     const id = makeId()
@@ -279,27 +284,25 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
     setEditingId(null)
   }
 
-  function handleDrop(targetId) {
-    if (dragId && targetId && dragId !== targetId) onReorderStep(campaign.name, dragId, targetId)
+  function handleDrop() {
+    if (dragId && overTarget && overTarget.id !== dragId) onReorderStep(campaign.name, dragId, overTarget)
     setDragId(null)
-    setOverId(null)
+    setOverTarget(null)
   }
 
-  // Hlavní fix proti glitchování: reorder se nespustí při každém pixelu pohybu myši,
-  // ale jen když kurzor přejde přes polovinu cílového kroku ve směru tažení.
-  // Indexy se počítají vůči NEZMĚNĚNÉ realPipeline (ne vůči živému náhledu), aby nedocházelo k oscilaci.
+  // Fix proti glitchování a proti tomu, že to fungovalo jen jedním směrem:
+  // cílová pozice se určuje podle toho, jestli je kurzor v HORNÍ nebo DOLNÍ polovině
+  // aktuálně přejížděného kroku ("before"/"after"), ne podle pevného indexu vůči startu tažení.
+  // Díky tomu lze prvek vložit na libovolnou stranu libovolného kroku v obou směrech.
   function handleDragOverStep(e, stepId) {
     e.preventDefault()
     if (!dragId || dragId === stepId) return
-    const dragIdx = realPipeline.findIndex(s => s.id === dragId)
-    const targetIdx = realPipeline.findIndex(s => s.id === stepId)
-    if (dragIdx < 0 || targetIdx < 0) return
     const rect = e.currentTarget.getBoundingClientRect()
     const midpoint = rect.top + rect.height / 2
-    const movingDown = targetIdx > dragIdx
-    const pastMidpoint = movingDown ? e.clientY > midpoint : e.clientY < midpoint
-    if (!pastMidpoint) return
-    if (overId !== stepId) setOverId(stepId)
+    const before = e.clientY < midpoint
+    if (!overTarget || overTarget.id !== stepId || overTarget.before !== before) {
+      setOverTarget({ id: stepId, before })
+    }
   }
 
   return (
@@ -319,7 +322,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{campaign.total} initiated · {fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
 
         {pipeline.length === 0 ? (
           <button
@@ -346,9 +349,9 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
                 onConfirm={handleConfirm}
                 onDelete={() => onDeleteStep(campaign.name, step.id)}
                 onDragStart={() => setDragId(step.id)}
-                onDragEnd={() => { setDragId(null); setOverId(null) }}
+                onDragEnd={() => { setDragId(null); setOverTarget(null) }}
                 onDragOver={(e) => handleDragOverStep(e, step.id)}
-                onDrop={(e) => { e.preventDefault(); handleDrop(step.id) }}
+                onDrop={(e) => { e.preventDefault(); handleDrop() }}
               />
             ))}
             <PlusButton onClick={() => setMenuOpen(o => !o)}>
@@ -358,6 +361,18 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
         )}
 
         <div style={{ display: 'flex', gap: 16, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+          {[
+            { lbl: 'Initiated', val: campaign.total, color: '#60A5FA' },
+            { lbl: 'Positive Replies', val: campaign.prr, color: '#FB923C' },
+            { lbl: 'Booked', val: campaign.abr, color: '#34D399' },
+          ].map(r => (
+            <div key={r.lbl}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.val}</div>
+              <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 16, marginTop: 14 }}>
           {[
             { lbl: 'MSR', val: campaign.msrPct, color: '#F472B6' },
             { lbl: 'PRR', val: campaign.prrPct, color: '#FB923C' },
@@ -421,9 +436,9 @@ export default function Campaigns({ data, user, config, isMobile }) {
     })
   }
 
-  function handleReorderStep(name, draggedId, targetId) {
+  function handleReorderStep(name, draggedId, overTarget) {
     setMessages(prev => {
-      const pipeline = previewReorder(getPipeline(prev, name), draggedId, targetId)
+      const pipeline = previewReorder(getPipeline(prev, name), draggedId, overTarget)
       const updated = { ...prev, [name]: { pipeline } }
       persist(updated)
       return updated

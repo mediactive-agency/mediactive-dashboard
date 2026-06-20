@@ -187,7 +187,7 @@ function fmtDelay(step) {
   if (step.delayValue === undefined || step.delayValue === null || step.delayValue === '') return null
   const unitLabel = { mins: 'min', hrs: 'hr', days: 'day' }[step.delayUnit || 'days']
   const n = step.delayValue
-  return `+${n} ${unitLabel}${Number(n) === 1 ? '' : 's'}`
+  return `${n} ${unitLabel}${Number(n) === 1 ? '' : 's'}`
 }
 
 function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelayValue, onChangeDelayUnit, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd }) {
@@ -195,6 +195,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
   const delayLabel = step.type === 'followup' ? fmtDelay(step) : null
+  const [lineHover, setLineHover] = useState(false)
 
   const bubble = def.hasText ? (
     <div style={{
@@ -232,17 +233,38 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       {showLine && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '2px 0' }}>
-          <div style={{ width: 2, height: 28, background: 'var(--border2)' }} />
-          {delayLabel && <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{delayLabel}</span>}
+        <div
+          style={{ position: 'relative', height: 40 }}
+          onMouseEnter={() => setLineHover(true)}
+          onMouseLeave={() => setLineHover(false)}
+        >
+          {/* Čára je vždy přesně na střed přes absolutní pozicování — obsah vpravo od ní (label/ikona) ji nikdy neposune */}
+          <div style={{ position: 'absolute', left: '50%', top: 0, width: 2, height: '100%', background: 'var(--border2)', transform: 'translateX(-50%)' }} />
+          {step.type === 'followup' && (
+            <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(14px, -50%)', display: 'flex', alignItems: 'center' }}>
+              {lineHover ? (
+                <button
+                  onClick={onEdit}
+                  title={delayLabel ? 'Edit time' : 'Add time'}
+                  style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 2, display: 'flex' }}
+                >
+                  {delayLabel ? ICON.edit : ICON.plus}
+                </button>
+              ) : (
+                delayLabel && <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600, whiteSpace: 'nowrap' }}>{delayLabel}</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {editing && def.hasText ? (
         <div style={{ marginTop: isFirst ? 0 : 6 }}>
           {step.type === 'followup' && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              <input
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 6 }}>Optional</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
                 type="text"
                 value={step.delayValue ?? ''}
                 onChange={e => onChangeDelayValue(e.target.value)}
@@ -274,6 +296,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
                 })}
               </div>
             </div>
+          </div>
           )}
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <textarea

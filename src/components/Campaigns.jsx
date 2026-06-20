@@ -14,10 +14,10 @@ const GAP_DAYS = 7
 // followup   — moje zpráva poslaná až po čase (čára mezi nimi, bublina vpravo)
 // reply      — událost "prospect odpověděl pozitivně" (jen značka, žádný text, bublina vlevo)
 const STEP_TYPES = {
-  initiation: { label: 'Initiation',        color: '#60A5FA', hasText: true,  lineBefore: false, side: 'right' },
-  message:    { label: 'Message',           color: '#9CA3AF', hasText: true,  lineBefore: false, side: 'right' },
-  followup:   { label: 'Follow-up',         color: '#9CA3AF', hasText: true,  lineBefore: true,  side: 'right' },
-  reply:      { label: 'Prospect Positive Reply', color: '#FB923C', hasText: false, lineBefore: true, side: 'left' },
+  initiation: { hasText: true,  lineBefore: false, side: 'right' },
+  message:    { hasText: true,  lineBefore: false, side: 'right' },
+  followup:   { hasText: true,  lineBefore: true,  side: 'right' },
+  reply:      { hasText: false, lineBefore: true,  side: 'left', fixedLabel: 'Prospect positive reply' },
 }
 
 function fmtDate(ds) {
@@ -83,29 +83,30 @@ function countDistinctTypes(messages, campaignNames, typeFilter) {
   return set.size
 }
 
-function IconBtn({ onClick, title, disabled, children }) {
+const ICON = {
+  edit: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
+  trash: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
+  grip: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>,
+  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  plus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+}
+
+function IconBtn({ onClick, title, children, draggable, onDragStart, onDragEnd }) {
   return (
     <button
       onClick={onClick}
       title={title}
-      disabled={disabled}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       style={{
-        background: 'none', border: 'none', cursor: disabled ? 'default' : 'pointer',
-        color: disabled ? 'var(--text5)' : 'var(--text3)', padding: 4, display: 'flex',
-        opacity: disabled ? 0.4 : 1,
+        background: 'none', border: 'none', cursor: draggable ? 'grab' : 'pointer',
+        color: 'var(--text3)', padding: 4, display: 'flex',
       }}
     >
       {children}
     </button>
   )
-}
-
-const ICON = {
-  edit: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
-  trash: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
-  up: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>,
-  down: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>,
-  check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
 }
 
 function AddStepMenu({ onPick }) {
@@ -141,86 +142,96 @@ function AddStepMenu({ onPick }) {
 
 function PlusButton({ onClick, children }) {
   return (
-    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '6px 0' }}>
-      <button
-        onClick={onClick}
-        style={{
-          width: 30, height: 30, borderRadius: '50%', border: '1px dashed var(--border2)',
-          background: 'var(--card)', color: 'var(--text3)', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700,
-        }}
-      >+</button>
-      {children}
-    </div>
-  )
-}
-
-function PipelineStep({ step, index, total, editing, onEdit, onChangeText, onConfirm, onDelete, onMoveUp, onMoveDown, justAdded }) {
-  const def = STEP_TYPES[step.type]
-  const isRight = def.side === 'right'
-  const align = isRight ? 'flex-end' : 'flex-start'
-
-  return (
-    <div>
-      {def.lineBefore && index > 0 && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
-
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: align, marginTop: index === 0 ? 0 : 6 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: def.color, marginBottom: 4, padding: '0 2px' }}>
-          {def.label}
-        </div>
-
-        {editing ? (
-          <div style={{ width: '100%', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-            <textarea
-              autoFocus={justAdded}
-              value={step.text || ''}
-              onChange={e => onChangeText(e.target.value)}
-              placeholder="Paste the message text here..."
-              rows={3}
-              style={{
-                flex: 1, resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
-                background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
-                borderRadius: 10, padding: '8px 10px', outline: 'none',
-              }}
-            />
-            <button
-              onClick={onConfirm}
-              title="Confirm"
-              style={{
-                width: 32, height: 32, borderRadius: '50%', border: 'none', background: '#34D399',
-                color: '#0C0C0E', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}
-            >
-              {ICON.check}
-            </button>
-          </div>
-        ) : (
-          <div style={{ maxWidth: '85%', display: 'flex', flexDirection: 'column', alignItems: align }}>
-            <div style={{
-              background: isRight ? 'var(--border)' : '#FB923C1A',
-              border: isRight ? '1px solid var(--border2)' : '1px solid #FB923C40',
-              borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--text)',
-              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            }}>
-              {def.hasText ? (step.text || <span style={{ color: 'var(--text3)', fontStyle: 'italic' }}>Empty</span>) : def.label}
-            </div>
-            <div style={{ display: 'flex', gap: 2, marginTop: 2 }}>
-              {def.hasText && <IconBtn onClick={onEdit} title="Edit">{ICON.edit}</IconBtn>}
-              <IconBtn onClick={onMoveUp} disabled={index === 0} title="Move up">{ICON.up}</IconBtn>
-              <IconBtn onClick={onMoveDown} disabled={index === total - 1} title="Move down">{ICON.down}</IconBtn>
-              <IconBtn onClick={onDelete} title="Remove">{ICON.trash}</IconBtn>
-            </div>
-          </div>
-        )}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ width: 2, height: 24, background: 'var(--border2)' }} />
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
+        <button
+          onClick={onClick}
+          style={{
+            width: 30, height: 30, borderRadius: '50%', border: '1px dashed var(--border2)',
+            background: 'var(--card)', color: 'var(--text3)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >{ICON.plus}</button>
+        {children}
       </div>
     </div>
   )
 }
 
-function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText, onDeleteStep, onMoveStep, onClose, isMobile }) {
+function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onDragStart, onDragOver, onDrop, onDragEnd }) {
+  const def = STEP_TYPES[step.type]
+  const isRight = def.side === 'right'
+  const rowJustify = isRight ? 'flex-end' : 'flex-start'
+
+  const bubble = (
+    <div style={{
+      maxWidth: '78%',
+      background: isRight ? 'var(--border)' : '#FB923C1A',
+      border: isRight ? '1px solid var(--border2)' : '1px solid #FB923C40',
+      borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--text)',
+      whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+    }}>
+      {def.hasText ? (step.text || <span style={{ color: 'var(--text3)', fontStyle: 'italic' }}>Empty</span>) : def.fixedLabel}
+    </div>
+  )
+
+  const icons = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center' }}>
+      {hasEdit && <IconBtn onClick={onEdit} title="Edit">{ICON.edit}</IconBtn>}
+      <IconBtn draggable title="Drag to reorder" onDragStart={onDragStart} onDragEnd={onDragEnd}>{ICON.grip}</IconBtn>
+      <IconBtn onClick={onDelete} title="Remove">{ICON.trash}</IconBtn>
+    </div>
+  )
+
+  return (
+    <div
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      style={{ opacity: isDragging ? 0.35 : 1 }}
+    >
+      {def.lineBefore && index > 0 && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
+
+      {editing ? (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: index === 0 ? 0 : 6 }}>
+          <textarea
+            autoFocus
+            value={step.text || ''}
+            onChange={e => onChangeText(e.target.value)}
+            placeholder="Paste the message text here..."
+            rows={3}
+            style={{
+              flex: 1, resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
+              background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+              borderRadius: 10, padding: '8px 10px', outline: 'none',
+            }}
+          />
+          <button
+            onClick={onConfirm}
+            title="Confirm"
+            style={{
+              width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border2)',
+              background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}
+          >
+            {ICON.check}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: rowJustify, gap: 8, marginTop: index === 0 ? 0 : 6 }}>
+          {isRight ? <>{icons}{bubble}</> : <>{bubble}{icons}</>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
   const pipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  const [dragId, setDragId] = useState(null)
 
   function handlePick(type) {
     const id = makeId()
@@ -276,15 +287,17 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
                 key={step.id}
                 step={step}
                 index={i}
-                total={pipeline.length}
+                hasEdit={STEP_TYPES[step.type].hasText}
                 editing={editingId === step.id}
-                justAdded={editingId === step.id}
+                isDragging={dragId === step.id}
                 onEdit={() => setEditingId(step.id)}
                 onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
                 onConfirm={handleConfirm}
                 onDelete={() => onDeleteStep(campaign.name, step.id)}
-                onMoveUp={() => onMoveStep(campaign.name, step.id, -1)}
-                onMoveDown={() => onMoveStep(campaign.name, step.id, 1)}
+                onDragStart={() => setDragId(step.id)}
+                onDragEnd={() => setDragId(null)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== step.id) onReorderStep(campaign.name, dragId, step.id); setDragId(null) }}
               />
             ))}
             <PlusButton onClick={() => setMenuOpen(o => !o)}>
@@ -357,13 +370,14 @@ export default function Campaigns({ data, user, config, isMobile }) {
     })
   }
 
-  function handleMoveStep(name, stepId, dir) {
+  function handleReorderStep(name, draggedId, targetId) {
     setMessages(prev => {
       const pipeline = getPipeline(prev, name).slice()
-      const i = pipeline.findIndex(s => s.id === stepId)
-      const j = i + dir
-      if (i < 0 || j < 0 || j >= pipeline.length) return prev
-      ;[pipeline[i], pipeline[j]] = [pipeline[j], pipeline[i]]
+      const from = pipeline.findIndex(s => s.id === draggedId)
+      const to = pipeline.findIndex(s => s.id === targetId)
+      if (from < 0 || to < 0 || from === to) return prev
+      const [item] = pipeline.splice(from, 1)
+      pipeline.splice(to, 0, item)
       const updated = { ...prev, [name]: { pipeline } }
       persist(updated)
       return updated
@@ -579,7 +593,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
           onChangeText={handleChangeText}
           onSaveText={handleSaveText}
           onDeleteStep={handleDeleteStep}
-          onMoveStep={handleMoveStep}
+          onReorderStep={handleReorderStep}
           onClose={() => setSelected(null)}
           isMobile={isMobile}
         />

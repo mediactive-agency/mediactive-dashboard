@@ -13,11 +13,15 @@ const GAP_DAYS = 7
 // message    — další moje zpráva poslaná HNED po předchozí (bez čáry mezi nimi, bublina vpravo)
 // followup   — moje zpráva poslaná až po čase (čára mezi nimi, bublina vpravo)
 // reply      — událost "prospect odpověděl pozitivně" (jen pevná značka, žádný text, bublina vlevo)
+// boundary: true znamená "tento krok je oddělená událost v čase" — pokud je krok NEBO jeho
+// předchůdce boundary, mezi nimi se vykreslí svislá čára. Díky tomu, že se to počítá z OBOU
+// sousedů (ne jen z aktuálního kroku), čára se správně objeví i po přetažení pořadí —
+// např. když přesunu "Prospect positive reply" nad "Initiation", čára mezi nimi zůstane.
 const STEP_TYPES = {
-  initiation: { hasText: true,  lineBefore: false, side: 'right' },
-  message:    { hasText: true,  lineBefore: false, side: 'right' },
-  followup:   { hasText: true,  lineBefore: true,  side: 'right' },
-  reply:      { hasText: false, lineBefore: true,  side: 'left', fixedLabel: 'PROSPECT POSITIVE REPLY' },
+  initiation: { hasText: true,  boundary: false, side: 'right' },
+  message:    { hasText: true,  boundary: false, side: 'right' },
+  followup:   { hasText: true,  boundary: true,  side: 'right' },
+  reply:      { hasText: false, boundary: true,  side: 'left', fixedLabel: 'PROSPECT POSITIVE REPLY' },
 }
 
 function fmtDate(ds) {
@@ -179,7 +183,7 @@ function PlusButton({ onClick, children }) {
   )
 }
 
-function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onDragStart, onDragOver, onDrop, onDragEnd }) {
+function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onDragStart, onDragOver, onDrop, onDragEnd }) {
   const def = STEP_TYPES[step.type]
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
@@ -219,10 +223,10 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
       onDrop={onDrop}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      {def.lineBefore && index > 0 && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
+      {showLine && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
 
-      {editing ? (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: index === 0 ? 0 : 6 }}>
+      {editing && def.hasText ? (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: isFirst ? 0 : 6 }}>
           <textarea
             autoFocus
             value={step.text || ''}
@@ -248,7 +252,7 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: rowJustify, gap: 8, marginTop: index === 0 ? 0 : 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: rowJustify, gap: 8, marginTop: isFirst ? 0 : 6 }}>
           {isRight ? <>{icons}{bubble}</> : <>{bubble}{icons}</>}
         </div>
       )}
@@ -269,7 +273,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
   function handlePick(type) {
     const id = makeId()
     onAddStep(campaign.name, type, id)
-    setEditingId(id)
+    if (STEP_TYPES[type].hasText) setEditingId(id)
     setMenuOpen(false)
   }
 
@@ -336,51 +340,56 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
           </button>
         ) : (
           <>
-            {pipeline.map((step, i) => (
-              <PipelineStep
-                key={step.id}
-                step={step}
-                index={i}
-                hasEdit={STEP_TYPES[step.type].hasText}
-                editing={editingId === step.id}
-                isDragging={dragId === step.id}
-                onEdit={() => setEditingId(step.id)}
-                onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
-                onConfirm={handleConfirm}
-                onDelete={() => onDeleteStep(campaign.name, step.id)}
-                onDragStart={() => setDragId(step.id)}
-                onDragEnd={() => { setDragId(null); setOverTarget(null) }}
-                onDragOver={(e) => handleDragOverStep(e, step.id)}
-                onDrop={(e) => { e.preventDefault(); handleDrop() }}
-              />
-            ))}
+            {pipeline.map((step, i) => {
+              const prevStep = i > 0 ? pipeline[i - 1] : null
+              const showLine = i > 0 && (STEP_TYPES[step.type].boundary || STEP_TYPES[prevStep.type].boundary)
+              return (
+                <PipelineStep
+                  key={step.id}
+                  step={step}
+                  showLine={showLine}
+                  isFirst={i === 0}
+                  hasEdit={STEP_TYPES[step.type].hasText}
+                  editing={editingId === step.id}
+                  isDragging={dragId === step.id}
+                  onEdit={() => setEditingId(step.id)}
+                  onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
+                  onConfirm={handleConfirm}
+                  onDelete={() => onDeleteStep(campaign.name, step.id)}
+                  onDragStart={() => setDragId(step.id)}
+                  onDragEnd={() => { setDragId(null); setOverTarget(null) }}
+                  onDragOver={(e) => handleDragOverStep(e, step.id)}
+                  onDrop={(e) => { e.preventDefault(); handleDrop() }}
+                />
+              )
+            })}
             <PlusButton onClick={() => setMenuOpen(o => !o)}>
               {menuOpen && <AddStepMenu onPick={handlePick} />}
             </PlusButton>
           </>
         )}
 
-        <div style={{ display: 'flex', gap: 16, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', gap: 30, marginTop: 26, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
           {[
             { lbl: 'Initiated', val: campaign.total, color: '#60A5FA' },
             { lbl: 'Positive Replies', val: campaign.prr, color: '#FB923C' },
             { lbl: 'Booked', val: campaign.abr, color: '#34D399' },
           ].map(r => (
             <div key={r.lbl}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.val}</div>
-              <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: r.color, marginBottom: 4 }}>{r.val}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
             </div>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: 16, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 30, marginTop: 24 }}>
           {[
             { lbl: 'MSR', val: campaign.msrPct, color: '#F472B6' },
             { lbl: 'PRR', val: campaign.prrPct, color: '#FB923C' },
             { lbl: 'ABR', val: campaign.abrPct, color: '#34D399' },
           ].map(r => (
             <div key={r.lbl}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.val}%</div>
-              <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: r.color, marginBottom: 4 }}>{r.val}%</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
             </div>
           ))}
         </div>

@@ -871,11 +871,11 @@ export default function Campaigns({ data, user, config, isMobile }) {
       </div>
 
       {[
-        { title: 'Initiation Messages', groups: initiationGroups, accent: '#60A5FA' },
-        { title: 'Positive Reply Messages', groups: replyGroups, accent: '#FB923C' },
+        { title: 'Initiation Messages', groups: initiationGroups },
+        { title: 'Positive Reply Messages', groups: replyGroups },
       ].map(section => (
         <div key={section.title} style={{ marginTop: 24 }}>
-          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>{section.title}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 14, textAlign: 'left' }}>{section.title}</div>
           {section.groups.length === 0 ? (
             <div style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', fontSize: 12, color: 'var(--text3)' }}>
               Nothing set yet.
@@ -905,7 +905,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
 
                   <div style={{ display: 'flex', gap: 22, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                     {[
-                      { lbl: 'Sent', val: g.stats.total, color: section.accent },
+                      { lbl: 'Sent', val: g.stats.total, color: '#60A5FA' },
                       { lbl: 'MSR', val: `${g.stats.msrPct}%`, color: '#F472B6' },
                       { lbl: 'PRR', val: `${g.stats.prrPct}%`, color: '#FB923C' },
                       { lbl: 'ABR', val: `${g.stats.abrPct}%`, color: '#34D399' },

@@ -195,7 +195,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
   const delayLabel = step.type === 'followup' ? fmtDelay(step) : null
-  const [lineHover, setLineHover] = useState(false)
+  const [hovered, setHovered] = useState(false)
 
   const bubble = def.hasText ? (
     <div style={{
@@ -230,19 +230,17 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
     <div
       onDragOver={onDragOver}
       onDrop={onDrop}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       {showLine && (
-        <div
-          style={{ position: 'relative', height: 40 }}
-          onMouseEnter={() => setLineHover(true)}
-          onMouseLeave={() => setLineHover(false)}
-        >
+        <div style={{ position: 'relative', height: 40 }}>
           {/* Čára je vždy přesně na střed přes absolutní pozicování — obsah vpravo od ní (label/ikona) ji nikdy neposune */}
           <div style={{ position: 'absolute', left: '50%', top: 0, width: 2, height: '100%', background: 'var(--border2)', transform: 'translateX(-50%)' }} />
           {step.type === 'followup' && (
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(14px, -50%)', display: 'flex', alignItems: 'center' }}>
-              {lineHover ? (
+              {hovered ? (
                 <button
                   onClick={onEdit}
                   title={delayLabel ? 'Edit time' : 'Add time'}
@@ -326,7 +324,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: rowJustify, gap: 8, marginTop: isFirst ? 0 : 6 }}>
-          {isRight ? <>{icons}{bubble}</> : <>{bubble}{icons}</>}
+          {isRight ? <>{hovered && icons}{bubble}</> : <>{bubble}{hovered && icons}</>}
         </div>
       )}
     </div>

@@ -107,7 +107,7 @@ export default function Campaigns({ data, isMobile }) {
     }
   }
 
-  const rowHeight = isMobile ? 54 : 50
+  const rowHeight = isMobile ? 62 : 60
   const labelWidth = isMobile ? 110 : 190
 
   return (
@@ -187,9 +187,9 @@ export default function Campaigns({ data, isMobile }) {
                           key={segIdx}
                           title={`${s.name}: ${fmtDate(seg.from)} – ${fmtDate(seg.to)}`}
                           style={{
-                            position: 'absolute', left: `${left}%`, width: `${widthPct}%`, minWidth: 10,
-                            height: isHovered ? 18 : 14,
-                            borderRadius: 9,
+                            position: 'absolute', left: `${left}%`, width: `${widthPct}%`, minWidth: 14,
+                            height: isHovered ? 32 : 28,
+                            borderRadius: 10,
                             background: s.color,
                             opacity: hovered && !isHovered ? 0.35 : 0.92,
                             boxShadow: isHovered ? `0 0 0 3px ${s.color}33` : 'none',
@@ -197,8 +197,8 @@ export default function Campaigns({ data, isMobile }) {
                             display: 'flex', alignItems: 'center',
                           }}
                         >
-                          {!isMobile && widthPct > 14 && (
-                            <span style={{ fontSize: 10, fontWeight: 700, color: '#0C0C0E', paddingLeft: 10, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                          {!isMobile && widthPct > 12 && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#0C0C0E', paddingLeft: 12, whiteSpace: 'nowrap', overflow: 'hidden' }}>
                               {fmtDate(seg.from)} – {fmtDate(seg.to)}
                             </span>
                           )}

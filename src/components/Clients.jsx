@@ -390,7 +390,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>{clients.length} active client{clients.length !== 1 ? 's' : ''}</div>
-        <button onClick={() => setShowWizard(true)} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+        <button onClick={() => setShowWizard(true)} className="btn-outline-hover" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Client
         </button>
@@ -405,7 +405,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
           <div style={{ fontSize: 40, marginBottom: 16 }}>👥</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No clients yet</div>
           <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>Add your first client to start tracking their outreach</div>
-          <button onClick={() => setShowWizard(true)} className="hoverable-fade" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
+          <button onClick={() => setShowWizard(true)} className="btn-outline-hover" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>

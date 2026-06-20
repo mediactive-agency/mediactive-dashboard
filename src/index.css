@@ -188,5 +188,14 @@ a { text-decoration: none; }
   transition: filter 0.15s, opacity 0.15s;
 }
 .hoverable-fade:hover {
-  filter: brightness(1.12);
+  filter: brightness(1.25);
+}
+.btn-outline-hover {
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid transparent;
+}
+.btn-outline-hover:hover {
+  background: transparent !important;
+  border-color: var(--text) !important;
+  color: var(--text) !important;
 }

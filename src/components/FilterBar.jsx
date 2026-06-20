@@ -13,7 +13,7 @@ export default function FilterBar({ active, onFilter, customFrom, customTo, onCu
           <button
             key={f.key}
             onClick={() => onFilter(f.key)}
-            className="hoverable-fade"
+            className={active === f.key ? 'hoverable-fade' : 'hoverable'}
             style={{
               padding: isMobile ? '6px 10px' : '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
               fontSize: isMobile ? 12 : 11,

@@ -309,9 +309,9 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
               {hovered ? (
                 <button
                   onClick={onEdit}
-                  className="hoverable-fade"
+                  className="hoverable"
                   title={delayLabel ? 'Edit time' : 'Add time'}
-                  style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 2, display: 'flex' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 2, display: 'flex', borderRadius: 6 }}
                 >
                   {delayLabel ? ICON.edit : ICON.plus}
                 </button>
@@ -349,7 +349,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
                     <button
                       key={opt.key}
                       onClick={() => { onChangeDelayUnit(opt.key); onSaveDelay() }}
-                      className="hoverable-fade"
+                      className={isSel ? 'hoverable-fade' : 'hoverable'}
                       style={{
                         border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         background: isSel ? 'var(--card)' : 'transparent',
@@ -784,7 +784,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
         ].map(card => (
           <div key={card.label} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}</div>
-            <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: card.color }}>{card.value}</div>
+            <div style={{ fontSize: isMobile ? 24 : 28, fontWeight: 800, color: card.color, lineHeight: 1 }}>{card.value}</div>
           </div>
         ))}
       </div>
@@ -900,7 +900,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
                       <span
                         key={c.name}
                         onClick={() => setSelected(c.name)}
-                        className="hoverable-fade"
+                        className="hoverable"
                         style={{
                           fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--border)',
                           borderRadius: 20, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,

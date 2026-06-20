@@ -26,7 +26,7 @@ function TabPills({ tabs, isSelected, onPick }) {
       {tabs.map(tab => {
         const on = isSelected(tab)
         return (
-          <button key={tab} onClick={() => onPick(tab)} className="hoverable-fade" style={{
+          <button key={tab} onClick={() => onPick(tab)} className={on ? 'hoverable-fade' : 'hoverable'} style={{
             padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
             cursor: 'pointer', border: '1px solid', borderColor: on ? 'var(--text)' : 'var(--border)',
             background: on ? 'var(--text)' : 'transparent', color: on ? 'var(--bg)' : 'var(--text2)',

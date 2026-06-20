@@ -408,7 +408,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                 <button
                   key={opt.key}
                   onClick={() => setTrendValueMode(opt.key)}
-                  className="hoverable-fade"
+                  className={trendValueMode === opt.key ? 'hoverable-fade' : 'hoverable'}
                   style={{
                     border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                     background: trendValueMode === opt.key ? 'var(--card)' : 'transparent',
@@ -428,7 +428,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                 <button
                   key={chip.name}
                   onClick={() => setSelectedVars([chip.name])}
-                  className="hoverable-fade"
+                  className={isSel ? 'hoverable-fade' : 'hoverable'}
                   style={{
                     border: isSel ? '1px solid transparent' : '1px solid var(--border)',
                     borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',

@@ -90,11 +90,12 @@ export function useData(user) {
 
       const calendly = await fetchCalendly(cfg.calendlyPat)
 
+      // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
+      // — žádný hardcoded seznam měsíců, kolik tabů je ve Settings nakonfigurováno, tolik se sem propíše.
+      // mar/apr/may/jun mají fallback na [], protože na ně přímo spoléhá starší Dashboard kód.
       setData({
-        mar: tabData['mar'] || [],
-        apr: tabData['apr'] || [],
-        may: tabData['may'] || [],
-        jun: tabData['jun'] || [],
+        mar: [], apr: [], may: [], jun: [],
+        ...tabData,
         sales,
         calendly,
       })

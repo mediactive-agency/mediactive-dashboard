@@ -20,13 +20,12 @@ export default function Strategies({ data, isMobile }) {
 
   const strategies = useMemo(() => {
     if (!data) return []
-    const M = [
-      parseOutreachMonth(data.mar),
-      parseOutreachMonth(data.apr),
-      parseOutreachMonth(data.may),
-      parseOutreachMonth(data.jun || []),
-    ]
-    const allRaw = M.flatMap(m => m.rawRows).filter(r => r.varName && r.date)
+    // Dynamicky vezme VŠECHNY natažené outreach taby (cokoliv kromě sales/calendly),
+    // ne jen pevně mar/apr/may/jun — kolik tabů je ve Settings nakonfigurováno, tolik se zpracuje.
+    const monthKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
+    const allRaw = monthKeys
+      .flatMap(k => parseOutreachMonth(data[k]).rawRows)
+      .filter(r => r.varName && r.date)
 
     const byVar = {}
     allRaw.forEach(r => {

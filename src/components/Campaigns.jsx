@@ -95,25 +95,26 @@ function isLegacyStep(step) {
   return typeof step.id === 'string' && step.id.startsWith('legacy-')
 }
 
-// Počítá počet UNIKÁTNÍCH znění zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
-function countDistinctTypes(messages, campaignNames, typeFilter) {
-  const set = new Set()
+// Vrací každou unikátní zprávu spolu s tím, ze které kampaně poprvé pochází — slouží jako
+// průhledný "debug" výpis pod kartou, aby šlo přesně vidět co se počítá a odkud to reálně přišlo.
+function getInitiationEntries(messages, campaignNames) {
+  const seen = new Map()
   campaignNames.forEach(name => {
     getPipeline(messages, name).forEach(step => {
       if (isLegacyStep(step)) return
-      if (!typeFilter.includes(step.type)) return
+      if (step.type !== 'initiation') return
       const t = (step.text || '').trim()
-      if (t) set.add(t)
+      if (t && !seen.has(t)) seen.set(t, name)
     })
   })
-  return set.size
+  return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }
 
 // "Positive Reply Types" se počítá jen z kroků, které přijdou AŽ PO prvním "Prospect positive reply" v pipeline —
 // zprávy před první pozitivní odpovědí jsou pořád jen iniciační fáze, ne reakce na pozitivní odpověď.
 // Stará migrovaná data (legacy- id) se vylučují, ať nezkreslují nové počítání.
-function countPositiveReplyTypes(messages, campaignNames) {
-  const set = new Set()
+function getPositiveReplyEntries(messages, campaignNames) {
+  const seen = new Map()
   campaignNames.forEach(name => {
     const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
     const replyIdx = pipeline.findIndex(s => s.type === 'reply')
@@ -121,10 +122,10 @@ function countPositiveReplyTypes(messages, campaignNames) {
     pipeline.slice(replyIdx + 1).forEach(step => {
       if (step.type !== 'message' && step.type !== 'followup') return
       const t = (step.text || '').trim()
-      if (t) set.add(t)
+      if (t && !seen.has(t)) seen.set(t, name)
     })
   })
-  return set.size
+  return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }
 
 const ICON = {
@@ -570,6 +571,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
 
 export default function Campaigns({ data, user, config, isMobile }) {
   const [hovered, setHovered] = useState(null)
+  const [expandedStat, setExpandedStat] = useState(null)
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
   const initialized = useRef(false)
@@ -695,8 +697,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
   }
 
   const campaignNames = campaigns.map(c => c.name)
-  const initiationTypes = countDistinctTypes(messages, campaignNames, ['initiation'])
-  const replyTypes = countPositiveReplyTypes(messages, campaignNames)
+  const initiationEntries = getInitiationEntries(messages, campaignNames)
+  const replyEntries = getPositiveReplyEntries(messages, campaignNames)
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -727,15 +729,38 @@ export default function Campaigns({ data, user, config, isMobile }) {
         {[
           { label: 'Campaigns Tracked', value: campaigns.length, color: '#60A5FA' },
           { label: 'Active Span', value: `${totalSpan}d`, color: '#FBBF24' },
-          { label: 'Initiation Message Types', value: initiationTypes, color: '#60A5FA' },
-          { label: 'Positive Reply Types', value: replyTypes, color: '#FB923C' },
+          { label: 'Initiation Message Types', value: initiationEntries.length, color: '#60A5FA', key: 'initiation' },
+          { label: 'Positive Reply Types', value: replyEntries.length, color: '#FB923C', key: 'reply' },
         ].map(card => (
-          <div key={card.label} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}</div>
+          <div
+            key={card.label}
+            onClick={card.key ? () => setExpandedStat(s => s === card.key ? null : card.key) : undefined}
+            style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: card.key ? 'pointer' : 'default' }}
+          >
+            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}{card.key && <span style={{ marginLeft: 5 }}>{expandedStat === card.key ? '▲' : '▼'}</span>}</div>
             <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: card.color }}>{card.value}</div>
           </div>
         ))}
       </div>
+
+      {expandedStat && (
+        <div style={{ background: 'var(--card)', borderRadius: 14, padding: '14px 18px', boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {expandedStat === 'initiation' ? 'Counted Initiation Messages' : 'Counted Positive-Reply Messages'} — live from your data, nothing hardcoded
+          </div>
+          {(expandedStat === 'initiation' ? initiationEntries : replyEntries).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing counted yet.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(expandedStat === 'initiation' ? initiationEntries : replyEntries).map((e, i) => (
+                <div key={i} style={{ fontSize: 12, color: 'var(--text)', borderLeft: '2px solid var(--border2)', paddingLeft: 10 }}>
+                  <span style={{ color: 'var(--text3)', fontWeight: 700 }}>{e.campaign}:</span> {e.text}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: isMobile ? '20px 14px' : '24px 26px', boxShadow: 'var(--card-shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 10 }}>

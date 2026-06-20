@@ -183,10 +183,18 @@ function PlusButton({ onClick, children }) {
   )
 }
 
-function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelay, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd }) {
+function fmtDelay(step) {
+  if (step.delayValue === undefined || step.delayValue === null || step.delayValue === '') return null
+  const unitLabel = { mins: 'min', hrs: 'hr', days: 'day' }[step.delayUnit || 'days']
+  const n = step.delayValue
+  return `+${n} ${unitLabel}${Number(n) === 1 ? '' : 's'}`
+}
+
+function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelayValue, onChangeDelayUnit, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd }) {
   const def = STEP_TYPES[step.type]
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
+  const delayLabel = step.type === 'followup' ? fmtDelay(step) : null
 
   const bubble = def.hasText ? (
     <div style={{
@@ -226,49 +234,67 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
       {showLine && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '2px 0' }}>
           <div style={{ width: 2, height: 28, background: 'var(--border2)' }} />
-          {step.type === 'followup' && (
-            <input
-              type="text"
-              value={step.delay || ''}
-              onChange={e => onChangeDelay(e.target.value)}
-              onBlur={onSaveDelay}
-              placeholder="e.g. 3 days"
-              title="Time after which you send this follow-up"
-              style={{
-                fontSize: 11, color: 'var(--text2)', background: 'none', fontWeight: 600,
-                border: '1px dashed var(--border2)', borderRadius: 6, padding: '3px 8px',
-                width: 90, outline: 'none', fontFamily: 'inherit',
-              }}
-            />
-          )}
+          {delayLabel && <span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{delayLabel}</span>}
         </div>
       )}
 
       {editing && def.hasText ? (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: isFirst ? 0 : 6 }}>
-          <textarea
-            autoFocus
-            value={step.text || ''}
-            onChange={e => onChangeText(e.target.value)}
-            placeholder="Paste the message text here..."
-            rows={3}
-            style={{
-              flex: 1, resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
-              background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
-              borderRadius: 10, padding: '8px 10px', outline: 'none',
-            }}
-          />
-          <button
-            onClick={onConfirm}
-            title="Confirm"
-            style={{
-              width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border2)',
-              background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            }}
-          >
-            {ICON.check}
-          </button>
+        <div style={{ marginTop: isFirst ? 0 : 6 }}>
+          {step.type === 'followup' && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <input
+                type="number"
+                value={step.delayValue ?? ''}
+                onChange={e => onChangeDelayValue(e.target.value)}
+                onBlur={onSaveDelay}
+                placeholder="Optional"
+                title="Time after which you send this follow-up"
+                style={{
+                  width: 80, resize: 'none', fontFamily: 'inherit', fontSize: 13,
+                  background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '6px 10px', outline: 'none',
+                }}
+              />
+              <select
+                value={step.delayUnit || 'days'}
+                onChange={e => { onChangeDelayUnit(e.target.value); onSaveDelay() }}
+                style={{
+                  fontFamily: 'inherit', fontSize: 13, cursor: 'pointer',
+                  background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                  borderRadius: 8, padding: '6px 10px', outline: 'none',
+                }}
+              >
+                <option value="mins">Mins</option>
+                <option value="hrs">Hrs</option>
+                <option value="days">Days</option>
+              </select>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <textarea
+              autoFocus
+              value={step.text || ''}
+              onChange={e => onChangeText(e.target.value)}
+              placeholder="Paste the message text here..."
+              rows={3}
+              style={{
+                flex: 1, resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
+                background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                borderRadius: 10, padding: '8px 10px', outline: 'none',
+              }}
+            />
+            <button
+              onClick={onConfirm}
+              title="Confirm"
+              style={{
+                width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border2)',
+                background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}
+            >
+              {ICON.check}
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: rowJustify, gap: 8, marginTop: isFirst ? 0 : 6 }}>
@@ -279,7 +305,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   )
 }
 
-function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelay, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelayValue, onChangeDelayUnit, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
   const realPipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -373,7 +399,8 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
                   isDragging={dragId === step.id}
                   onEdit={() => setEditingId(step.id)}
                   onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
-                  onChangeDelay={(v) => onChangeDelay(campaign.name, step.id, v)}
+                  onChangeDelayValue={(v) => onChangeDelayValue(campaign.name, step.id, v)}
+                  onChangeDelayUnit={(v) => onChangeDelayUnit(campaign.name, step.id, v)}
                   onSaveDelay={() => onSaveText(campaign.name)}
                   onConfirm={handleConfirm}
                   onDelete={() => onDeleteStep(campaign.name, step.id)}
@@ -453,10 +480,19 @@ export default function Campaigns({ data, user, config, isMobile }) {
     })
   }
 
-  function handleChangeDelay(name, stepId, delay) {
+  function handleChangeDelayValue(name, stepId, delayValue) {
     setMessages(prev => {
-      const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, delay } : s)
+      const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, delayValue } : s)
       return { ...prev, [name]: { pipeline } }
+    })
+  }
+
+  function handleChangeDelayUnit(name, stepId, delayUnit) {
+    setMessages(prev => {
+      const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, delayUnit } : s)
+      const updated = { ...prev, [name]: { pipeline } }
+      persist(updated)
+      return updated
     })
   }
 
@@ -689,7 +725,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
           messages={messages}
           onAddStep={handleAddStep}
           onChangeText={handleChangeText}
-          onChangeDelay={handleChangeDelay}
+          onChangeDelayValue={handleChangeDelayValue}
+          onChangeDelayUnit={handleChangeDelayUnit}
           onSaveText={handleSaveText}
           onDeleteStep={handleDeleteStep}
           onReorderStep={handleReorderStep}

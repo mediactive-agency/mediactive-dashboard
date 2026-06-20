@@ -203,8 +203,8 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
   const icons = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
       {hasEdit && <IconBtn onClick={onEdit} title="Edit">{ICON.edit}</IconBtn>}
-      <IconBtn draggable title="Drag to reorder" onDragStart={onDragStart} onDragEnd={onDragEnd}>{ICON.grip}</IconBtn>
       <IconBtn onClick={onDelete} title="Remove" hoverColor="#EF4444">{ICON.trash}</IconBtn>
+      <IconBtn draggable title="Drag to reorder" onDragStart={onDragStart} onDragEnd={onDragEnd}>{ICON.grip}</IconBtn>
     </div>
   )
 
@@ -285,6 +285,23 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
     setOverId(null)
   }
 
+  // Hlavní fix proti glitchování: reorder se nespustí při každém pixelu pohybu myši,
+  // ale jen když kurzor přejde přes polovinu cílového kroku ve směru tažení.
+  // Indexy se počítají vůči NEZMĚNĚNÉ realPipeline (ne vůči živému náhledu), aby nedocházelo k oscilaci.
+  function handleDragOverStep(e, stepId) {
+    e.preventDefault()
+    if (!dragId || dragId === stepId) return
+    const dragIdx = realPipeline.findIndex(s => s.id === dragId)
+    const targetIdx = realPipeline.findIndex(s => s.id === stepId)
+    if (dragIdx < 0 || targetIdx < 0) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midpoint = rect.top + rect.height / 2
+    const movingDown = targetIdx > dragIdx
+    const pastMidpoint = movingDown ? e.clientY > midpoint : e.clientY < midpoint
+    if (!pastMidpoint) return
+    if (overId !== stepId) setOverId(stepId)
+  }
+
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
@@ -330,7 +347,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
                 onDelete={() => onDeleteStep(campaign.name, step.id)}
                 onDragStart={() => setDragId(step.id)}
                 onDragEnd={() => { setDragId(null); setOverId(null) }}
-                onDragOver={(e) => { e.preventDefault(); if (overId !== step.id) setOverId(step.id) }}
+                onDragOver={(e) => handleDragOverStep(e, step.id)}
                 onDrop={(e) => { e.preventDefault(); handleDrop(step.id) }}
               />
             ))}

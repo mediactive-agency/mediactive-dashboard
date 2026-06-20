@@ -26,7 +26,7 @@ function TabPills({ tabs, isSelected, onPick }) {
       {tabs.map(tab => {
         const on = isSelected(tab)
         return (
-          <button key={tab} onClick={() => onPick(tab)} style={{
+          <button key={tab} onClick={() => onPick(tab)} className="hoverable-fade" style={{
             padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
             cursor: 'pointer', border: '1px solid', borderColor: on ? 'var(--text)' : 'var(--border)',
             background: on ? 'var(--text)' : 'transparent', color: on ? 'var(--bg)' : 'var(--text2)',
@@ -215,10 +215,10 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         {logoPreview && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <img src={logoPreview} alt="Logo" style={{ height: 40, maxWidth: 140, objectFit: 'contain', borderRadius: 6 }} />
-            <button onClick={() => { setLogoPreview(null); setLogoUrl('') }} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+            <button onClick={() => { setLogoPreview(null); setLogoUrl('') }} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
           </div>
         )}
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 12 }}>
+        <label className="hoverable" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 12 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload logo
           <input type="file" accept="image/*,.svg" onChange={handleLogoFile} style={{ display: 'none' }} />
@@ -251,14 +251,14 @@ export default function Settings({ user, config, onSaved, isMobile }) {
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace' }}>{s.id.slice(0, 24)}...</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{s.tabs.join(', ')}</div>
             </div>
-            <button onClick={() => setOutreachSheets(prev => prev.filter(x => x.id !== s.id))} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+            <button onClick={() => setOutreachSheets(prev => prev.filter(x => x.id !== s.id))} className="hoverable" style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
           </div>
         ))}
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add another sheet</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input value={newSheetInput} onChange={e => setNewSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
             style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
-          <button onClick={loadNewSheetTabs} disabled={sheetBusy || !newSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+          <button onClick={loadNewSheetTabs} disabled={sheetBusy || !newSheetInput.trim()} className="hoverable-fade" style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
             {sheetBusy ? 'Loading...' : 'Load tabs'}
           </button>
         </div>
@@ -266,7 +266,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
           <>
             <TabPills tabs={newSheetTabsAvail} isSelected={t => newSheetTabs.includes(t)} onPick={t => setNewSheetTabs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])} />
             {newSheetId && newSheetTabs.length > 0 && (
-              <button onClick={addSheet} style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
+              <button onClick={addSheet} className="hoverable-fade" style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
                 + Add sheet
               </button>
             )}
@@ -292,7 +292,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input value={salesSheetInput} onChange={e => setSalesSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
             style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
-          <button onClick={loadSalesSheetTabs} disabled={salesSheetBusy || !salesSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+          <button onClick={loadSalesSheetTabs} disabled={salesSheetBusy || !salesSheetInput.trim()} className="hoverable-fade" style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
             {salesSheetBusy ? 'Loading...' : 'Connect'}
           </button>
         </div>
@@ -304,7 +304,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
 
       {error && <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
-      <button onClick={save} disabled={saving} style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
+      <button onClick={save} disabled={saving} className="hoverable-fade" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
         {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save changes'}
       </button>
     </div>

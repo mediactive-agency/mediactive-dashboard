@@ -74,7 +74,7 @@ function AddClientWizard({ onClose, onAdded }) {
       <div style={{ background: 'var(--card)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Add New Client</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onClose} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, borderRadius: 8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -88,7 +88,7 @@ function AddClientWizard({ onClose, onAdded }) {
             <label style={labelStyle}>COLOR</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {COLORS.map(c => (
-                <button key={c} onClick={() => setColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
+                <button key={c} onClick={() => setColor(c)} className="hoverable-fade" style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
               ))}
             </div>
           </div>
@@ -99,7 +99,7 @@ function AddClientWizard({ onClose, onAdded }) {
           </div>
 
           {!showCalendly ? (
-            <button onClick={() => setShowCalendly(true)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => setShowCalendly(true)} className="hoverable-fade" style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Calendly (optional)
             </button>
@@ -119,7 +119,7 @@ function AddClientWizard({ onClose, onAdded }) {
 
         {error && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 16 }}>{error}</div>}
 
-        <button onClick={submit} disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, marginTop: 28, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
+        <button onClick={submit} disabled={loading} className="hoverable-fade" style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, marginTop: 28, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
       </div>
     </div>
   )
@@ -372,7 +372,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
 
   if (selected) return (
     <div>
-      <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
+      <button onClick={() => setSelected(null)} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
         All Clients
       </button>
@@ -390,7 +390,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>{clients.length} active client{clients.length !== 1 ? 's' : ''}</div>
-        <button onClick={() => setShowWizard(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+        <button onClick={() => setShowWizard(true)} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Client
         </button>
@@ -405,7 +405,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
           <div style={{ fontSize: 40, marginBottom: 16 }}>👥</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No clients yet</div>
           <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>Add your first client to start tracking their outreach</div>
-          <button onClick={() => setShowWizard(true)} style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
+          <button onClick={() => setShowWizard(true)} className="hoverable-fade" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>

@@ -14,6 +14,7 @@
   --text4:     #555558;
   --text5:     #333336;
   --sidebar-active: #0d1825;
+  --hover-bg: #1c1c1f;
   --nav-dot-active: #FFFFFF;
   --nav-dot:   #2a2a2c;
   --bar-divider: #FFFFFF;
@@ -44,6 +45,7 @@ body.light {
   --text4:     #9CA3AF;
   --text5:     #D1D5DB;
   --sidebar-active: #EEF2FF;
+  --hover-bg: #F3F4F8;
   --nav-dot-active: #111827;
   --nav-dot:   #D1D5DB;
   --bar-divider: #111827;
@@ -162,4 +164,29 @@ a { text-decoration: none; }
 /* Monthly stats - always 4 columns */
 .monthly-stats-grid {
   grid-template-columns: repeat(4, 1fr) !important;
+}
+
+/* Generic hover affordance for clickable elements — used wherever inline JS hover state
+   would be overkill (rows, cards, sidebar items, buttons). Subtle bg lift, no layout shift. */
+.hoverable {
+  transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.hoverable:hover {
+  background-color: var(--hover-bg) !important;
+}
+.hoverable-border:hover {
+  border-color: var(--border2) !important;
+}
+.nav-item-btn:hover {
+  background: var(--hover-bg) !important;
+  color: var(--text) !important;
+}
+.sidebar-footer-btn:hover {
+  background: var(--hover-bg) !important;
+}
+.hoverable-fade {
+  transition: filter 0.15s, opacity 0.15s;
+}
+.hoverable-fade:hover {
+  filter: brightness(1.12);
 }

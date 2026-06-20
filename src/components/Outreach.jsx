@@ -80,7 +80,8 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile, vslMode = false }) {
   return (
     <div
       onClick={onToggle}
-      style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
+      className="hoverable"
+      style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s, background-color 0.15s' }}
     >
       <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>
         {v.name}

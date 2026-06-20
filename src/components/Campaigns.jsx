@@ -236,6 +236,7 @@ function PlusButton({ onClick, children }) {
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '4px 0' }}>
         <button
           onClick={onClick}
+          className="hoverable"
           style={{
             width: 30, height: 30, borderRadius: '50%', border: '1px dashed var(--border2)',
             background: 'var(--card)', color: 'var(--text3)', cursor: 'pointer',
@@ -308,6 +309,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
               {hovered ? (
                 <button
                   onClick={onEdit}
+                  className="hoverable-fade"
                   title={delayLabel ? 'Edit time' : 'Add time'}
                   style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 2, display: 'flex' }}
                 >
@@ -347,6 +349,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
                     <button
                       key={opt.key}
                       onClick={() => { onChangeDelayUnit(opt.key); onSaveDelay() }}
+                      className="hoverable-fade"
                       style={{
                         border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
                         background: isSel ? 'var(--card)' : 'transparent',
@@ -376,6 +379,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
             />
             <button
               onClick={onConfirm}
+              className="hoverable-fade"
               title="Confirm"
               style={{
                 width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border2)',
@@ -495,7 +499,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: campaign.color, flexShrink: 0 }} />
             <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{campaign.name}</div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 6, flexShrink: 0 }}>
+          <button onClick={onClose} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 6, flexShrink: 0, borderRadius: 8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -505,6 +509,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
           <div>
             <button
               onClick={handleAddFirst}
+              className="hoverable"
               style={{
                 width: '100%', padding: '14px', borderRadius: 10, border: '1px dashed var(--border2)',
                 background: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: 14, fontWeight: 700,
@@ -514,6 +519,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
             </button>
             <button
               onClick={handlePaste}
+              className="hoverable"
               style={{
                 width: '100%', marginTop: 10, padding: '10px', borderRadius: 10, border: 'none',
                 background: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600,
@@ -561,6 +567,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
           <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
             <button
               onClick={handleCopy}
+              className="hoverable"
               style={{
                 flex: 1, height: 40, borderRadius: 10, border: '1px solid var(--border2)',
                 background: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
@@ -570,6 +577,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
             </button>
             <button
               onClick={handleSaveAll}
+              className="hoverable-fade"
               style={{
                 flex: 1, height: 40, borderRadius: 10, border: 'none',
                 background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)',
@@ -795,11 +803,12 @@ export default function Campaigns({ data, user, config, isMobile }) {
                 onMouseEnter={() => setHovered(s.name)}
                 onMouseLeave={() => setHovered(null)}
                 onClick={() => setSelected(s.name)}
+                className="hoverable"
                 style={{
                   height: rowHeight, display: 'flex', alignItems: 'center', gap: 8,
-                  paddingRight: 12, cursor: 'pointer',
+                  paddingRight: 12, cursor: 'pointer', borderRadius: 8,
                   opacity: hovered && hovered !== s.name ? 0.4 : 1,
-                  transition: 'opacity 0.15s',
+                  transition: 'opacity 0.15s, background-color 0.15s',
                 }}
               >
                 <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
@@ -891,6 +900,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
                       <span
                         key={c.name}
                         onClick={() => setSelected(c.name)}
+                        className="hoverable-fade"
                         style={{
                           fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--border)',
                           borderRadius: 20, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,

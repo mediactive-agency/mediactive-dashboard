@@ -134,7 +134,7 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
           <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
           <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
         </div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Streak Calendar</div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
     )
@@ -143,7 +143,7 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
   return (
     <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Streak Calendar</div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
       <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>

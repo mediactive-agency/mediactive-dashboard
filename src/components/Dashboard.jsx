@@ -293,7 +293,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     <div>
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16, fontWeight: 600 }}>Full Sales Funnel</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Full Sales Funnel</div>
         {isMobile ? (
           <div style={{ background: 'var(--card)', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
             {funnelSteps.map((step, i) => {
@@ -360,11 +360,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
 
       {/* Today's Tasks */}
       {!clientMode && <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Today's Tasks</div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
@@ -399,11 +395,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       </>}
 
       {/* Breakdown */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Breakdown</div>
 
       {/* Rate Trends */}
       {monthlyTable.length > 1 && (

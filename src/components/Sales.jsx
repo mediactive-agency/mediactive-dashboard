@@ -243,9 +243,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
   return (
     <div>
       {/* Upcoming */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Upcoming Calls</div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
         {upcomingCalls.length === 0
           ? <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
@@ -348,9 +346,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       </div>
 
       {/* Call log */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Call Log</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Call Log</div>
       <div style={{ marginBottom: 20 }}>
         {filtered.length === 0
           ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>

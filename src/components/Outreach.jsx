@@ -290,16 +290,12 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
   ]
 
   const Divider = ({ label, dim }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dim ? '#2a2a2c' : '#666669' }}>{label}</div>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-    </div>
+    <div style={{ fontSize: 20, fontWeight: 800, color: dim ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>{label}</div>
   )
 
   return (
     <div>
-      {mode !== 'variables' && (<><Divider label="Total Active Funnel" />
+      {mode !== 'variables' && (<>
       <div style={{ borderRadius: 12, marginBottom: 20, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
@@ -397,6 +393,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       )}
 
       {mode !== 'funnel' && (<>
+      <Divider label="Funnels by Variables" />
       {selected.size > 0 && (
         <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
@@ -473,11 +470,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
 
       {inactiveVars.length > 0 && (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 16px' }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text5)' }}>Inactive — not used in last 14d</div>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text4)', marginTop: 12, marginBottom: 16 }}>Inactive — not used in last 14d</div>
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} vslMode={vslMode} />)}
         </>
       )}

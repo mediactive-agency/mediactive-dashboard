@@ -95,45 +95,48 @@ function isLegacyStep(step) {
   return typeof step.id === 'string' && step.id.startsWith('legacy-')
 }
 
-// Vrací každou unikátní zprávu spolu s tím, ze které kampaně poprvé pochází — slouží jako
-// průhledný "debug" výpis pod kartou, aby šlo přesně vidět co se počítá a odkud to reálně přišlo.
+// Vrátí text iniciační zprávy KONKRÉTNÍ kampaně (nebo null, pokud žádnou nemá)
+function getCampaignInitiationText(messages, name) {
+  const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
+  const step = pipeline.find(s => s.type === 'initiation')
+  const t = step && (step.text || '').trim()
+  return t || null
+}
+
+// Vrátí spojený text odpovědi na pozitivní reakci pro KONKRÉTNÍ kampaň (nebo null).
+// Pravidlo: od prvního "Prospect positive reply" se vezmou jen po sobě jdoucí "message" kroky
+// (bez čárky, posílané hned za sebou) a spojí se do jednoho textu — i když je to v praxi
+// rozsekané do 2-3 bublin, je to obsahově jedna odpověď. Jakmile přijde "followup" (časový
+// odstup) nebo cokoliv jiného, zbytek pipeline se ignoruje úplně.
+function getCampaignReplyText(messages, name) {
+  const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
+  const replyIdx = pipeline.findIndex(s => s.type === 'reply')
+  if (replyIdx < 0) return null
+  const parts = []
+  for (let i = replyIdx + 1; i < pipeline.length; i++) {
+    const step = pipeline[i]
+    if (step.type !== 'message') break
+    const t = (step.text || '').trim()
+    if (t) parts.push(t)
+  }
+  return parts.length ? parts.join(' ') : null
+}
+
+// Vrací každou unikátní zprávu spolu s tím, ze které kampaně poprvé pochází
 function getInitiationEntries(messages, campaignNames) {
   const seen = new Map()
   campaignNames.forEach(name => {
-    getPipeline(messages, name).forEach(step => {
-      if (isLegacyStep(step)) return
-      if (step.type !== 'initiation') return
-      const t = (step.text || '').trim()
-      if (t && !seen.has(t)) seen.set(t, name)
-    })
+    const t = getCampaignInitiationText(messages, name)
+    if (t && !seen.has(t)) seen.set(t, name)
   })
   return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }
 
-// "Positive Reply Types" se počítá jen z kroků, které přijdou AŽ PO prvním "Prospect positive reply" v pipeline —
-// zprávy před první pozitivní odpovědí jsou pořád jen iniciační fáze, ne reakce na pozitivní odpověď.
-// Stará migrovaná data (legacy- id) se vylučují, ať nezkreslují nové počítání.
-// Pravidlo (dohodnuté s Kryštofem): od prvního "Prospect positive reply" se vezmou JEN po sobě
-// jdoucí kroky typu "message" (bez čárky, posílané hned za sebou) a spojí se do JEDNOHO typu —
-// i když je to v praxi rozsekané do 2-3 bublin, je to obsahově jedna odpověď na pozitivní reakci.
-// Jakmile se narazí na "followup" (= je tam čárka, časový odstup) nebo cokoliv jiného, zbytek
-// pipeline se ignoruje úplně — follow-up nudge zprávy (GIFka, připomínky) do téhle statistiky nepatří.
 function getPositiveReplyEntries(messages, campaignNames) {
   const seen = new Map()
   campaignNames.forEach(name => {
-    const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
-    const replyIdx = pipeline.findIndex(s => s.type === 'reply')
-    if (replyIdx < 0) return
-    const parts = []
-    for (let i = replyIdx + 1; i < pipeline.length; i++) {
-      const step = pipeline[i]
-      if (step.type !== 'message') break
-      const t = (step.text || '').trim()
-      if (t) parts.push(t)
-    }
-    if (parts.length === 0) return
-    const combined = parts.join(' ')
-    if (!seen.has(combined)) seen.set(combined, name)
+    const t = getCampaignReplyText(messages, name)
+    if (t && !seen.has(t)) seen.set(t, name)
   })
   return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }
@@ -708,6 +711,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
   const campaignNames = campaigns.map(c => c.name)
   const initiationEntries = getInitiationEntries(messages, campaignNames)
   const replyEntries = getPositiveReplyEntries(messages, campaignNames)
+  const initiationTypeIndex = new Map(initiationEntries.map((e, i) => [e.text, i + 1]))
+  const replyTypeIndex = new Map(replyEntries.map((e, i) => [e.text, i + 1]))
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -838,26 +843,30 @@ export default function Campaigns({ data, user, config, isMobile }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginTop: 16 }}>
-        {campaigns.map(s => (
-          <div key={s.name} onClick={() => setSelected(s.name)} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-            </div>
-            <div style={{ display: 'flex', gap: 16 }}>
-              {[
-                { lbl: 'MSR', val: s.msrPct, color: '#F472B6' },
-                { lbl: 'PRR', val: s.prrPct, color: '#FB923C' },
-                { lbl: 'ABR', val: s.abrPct, color: '#34D399' },
-              ].map(r => (
-                <div key={r.lbl}>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.val}%</div>
-                  <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
+        {campaigns.map(s => {
+          const initText = getCampaignInitiationText(messages, s.name)
+          const replyText = getCampaignReplyText(messages, s.name)
+          const initType = initText ? initiationTypeIndex.get(initText) : null
+          const replyType = replyText ? replyTypeIndex.get(replyText) : null
+          return (
+            <div key={s.name} onClick={() => setSelected(s.name)} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>Initiation</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: initType ? '#60A5FA' : 'var(--text4)' }}>{initType ? `Type ${initType}` : '—'}</span>
                 </div>
-              ))}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>Positive Reply</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: replyType ? '#FB923C' : 'var(--text4)' }}>{replyType ? `Type ${replyType}` : '—'}</span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {selectedCampaign && (

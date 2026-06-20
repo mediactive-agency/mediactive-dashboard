@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { parseOutreachMonth } from './Dashboard'
 import { dateStr } from '../utils/data'
+import { saveUserConfig } from '../hooks/useData'
 
 const PALETTE = ['#60A5FA', '#F472B6', '#FB923C', '#34D399', '#A78BFA', '#FBBF24', '#22D3EE', '#F87171', '#818CF8', '#4ADE80', '#E879F9', '#FACC15']
 
@@ -39,8 +40,140 @@ function buildSegments(sortedUniqueDates) {
   return segments
 }
 
-export default function Campaigns({ data, isMobile }) {
+// Počítá počet UNIKÁTNÍCH zně­ní zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
+function countDistinctTypes(messages, field, campaignNames) {
+  const set = new Set()
+  campaignNames.forEach(name => {
+    const v = (messages[name]?.[field] || '').trim()
+    if (v) set.add(v)
+  })
+  return set.size
+}
+
+function FlowBox({ title, sub, value, onChange, onSave, saved }) {
+  return (
+    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
+        {saved && <div style={{ fontSize: 10, color: '#34D399', fontWeight: 600 }}>Saved</div>}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>{sub}</div>
+      <textarea
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onBlur={onSave}
+        placeholder="Paste the message text here..."
+        rows={3}
+        style={{
+          width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
+          background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+          borderRadius: 8, padding: '8px 10px', outline: 'none',
+        }}
+      />
+    </div>
+  )
+}
+
+function Connector({ label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 8px 16px' }}>
+      <div style={{ width: 1, height: 24, background: 'var(--border2)', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: -3, left: -3, width: 7, height: 7, borderRadius: '50%', background: 'var(--border2)' }} />
+        <div style={{ position: 'absolute', bottom: -3, left: -3, width: 7, height: 7, borderRadius: '50%', background: 'var(--border2)' }} />
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{label}</div>
+    </div>
+  )
+}
+
+function CampaignPanel({ campaign, messages, onChangeField, onSaveField, onClose, isMobile }) {
+  const m = messages[campaign.name] || {}
+  const [savedFlash, setSavedFlash] = useState(null)
+
+  function handleSave(field) {
+    onSaveField(campaign.name, field)
+    setSavedFlash(field)
+    setTimeout(() => setSavedFlash(null), 1500)
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
+      <div style={{
+        position: 'fixed', top: 0, right: 0, height: '100dvh', width: isMobile ? '100%' : 440,
+        background: 'var(--card)', zIndex: 201, boxShadow: '-8px 0 32px rgba(0,0,0,0.3)',
+        overflowY: 'auto', padding: isMobile ? '18px 16px' : '24px 24px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: campaign.color, flexShrink: 0 }} />
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{campaign.name}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 6, flexShrink: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 22 }}>{campaign.total} initiated · {fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
+
+        <FlowBox
+          title="Initiation Message"
+          sub="What you send to start the conversation"
+          value={m.initiation || ''}
+          onChange={v => onChangeField(campaign.name, 'initiation', v)}
+          onSave={() => handleSave('initiation')}
+          saved={savedFlash === 'initiation'}
+        />
+        <Connector label={`${campaign.prr} positive replies · ${campaign.prrPct}%`} />
+        <FlowBox
+          title="Your Reply"
+          sub="What you send back after a positive reply"
+          value={m.reply || ''}
+          onChange={v => onChangeField(campaign.name, 'reply', v)}
+          onSave={() => handleSave('reply')}
+          saved={savedFlash === 'reply'}
+        />
+
+        <div style={{ display: 'flex', gap: 16, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+          {[
+            { lbl: 'MSR', val: campaign.msrPct, color: '#F472B6' },
+            { lbl: 'PRR', val: campaign.prrPct, color: '#FB923C' },
+            { lbl: 'ABR', val: campaign.abrPct, color: '#34D399' },
+          ].map(r => (
+            <div key={r.lbl}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.val}%</div>
+              <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{r.lbl}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default function Campaigns({ data, user, config, isMobile }) {
   const [hovered, setHovered] = useState(null)
+  const [selected, setSelected] = useState(null)
+  const [messages, setMessages] = useState(config?.campaignMessages || {})
+  const initialized = useRef(false)
+
+  useEffect(() => {
+    if (!initialized.current && config?.campaignMessages) {
+      setMessages(config.campaignMessages)
+      initialized.current = true
+    }
+  }, [config?.campaignMessages])
+
+  function handleChangeField(name, field, value) {
+    setMessages(prev => ({ ...prev, [name]: { ...(prev[name] || {}), [field]: value } }))
+  }
+
+  function handleSaveField(name, field) {
+    if (!user) return
+    setMessages(prev => {
+      saveUserConfig(user.uid, { campaignMessages: prev }).catch(() => {})
+      return prev
+    })
+  }
 
   const campaigns = useMemo(() => {
     if (!data) return []
@@ -88,6 +221,10 @@ export default function Campaigns({ data, isMobile }) {
     )
   }
 
+  const campaignNames = campaigns.map(c => c.name)
+  const initiationTypes = countDistinctTypes(messages, 'initiation', campaignNames)
+  const replyTypes = countDistinctTypes(messages, 'reply', campaignNames)
+
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
   const totalSpan = Math.max(1, daysBetween(globalFrom, globalTo))
@@ -109,6 +246,7 @@ export default function Campaigns({ data, isMobile }) {
 
   const rowHeight = isMobile ? 62 : 60
   const labelWidth = isMobile ? 110 : 190
+  const selectedCampaign = selected ? campaigns.find(c => c.name === selected) : null
 
   return (
     <div>
@@ -116,8 +254,8 @@ export default function Campaigns({ data, isMobile }) {
         {[
           { label: 'Campaigns Tracked', value: campaigns.length, color: '#60A5FA' },
           { label: 'Active Span', value: `${totalSpan}d`, color: '#FBBF24' },
-          { label: 'Best MSR', value: `${Math.max(...campaigns.map(s => s.msrPct))}%`, color: '#F472B6' },
-          { label: 'Best ABR', value: `${Math.max(...campaigns.map(s => s.abrPct))}%`, color: '#34D399' },
+          { label: 'Initiation Message Types', value: initiationTypes, color: '#F472B6' },
+          { label: 'Positive Reply Types', value: replyTypes, color: '#34D399' },
         ].map(card => (
           <div key={card.label} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}</div>
@@ -129,7 +267,7 @@ export default function Campaigns({ data, isMobile }) {
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: isMobile ? '20px 14px' : '24px 26px', boxShadow: 'var(--card-shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 10 }}>
           <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Campaign Timeline</div>
-          <div style={{ fontSize: 11, color: 'var(--text4)' }}>{fmtDate(globalFrom)} — {fmtDate(globalTo)}</div>
+          <div style={{ fontSize: 11, color: 'var(--text4)' }}>{fmtDate(globalFrom)} — {fmtDate(globalTo)} · click a campaign for details</div>
         </div>
 
         <div style={{ display: 'flex' }}>
@@ -140,9 +278,10 @@ export default function Campaigns({ data, isMobile }) {
                 key={s.name}
                 onMouseEnter={() => setHovered(s.name)}
                 onMouseLeave={() => setHovered(null)}
+                onClick={() => setSelected(s.name)}
                 style={{
                   height: rowHeight, display: 'flex', alignItems: 'center', gap: 8,
-                  paddingRight: 12, cursor: 'default',
+                  paddingRight: 12, cursor: 'pointer',
                   opacity: hovered && hovered !== s.name ? 0.4 : 1,
                   transition: 'opacity 0.15s',
                 }}
@@ -177,7 +316,8 @@ export default function Campaigns({ data, isMobile }) {
                     key={s.name}
                     onMouseEnter={() => setHovered(s.name)}
                     onMouseLeave={() => setHovered(null)}
-                    style={{ height: rowHeight, display: 'flex', alignItems: 'center', position: 'relative' }}
+                    onClick={() => setSelected(s.name)}
+                    style={{ height: rowHeight, display: 'flex', alignItems: 'center', position: 'relative', cursor: 'pointer' }}
                   >
                     {s.segments.map((seg, segIdx) => {
                       const left = (daysBetween(globalFrom, seg.from) / totalSpan) * 100
@@ -215,7 +355,7 @@ export default function Campaigns({ data, isMobile }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginTop: 16 }}>
         {campaigns.map(s => (
-          <div key={s.name} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
+          <div key={s.name} onClick={() => setSelected(s.name)} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
@@ -235,6 +375,17 @@ export default function Campaigns({ data, isMobile }) {
           </div>
         ))}
       </div>
+
+      {selectedCampaign && (
+        <CampaignPanel
+          campaign={selectedCampaign}
+          messages={messages}
+          onChangeField={handleChangeField}
+          onSaveField={handleSaveField}
+          onClose={() => setSelected(null)}
+          isMobile={isMobile}
+        />
+      )}
     </div>
   )
 }

@@ -125,7 +125,7 @@ export default function App() {
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
-              {page === 'campaigns' && <Campaigns data={data} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'campaigns' && <Campaigns data={data} user={user} config={config} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'settings'  && <Settings  user={user} config={config} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}
             </>

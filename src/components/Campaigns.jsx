@@ -782,9 +782,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
       </div>
 
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: isMobile ? '20px 14px' : '24px 26px', boxShadow: 'var(--card-shadow)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Campaign Timeline</div>
-          <div style={{ fontSize: 11, color: 'var(--text4)' }}>{fmtDate(globalFrom)} — {fmtDate(globalTo)} · click a campaign for details</div>
+        <div style={{ marginBottom: 22 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDate(globalFrom)} — {fmtDate(globalTo)}</div>
         </div>
 
         <div style={{ display: 'flex' }}>

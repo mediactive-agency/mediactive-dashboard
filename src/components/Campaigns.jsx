@@ -12,12 +12,12 @@ const GAP_DAYS = 7
 // initiation — první zpráva, kterou nasazuju (vždy první krok, vlastní text, bublina vpravo)
 // message    — další moje zpráva poslaná HNED po předchozí (bez čáry mezi nimi, bublina vpravo)
 // followup   — moje zpráva poslaná až po čase (čára mezi nimi, bublina vpravo)
-// reply      — událost "prospect odpověděl pozitivně" (jen značka, žádný text, bublina vlevo)
+// reply      — událost "prospect odpověděl pozitivně" (jen pevná značka, žádný text, bublina vlevo)
 const STEP_TYPES = {
   initiation: { hasText: true,  lineBefore: false, side: 'right' },
   message:    { hasText: true,  lineBefore: false, side: 'right' },
   followup:   { hasText: true,  lineBefore: true,  side: 'right' },
-  reply:      { hasText: false, lineBefore: true,  side: 'left', fixedLabel: 'Prospect positive reply' },
+  reply:      { hasText: false, lineBefore: true,  side: 'left', fixedLabel: 'PROSPECT POSITIVE REPLY' },
 }
 
 function fmtDate(ds) {
@@ -70,6 +70,18 @@ function getPipeline(messages, name) {
   return legacy
 }
 
+// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data — commitne se až na drop
+function previewReorder(pipeline, dragId, overId) {
+  if (!dragId || !overId || dragId === overId) return pipeline
+  const arr = pipeline.slice()
+  const from = arr.findIndex(s => s.id === dragId)
+  const to = arr.findIndex(s => s.id === overId)
+  if (from < 0 || to < 0) return pipeline
+  const [item] = arr.splice(from, 1)
+  arr.splice(to, 0, item)
+  return arr
+}
+
 // Počítá počet UNIKÁTNÍCH znění zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
 function countDistinctTypes(messages, campaignNames, typeFilter) {
   const set = new Set()
@@ -89,9 +101,10 @@ const ICON = {
   grip: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>,
   check: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   plus: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  reply: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
 }
 
-function IconBtn({ onClick, title, children, draggable, onDragStart, onDragEnd }) {
+function IconBtn({ onClick, title, children, draggable, onDragStart, onDragEnd, hoverColor }) {
   return (
     <button
       onClick={onClick}
@@ -99,9 +112,11 @@ function IconBtn({ onClick, title, children, draggable, onDragStart, onDragEnd }
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
+      onMouseEnter={e => { e.currentTarget.style.color = hoverColor || 'var(--text)' }}
+      onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)' }}
       style={{
         background: 'none', border: 'none', cursor: draggable ? 'grab' : 'pointer',
-        color: 'var(--text3)', padding: 4, display: 'flex',
+        color: 'var(--text3)', padding: 4, display: 'flex', transition: 'color 0.15s',
       }}
     >
       {children}
@@ -164,23 +179,32 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
 
-  const bubble = (
+  const bubble = def.hasText ? (
     <div style={{
-      maxWidth: '78%',
+      maxWidth: '74%',
       background: isRight ? 'var(--border)' : '#FB923C1A',
       border: isRight ? '1px solid var(--border2)' : '1px solid #FB923C40',
       borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--text)',
       whiteSpace: 'pre-wrap', wordBreak: 'break-word',
     }}>
-      {def.hasText ? (step.text || <span style={{ color: 'var(--text3)', fontStyle: 'italic' }}>Empty</span>) : def.fixedLabel}
+      {step.text || <span style={{ color: 'var(--text3)', fontStyle: 'italic' }}>Empty</span>}
+    </div>
+  ) : (
+    <div style={{
+      maxWidth: '74%', display: 'flex', alignItems: 'center', gap: 8,
+      background: '#FB923C1A', border: '1px solid #FB923C40',
+      borderRadius: 12, padding: '10px 14px', color: '#FB923C',
+    }}>
+      {ICON.reply}
+      <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.04em' }}>{def.fixedLabel}</span>
     </div>
   )
 
   const icons = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
       {hasEdit && <IconBtn onClick={onEdit} title="Edit">{ICON.edit}</IconBtn>}
       <IconBtn draggable title="Drag to reorder" onDragStart={onDragStart} onDragEnd={onDragEnd}>{ICON.grip}</IconBtn>
-      <IconBtn onClick={onDelete} title="Remove">{ICON.trash}</IconBtn>
+      <IconBtn onClick={onDelete} title="Remove" hoverColor="#EF4444">{ICON.trash}</IconBtn>
     </div>
   )
 
@@ -188,7 +212,7 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
     <div
       onDragOver={onDragOver}
       onDrop={onDrop}
-      style={{ opacity: isDragging ? 0.35 : 1 }}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       {def.lineBefore && index > 0 && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
 
@@ -219,7 +243,7 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', justifyContent: rowJustify, gap: 8, marginTop: index === 0 ? 0 : 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: rowJustify, gap: 8, marginTop: index === 0 ? 0 : 6 }}>
           {isRight ? <>{icons}{bubble}</> : <>{bubble}{icons}</>}
         </div>
       )}
@@ -228,10 +252,14 @@ function PipelineStep({ step, index, hasEdit, editing, isDragging, onEdit, onCha
 }
 
 function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
-  const pipeline = getPipeline(messages, campaign.name)
+  const realPipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [dragId, setDragId] = useState(null)
+  const [overId, setOverId] = useState(null)
+
+  // Při tažení se pipeline živě překresluje podle toho, kam zrovna draguju — commit teprve na drop
+  const pipeline = dragId ? previewReorder(realPipeline, dragId, overId) : realPipeline
 
   function handlePick(type) {
     const id = makeId()
@@ -249,6 +277,12 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
   function handleConfirm() {
     onSaveText(campaign.name)
     setEditingId(null)
+  }
+
+  function handleDrop(targetId) {
+    if (dragId && targetId && dragId !== targetId) onReorderStep(campaign.name, dragId, targetId)
+    setDragId(null)
+    setOverId(null)
   }
 
   return (
@@ -295,9 +329,9 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
                 onConfirm={handleConfirm}
                 onDelete={() => onDeleteStep(campaign.name, step.id)}
                 onDragStart={() => setDragId(step.id)}
-                onDragEnd={() => setDragId(null)}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); if (dragId && dragId !== step.id) onReorderStep(campaign.name, dragId, step.id); setDragId(null) }}
+                onDragEnd={() => { setDragId(null); setOverId(null) }}
+                onDragOver={(e) => { e.preventDefault(); if (overId !== step.id) setOverId(step.id) }}
+                onDrop={(e) => { e.preventDefault(); handleDrop(step.id) }}
               />
             ))}
             <PlusButton onClick={() => setMenuOpen(o => !o)}>
@@ -372,12 +406,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
 
   function handleReorderStep(name, draggedId, targetId) {
     setMessages(prev => {
-      const pipeline = getPipeline(prev, name).slice()
-      const from = pipeline.findIndex(s => s.id === draggedId)
-      const to = pipeline.findIndex(s => s.id === targetId)
-      if (from < 0 || to < 0 || from === to) return prev
-      const [item] = pipeline.splice(from, 1)
-      pipeline.splice(to, 0, item)
+      const pipeline = previewReorder(getPipeline(prev, name), draggedId, targetId)
       const updated = { ...prev, [name]: { pipeline } }
       persist(updated)
       return updated

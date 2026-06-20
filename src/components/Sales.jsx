@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { TODAY, toDateStr, toSalesDateStr, inRange } from '../utils/data'
+import { TODAY, toDateStr, toSalesDateStr, inRange, outreachSheets } from '../utils/data'
 
 const OBJ_CATS = [
   { key: 'too_expensive', label: 'Too Expensive',      color: '#EF4444', patterns: ['price','expensive','budget','afford','cost','payment','invest','money','fund','cash','financial','runway'] },
@@ -193,7 +193,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
 
     // LinkedIn map from outreach
     const linkedinMap = {}
-    const allOutreach = [...data.mar, ...data.apr, ...data.may, ...(data.jun||[])]
+    const allOutreach = outreachSheets(data).flat()
     let foundH = false
     for (const r of allOutreach) {
       if (!foundH) { if (r && r[1] === 'Name' && r[3] === 'Date') { foundH = true } continue }

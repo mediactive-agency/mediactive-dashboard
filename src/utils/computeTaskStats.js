@@ -1,4 +1,4 @@
-import { TODAY, toDateStr, dateStr } from './data'
+import { TODAY, toDateStr, dateStr, outreachSheets } from './data'
 
 function nextBizDay(d) {
   const n = new Date(d); n.setDate(n.getDate()+1)
@@ -67,7 +67,7 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
   const todayStr = dateStr(today)
 
   const allRows = []
-  for (const sheet of [data.mar, data.apr, data.may, data.jun||[]]) {
+  for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
     if (ds < 0) continue

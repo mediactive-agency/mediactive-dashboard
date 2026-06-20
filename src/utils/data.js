@@ -85,6 +85,15 @@ export function normName(n) {
   return n
 }
 
+// Vrátí VŠECHNY natažené outreach taby jako pole sheetů (cokoliv v `data` kromě sales/calendly).
+// Žádný hardcoded seznam měsíců — kolik tabů je ve Settings nakonfigurováno, tolik se vrátí.
+export function outreachSheets(data) {
+  if (!data) return []
+  return Object.keys(data)
+    .filter(k => k !== 'sales' && k !== 'calendly')
+    .map(k => data[k] || [])
+}
+
 export const FILTERS = [
   { key: 'all',       label: 'All Time' },
   { key: '90d',       label: '90d' },

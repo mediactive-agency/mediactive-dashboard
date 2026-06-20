@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { TODAY, toDateStr, inRange, normName, ago, todayStr } from '../utils/data'
+import { TODAY, toDateStr, inRange, normName, ago, todayStr, outreachSheets } from '../utils/data'
 
 const VAR_COLORS = {
   'Main acc — Normal':   '#60A5FA', '2nd acc — Normal':    '#A78BFA',
@@ -179,12 +179,11 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
   const { activeVars, inactiveVars, tot } = useMemo(() => {
     if (!data) return { activeVars: [], inactiveVars: [], tot: { A:0,MS:0,B:0,C:0 } }
 
-    const allSheets = [data.mar, data.apr, data.may, data.jun||[]]
+    const allSheets = outreachSheets(data)
     const cutoff14 = ago(14)
 
     let aggMap = {}
     const useRaw = ['14d','7d','yesterday','today','custom'].includes(filter)
-    const monthRanges = { Mar: ['2026-03-01','2026-03-31'], Apr: ['2026-04-01','2026-04-30'], May: ['2026-05-01','2026-05-31'], Jun: ['2026-06-01','2026-06-30'] }
 
     if (useRaw) {
       let filterFn
@@ -206,12 +205,18 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
     } else {
       const from = filter === 'all' ? null : filter === '90d' ? ago(90) : ago(30)
       const filterFn = from ? (d => d >= from) : () => true
-      const months = ['Mar','Apr','May','Jun']
-      const sheetMap = { Mar: data.mar, Apr: data.apr, May: data.may, Jun: data.jun||[] }
-      for (const m of months) {
-        const [start, end] = monthRanges[m]
-        if (from && end < from) continue
-        const vars = parseRawVars(sheetMap[m], filterFn)
+      for (const sheet of allSheets) {
+        // Stejná optimalizace jako dřív (přeskočit sheety mimo rozsah) — jen rozsah teď
+        // čteme z posledního skutečného data v sheetu, ne z natvrdo napsaných kalendářních dat.
+        if (from) {
+          let sheetEnd = null
+          for (let i = sheet.length - 1; i >= 0; i--) {
+            const r = sheet[i]
+            if (r && r[3]) { const d = toDateStr(r[3]); if (d) { sheetEnd = d; break } }
+          }
+          if (sheetEnd && sheetEnd < from) continue
+        }
+        const vars = parseRawVars(sheet, filterFn)
         for (const [name, v] of Object.entries(vars)) {
           if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, E:0, VSLB:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
           for (const k of ['A','MS','B','C','D','fuTotal','fuCount','daysTotal','daysCount']) aggMap[name][k] += v[k]

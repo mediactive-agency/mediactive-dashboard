@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct, dateStr, ago, todayStr } from '../utils/data'
+import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct, dateStr, ago, todayStr, outreachSheets } from '../utils/data'
 
 export function parseOutreachMonth(rows) {
   let summary = null
@@ -104,13 +104,13 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   const [trendValueMode, setTrendValueMode] = useState('pct') // 'pct' | 'count'
   const stats = useMemo(() => {
     if (!data) return null
-    const M = {
-      Mar: parseOutreachMonth(data.mar),
-      Apr: parseOutreachMonth(data.apr),
-      May: parseOutreachMonth(data.may),
-      Jun: parseOutreachMonth(data.jun || []),
-    }
-    const allRaw = [...M.Mar.rawRows, ...M.Apr.rawRows, ...M.May.rawRows, ...M.Jun.rawRows]
+    // Dynamicky zpracuje VŠECHNY natažené outreach taby (cokoliv kromě sales/calendly) —
+    // žádný pevný seznam měsíců, kolik tabů přijde ze sheetu, tolik se zpracuje.
+    const tabKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
+    const M = {}
+    tabKeys.forEach(k => { M[k] = parseOutreachMonth(data[k]) })
+
+    const allRaw = tabKeys.flatMap(k => M[k].rawRows)
     const filtered = filter === 'all' ? allRaw : allRaw.filter(r => inRange(r.date, filter, customFrom, customTo))
     const A = filtered.length
     const MS = filtered.filter(r => r.hasMS).length
@@ -120,13 +120,19 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     const E = filtered.filter(r => r.hasE).length
     const VSLB = filtered.filter(r => r.hasVSLB).length
 
-    const ALL_MONTHS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb']
-    const currentMonthIdx = new Date().getMonth()
-    const MONTH_TO_KEY = { Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11, Jan:0, Feb:1 }
-    const lastThree = ALL_MONTHS.filter(m => MONTH_TO_KEY[m] <= currentMonthIdx && M[m]).slice(-3)
-    const monthlyPerf = lastThree.map(m => {
-      const s = M[m] && M[m].summary; if (!s) return null
-      return { month: m, ...s, msr: pct(s.MS, s.A), prr: pct(s.B, s.A), abr: pct(s.C, s.A) }
+    // Pořadí a label pro "poslední 3 měsíce" odvozené z reálných dat v tabu, ne z názvu tabu
+    const monthEntries = tabKeys
+      .map(k => {
+        const dates = M[k].rawRows.map(r => r.date).filter(Boolean).sort()
+        if (dates.length === 0) return null
+        return { key: k, label: k.charAt(0).toUpperCase() + k.slice(1, 3), firstDate: dates[0], summary: M[k].summary }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.firstDate.localeCompare(b.firstDate))
+    const lastThree = monthEntries.slice(-3)
+    const monthlyPerf = lastThree.map(({ label, summary: s }) => {
+      if (!s) return null
+      return { month: label, ...s, msr: pct(s.MS, s.A), prr: pct(s.B, s.A), abr: pct(s.C, s.A) }
     }).filter(Boolean)
 
     // ---- Date-range-aware trend buckets (daily if range < 30 days, otherwise weekly) ----
@@ -269,7 +275,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   if (now.getHours() < 3) tod.setDate(tod.getDate() - 1)
   const todStr = tod.getFullYear() + '-' + String(tod.getMonth()+1).padStart(2,'0') + '-' + String(tod.getDate()).padStart(2,'0')
   let outToday = 0
-  for (const sheet of [data.mar, data.apr, data.may, data.jun || []]) {
+  for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
     if (ds < 0) continue

@@ -3,6 +3,7 @@ import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
 import { parseOutreachMonth } from './Dashboard'
+import { outreachSheets } from '../utils/data'
 import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
 
@@ -127,7 +128,7 @@ function AddClientWizard({ onClose, onAdded }) {
 function calcStats(data, filter, customFrom, customTo) {
   if (!data) return null
   const allRows = []
-  for (const sheet of [data.mar||[], data.apr||[], data.may||[], data.jun||[]]) {
+  for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) {
       if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }

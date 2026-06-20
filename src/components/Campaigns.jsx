@@ -581,7 +581,6 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
 
 export default function Campaigns({ data, user, config, isMobile }) {
   const [hovered, setHovered] = useState(null)
-  const [expandedStat, setExpandedStat] = useState(null)
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
   const initialized = useRef(false)
@@ -739,38 +738,15 @@ export default function Campaigns({ data, user, config, isMobile }) {
         {[
           { label: 'Campaigns Tracked', value: campaigns.length, color: '#60A5FA' },
           { label: 'Active Span', value: `${totalSpan}d`, color: '#FBBF24' },
-          { label: 'Initiation Message Types', value: initiationEntries.length, color: '#60A5FA', key: 'initiation' },
-          { label: 'Positive Reply Types', value: replyEntries.length, color: '#FB923C', key: 'reply' },
+          { label: 'Initiation Message Types', value: initiationEntries.length, color: '#60A5FA' },
+          { label: 'Positive Reply Types', value: replyEntries.length, color: '#FB923C' },
         ].map(card => (
-          <div
-            key={card.label}
-            onClick={card.key ? () => setExpandedStat(s => s === card.key ? null : card.key) : undefined}
-            style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: card.key ? 'pointer' : 'default' }}
-          >
-            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}{card.key && <span style={{ marginLeft: 5 }}>{expandedStat === card.key ? '▲' : '▼'}</span>}</div>
+          <div key={card.label} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
+            <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}</div>
             <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 800, color: card.color }}>{card.value}</div>
           </div>
         ))}
       </div>
-
-      {expandedStat && (
-        <div style={{ background: 'var(--card)', borderRadius: 14, padding: '14px 18px', boxShadow: 'var(--card-shadow)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {expandedStat === 'initiation' ? 'Counted Initiation Messages' : 'Counted Positive-Reply Messages'} — live from your data, nothing hardcoded
-          </div>
-          {(expandedStat === 'initiation' ? initiationEntries : replyEntries).length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--text3)' }}>Nothing counted yet.</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {(expandedStat === 'initiation' ? initiationEntries : replyEntries).map((e, i) => (
-                <div key={i} style={{ fontSize: 12, color: 'var(--text)', borderLeft: '2px solid var(--border2)', paddingLeft: 10 }}>
-                  <span style={{ color: 'var(--text3)', fontWeight: 700 }}>{e.campaign}:</span> {e.text}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: isMobile ? '20px 14px' : '24px 26px', boxShadow: 'var(--card-shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22, flexWrap: 'wrap', gap: 10 }}>

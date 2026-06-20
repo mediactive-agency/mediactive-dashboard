@@ -584,6 +584,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
 
 export default function Campaigns({ data, user, config, isMobile }) {
   const [hovered, setHovered] = useState(null)
+  const [expandedNames, setExpandedNames] = useState(new Set())
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
   const initialized = useRef(false)
@@ -711,8 +712,6 @@ export default function Campaigns({ data, user, config, isMobile }) {
   const campaignNames = campaigns.map(c => c.name)
   const initiationEntries = getInitiationEntries(messages, campaignNames)
   const replyEntries = getPositiveReplyEntries(messages, campaignNames)
-  const initiationTypeIndex = new Map(initiationEntries.map((e, i) => [e.text, i + 1]))
-  const replyTypeIndex = new Map(replyEntries.map((e, i) => [e.text, i + 1]))
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -842,28 +841,51 @@ export default function Campaigns({ data, user, config, isMobile }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
         {campaigns.map(s => {
+          const isOpen = expandedNames.has(s.name)
           const initText = getCampaignInitiationText(messages, s.name)
           const replyText = getCampaignReplyText(messages, s.name)
-          const initType = initText ? initiationTypeIndex.get(initText) : null
-          const replyType = replyText ? replyTypeIndex.get(replyText) : null
           return (
-            <div key={s.name} onClick={() => setSelected(s.name)} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>Initiation</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: initType ? '#60A5FA' : 'var(--text4)' }}>{initType ? `Type ${initType}` : '—'}</span>
+            <div key={s.name} style={{ background: 'var(--card)', borderRadius: 14, padding: '14px 18px', boxShadow: 'var(--card-shadow)' }}>
+              <div
+                onClick={() => setSelected(s.name)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>Positive Reply</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: replyType ? '#FB923C' : 'var(--text4)' }}>{replyType ? `Type ${replyType}` : '—'}</span>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setExpandedNames(prev => {
+                      const next = new Set(prev)
+                      next.has(s.name) ? next.delete(s.name) : next.add(s.name)
+                      return next
+                    })
+                  }}
+                  title={isOpen ? 'Collapse' : 'Expand'}
+                  style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
               </div>
+
+              {isOpen && (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: '#60A5FA', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Initiation</div>
+                    <div style={{ fontSize: 12, color: initText ? 'var(--text2)' : 'var(--text4)', lineHeight: 1.5 }}>{initText || 'Not set'}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: '#FB923C', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Positive Reply</div>
+                    <div style={{ fontSize: 12, color: replyText ? 'var(--text2)' : 'var(--text4)', lineHeight: 1.5 }}>{replyText || 'Not set'}</div>
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}

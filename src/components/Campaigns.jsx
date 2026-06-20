@@ -141,6 +141,34 @@ function getPositiveReplyEntries(messages, campaignNames) {
   return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }
 
+// Skupiny "zpráva -> ve kterých kampaních se používá" + agregované stats (sečtené ze všech
+// kampaní, co tu zprávu používají, a procenta dopočítaná ze sečtených čísel).
+function groupMessagesByText(messages, campaigns, getTextFn) {
+  const map = new Map() // text -> [campaign objects]
+  campaigns.forEach(c => {
+    const t = getTextFn(messages, c.name)
+    if (!t) return
+    if (!map.has(t)) map.set(t, [])
+    map.get(t).push(c)
+  })
+  return Array.from(map, ([text, usedIn]) => {
+    const total = usedIn.reduce((s, c) => s + c.total, 0)
+    const msr = usedIn.reduce((s, c) => s + c.msr, 0)
+    const prr = usedIn.reduce((s, c) => s + c.prr, 0)
+    const abr = usedIn.reduce((s, c) => s + c.abr, 0)
+    return {
+      text,
+      usedIn,
+      stats: {
+        total,
+        msrPct: total > 0 ? +((msr / total) * 100).toFixed(1) : 0,
+        prrPct: total > 0 ? +((prr / total) * 100).toFixed(1) : 0,
+        abrPct: total > 0 ? +((abr / total) * 100).toFixed(1) : 0,
+      },
+    }
+  }).sort((a, b) => b.stats.total - a.stats.total)
+}
+
 const ICON = {
   edit: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   trash: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
@@ -584,7 +612,6 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
 
 export default function Campaigns({ data, user, config, isMobile }) {
   const [hovered, setHovered] = useState(null)
-  const [expandedNames, setExpandedNames] = useState(new Set())
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
   const initialized = useRef(false)
@@ -712,6 +739,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
   const campaignNames = campaigns.map(c => c.name)
   const initiationEntries = getInitiationEntries(messages, campaignNames)
   const replyEntries = getPositiveReplyEntries(messages, campaignNames)
+  const initiationGroups = groupMessagesByText(messages, campaigns, getCampaignInitiationText)
+  const replyGroups = groupMessagesByText(messages, campaigns, getCampaignReplyText)
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -841,55 +870,58 @@ export default function Campaigns({ data, user, config, isMobile }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-        {campaigns.map(s => {
-          const isOpen = expandedNames.has(s.name)
-          const initText = getCampaignInitiationText(messages, s.name)
-          const replyText = getCampaignReplyText(messages, s.name)
-          return (
-            <div key={s.name} style={{ background: 'var(--card)', borderRadius: 14, padding: '14px 18px', boxShadow: 'var(--card-shadow)' }}>
-              <div
-                onClick={() => setSelected(s.name)}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                  <div style={{ width: 9, height: 9, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setExpandedNames(prev => {
-                      const next = new Set(prev)
-                      next.has(s.name) ? next.delete(s.name) : next.add(s.name)
-                      return next
-                    })
-                  }}
-                  title={isOpen ? 'Collapse' : 'Expand'}
-                  style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-              </div>
-
-              {isOpen && (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#60A5FA', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Initiation</div>
-                    <div style={{ fontSize: 12, color: initText ? 'var(--text2)' : 'var(--text4)', lineHeight: 1.5 }}>{initText || 'Not set'}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#FB923C', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Positive Reply</div>
-                    <div style={{ fontSize: 12, color: replyText ? 'var(--text2)' : 'var(--text4)', lineHeight: 1.5 }}>{replyText || 'Not set'}</div>
-                  </div>
-                </div>
-              )}
+      {[
+        { title: 'Initiation Messages', groups: initiationGroups, accent: '#60A5FA' },
+        { title: 'Positive Reply Messages', groups: replyGroups, accent: '#FB923C' },
+      ].map(section => (
+        <div key={section.title} style={{ marginTop: 24 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>{section.title}</div>
+          {section.groups.length === 0 ? (
+            <div style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)', fontSize: 12, color: 'var(--text3)' }}>
+              Nothing set yet.
             </div>
-          )
-        })}
-      </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {section.groups.map((g, i) => (
+                <div key={i} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginBottom: 12 }}>{g.text}</div>
+
+                  <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 6 }}>Used in</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                    {g.usedIn.map(c => (
+                      <span
+                        key={c.name}
+                        onClick={() => setSelected(c.name)}
+                        style={{
+                          fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'var(--border)',
+                          borderRadius: 20, padding: '4px 10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+                        }}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.color }} />
+                        {c.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 22, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                    {[
+                      { lbl: 'Sent', val: g.stats.total, color: section.accent },
+                      { lbl: 'MSR', val: `${g.stats.msrPct}%`, color: '#F472B6' },
+                      { lbl: 'PRR', val: `${g.stats.prrPct}%`, color: '#FB923C' },
+                      { lbl: 'ABR', val: `${g.stats.abrPct}%`, color: '#34D399' },
+                    ].map(stat => (
+                      <div key={stat.lbl}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: stat.color }}>{stat.val}</div>
+                        <div style={{ fontSize: 9, color: 'var(--text3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{stat.lbl}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
 
       {selectedCampaign && (
         <CampaignPanel

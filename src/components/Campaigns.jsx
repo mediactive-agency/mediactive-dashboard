@@ -91,11 +91,16 @@ function previewReorder(pipeline, dragId, over) {
   return arr
 }
 
+function isLegacyStep(step) {
+  return typeof step.id === 'string' && step.id.startsWith('legacy-')
+}
+
 // Počítá počet UNIKÁTNÍCH znění zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
 function countDistinctTypes(messages, campaignNames, typeFilter) {
   const set = new Set()
   campaignNames.forEach(name => {
     getPipeline(messages, name).forEach(step => {
+      if (isLegacyStep(step)) return
       if (!typeFilter.includes(step.type)) return
       const t = (step.text || '').trim()
       if (t) set.add(t)
@@ -106,10 +111,11 @@ function countDistinctTypes(messages, campaignNames, typeFilter) {
 
 // "Positive Reply Types" se počítá jen z kroků, které přijdou AŽ PO prvním "Prospect positive reply" v pipeline —
 // zprávy před první pozitivní odpovědí jsou pořád jen iniciační fáze, ne reakce na pozitivní odpověď.
+// Stará migrovaná data (legacy- id) se vylučují, ať nezkreslují nové počítání.
 function countPositiveReplyTypes(messages, campaignNames) {
   const set = new Set()
   campaignNames.forEach(name => {
-    const pipeline = getPipeline(messages, name)
+    const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
     const replyIdx = pipeline.findIndex(s => s.type === 'reply')
     if (replyIdx < 0) return
     pipeline.slice(replyIdx + 1).forEach(step => {

@@ -8,6 +8,18 @@ const PALETTE = ['#60A5FA', '#F472B6', '#FB923C', '#34D399', '#A78BFA', '#FBBF24
 // Mezera mezi dvěma použitími delší než tolik dní přetrhne pruh na samostatné segmenty
 const GAP_DAYS = 7
 
+// Definice typů kroků v pipeline:
+// initiation — první zpráva, kterou nasazuju (vždy první krok, vlastní text)
+// message    — další moje zpráva poslaná HNED po předchozí (bez čáry mezi nimi)
+// followup   — moje zpráva poslaná až po čase (čára mezi nimi)
+// reply      — událost "prospect odpověděl pozitivně" (jen značka, žádný text)
+const STEP_TYPES = {
+  initiation: { label: 'Initiation Message', color: '#60A5FA', hasText: true, lineBefore: false },
+  message:    { label: 'Message',            color: 'var(--text)', hasText: true, lineBefore: false },
+  followup:   { label: 'Follow-up Message',  color: 'var(--text)', hasText: true, lineBefore: true },
+  reply:      { label: 'Prospect Positive Reply', color: '#FB923C', hasText: false, lineBefore: true },
+}
+
 function fmtDate(ds) {
   if (!ds) return ''
   const [y, m, d] = ds.split('-')
@@ -17,6 +29,10 @@ function fmtDate(ds) {
 
 function daysBetween(a, b) {
   return Math.round((new Date(b) - new Date(a)) / 86400000)
+}
+
+function makeId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
 // Vezme unikátní seřazená data nasazení a rozdělí je na souvislé úseky —
@@ -40,61 +56,149 @@ function buildSegments(sortedUniqueDates) {
   return segments
 }
 
-// Počítá počet UNIKÁTNÍCH zně­ní zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
-function countDistinctTypes(messages, field, campaignNames) {
+// Vrátí pipeline kroků pro danou kampaň. Pokud ještě neexistuje nový formát,
+// zkusí ho postavit ze starého (initiation/reply text fields) — ať se stará testovací data neztratí.
+function getPipeline(messages, name) {
+  const m = messages[name]
+  if (m?.pipeline) return m.pipeline
+  const legacy = []
+  if (m?.initiation) legacy.push({ id: 'legacy-init', type: 'initiation', text: m.initiation })
+  if (m?.reply) {
+    legacy.push({ id: 'legacy-reply-event', type: 'reply', text: '' })
+    legacy.push({ id: 'legacy-reply-text', type: 'message', text: m.reply })
+  }
+  return legacy
+}
+
+// Počítá počet UNIKÁTNÍCH znění zprávy mezi kampaněmi (stejný text ve více kampaních = jeden typ)
+function countDistinctTypes(messages, campaignNames, typeFilter) {
   const set = new Set()
   campaignNames.forEach(name => {
-    const v = (messages[name]?.[field] || '').trim()
-    if (v) set.add(v)
+    getPipeline(messages, name).forEach(step => {
+      if (!typeFilter.includes(step.type)) return
+      const t = (step.text || '').trim()
+      if (t) set.add(t)
+    })
   })
   return set.size
 }
 
-function FlowBox({ title, titleColor, sub, value, onChange, onSave, saved }) {
+function AddStepMenu({ onPick, onCancel }) {
+  const options = [
+    { type: 'reply', label: 'Prospect positive reply' },
+    { type: 'message', label: 'Another message (mine)' },
+    { type: 'followup', label: 'My follow-up' },
+  ]
   return (
-    <div style={{ marginBottom: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-        <div style={{ fontSize: 17, fontWeight: 800, color: titleColor || 'var(--text)' }}>{title}</div>
-        {saved && <div style={{ fontSize: 12, color: '#34D399', fontWeight: 600 }}>Saved</div>}
-      </div>
-      <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 12 }}>{sub}</div>
-      <textarea
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onBlur={onSave}
-        placeholder="Paste the message text here..."
-        rows={3}
+    <div style={{
+      position: 'absolute', top: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)',
+      background: 'var(--card)', border: '1px solid var(--border2)', borderRadius: 10,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.35)', padding: 6, zIndex: 10, minWidth: 200,
+    }}>
+      {options.map(o => (
+        <button
+          key={o.type}
+          onClick={() => onPick(o.type)}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none',
+            color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '8px 10px', borderRadius: 7,
+            cursor: 'pointer',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--sidebar-active)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function PlusButton({ onClick, open, children }) {
+  return (
+    <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', padding: '10px 0' }}>
+      <button
+        onClick={onClick}
         style={{
-          width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
-          background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
-          borderRadius: 8, padding: '8px 10px', outline: 'none',
+          width: 30, height: 30, borderRadius: '50%', border: '1px dashed var(--border2)',
+          background: 'var(--card)', color: 'var(--text3)', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700,
         }}
-      />
+      >+</button>
+      {children}
     </div>
   )
 }
 
-function Connector({ label, sub, color }) {
+function PipelineStep({ step, onChangeText, onSaveText, onDelete, saved }) {
+  const def = STEP_TYPES[step.type]
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0 14px 4px' }}>
-      <div style={{ width: 2, height: 44, background: 'var(--border2)', flexShrink: 0 }} />
-      <div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: color || 'var(--text2)' }}>{label}</div>
-        {sub && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{sub}</div>}
+    <div style={{ position: 'relative' }}>
+      {def.lineBefore && <div style={{ width: 2, height: 30, background: 'var(--border2)', margin: '0 auto' }} />}
+      <div
+        style={{ position: 'relative' }}
+        onMouseEnter={e => { const x = e.currentTarget.querySelector('.del-btn'); if (x) x.style.opacity = 1 }}
+        onMouseLeave={e => { const x = e.currentTarget.querySelector('.del-btn'); if (x) x.style.opacity = 0 }}
+      >
+        <button
+          className="del-btn"
+          onClick={() => onDelete(step.id)}
+          style={{
+            position: 'absolute', top: 0, right: 0, opacity: 0, transition: 'opacity 0.15s',
+            background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4,
+          }}
+          title="Remove step"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        {def.hasText ? (
+          <div style={{ paddingTop: def.lineBefore ? 8 : 0 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: def.color }}>{def.label}</div>
+              {saved && <div style={{ fontSize: 12, color: '#34D399', fontWeight: 600 }}>Saved</div>}
+            </div>
+            <textarea
+              value={step.text || ''}
+              onChange={e => onChangeText(step.id, e.target.value)}
+              onBlur={onSaveText}
+              placeholder="Paste the message text here..."
+              rows={3}
+              style={{
+                width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 13,
+                background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '8px 10px', outline: 'none',
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+            borderRadius: 20, background: `${def.color}1A`, border: `1px solid ${def.color}55`,
+          }}>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: def.color }} />
+            <div style={{ fontSize: 14, fontWeight: 700, color: def.color }}>{def.label}</div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-
-function CampaignPanel({ campaign, messages, onChangeField, onSaveField, onClose, isMobile }) {
-  const m = messages[campaign.name] || {}
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText, onDeleteStep, onClose, isMobile }) {
+  const pipeline = getPipeline(messages, campaign.name)
   const [savedFlash, setSavedFlash] = useState(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  function handleSave(field) {
-    onSaveField(campaign.name, field)
-    setSavedFlash(field)
+  function handleSave(stepId) {
+    onSaveText(campaign.name)
+    setSavedFlash(stepId)
     setTimeout(() => setSavedFlash(null), 1500)
+  }
+
+  function handlePick(type) {
+    onAddStep(campaign.name, type)
+    setMenuOpen(false)
   }
 
   return (
@@ -116,24 +220,33 @@ function CampaignPanel({ campaign, messages, onChangeField, onSaveField, onClose
         </div>
         <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{campaign.total} initiated · {fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
 
-        <FlowBox
-          title="Initiation Message"
-          titleColor="#60A5FA"
-          sub="What you send to start the conversation"
-          value={m.initiation || ''}
-          onChange={v => onChangeField(campaign.name, 'initiation', v)}
-          onSave={() => handleSave('initiation')}
-          saved={savedFlash === 'initiation'}
-        />
-        <Connector label="Prospect replies positively" sub={`${campaign.prr} replies · ${campaign.prrPct}%`} color="#FB923C" />
-        <FlowBox
-          title="Your Reply"
-          sub="What you send back after a positive reply"
-          value={m.reply || ''}
-          onChange={v => onChangeField(campaign.name, 'reply', v)}
-          onSave={() => handleSave('reply')}
-          saved={savedFlash === 'reply'}
-        />
+        {pipeline.length === 0 ? (
+          <button
+            onClick={() => onAddStep(campaign.name, 'initiation')}
+            style={{
+              width: '100%', padding: '14px', borderRadius: 10, border: '1px dashed var(--border2)',
+              background: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+            }}
+          >
+            + Add Initiation Message
+          </button>
+        ) : (
+          <>
+            {pipeline.map(step => (
+              <PipelineStep
+                key={step.id}
+                step={step}
+                onChangeText={(id, v) => onChangeText(campaign.name, id, v)}
+                onSaveText={() => handleSave(step.id)}
+                onDelete={(id) => onDeleteStep(campaign.name, id)}
+                saved={savedFlash === step.id}
+              />
+            ))}
+            <PlusButton onClick={() => setMenuOpen(o => !o)} open={menuOpen}>
+              {menuOpen && <AddStepMenu onPick={handlePick} onCancel={() => setMenuOpen(false)} />}
+            </PlusButton>
+          </>
+        )}
 
         <div style={{ display: 'flex', gap: 16, marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
           {[
@@ -165,15 +278,37 @@ export default function Campaigns({ data, user, config, isMobile }) {
     }
   }, [config?.campaignMessages])
 
-  function handleChangeField(name, field, value) {
-    setMessages(prev => ({ ...prev, [name]: { ...(prev[name] || {}), [field]: value } }))
+  function persist(updated) {
+    if (!user) return
+    saveUserConfig(user.uid, { campaignMessages: updated }).catch(() => {})
   }
 
-  function handleSaveField(name, field) {
-    if (!user) return
+  function handleAddStep(name, type) {
     setMessages(prev => {
-      saveUserConfig(user.uid, { campaignMessages: prev }).catch(() => {})
-      return prev
+      const pipeline = [...getPipeline(prev, name), { id: makeId(), type, text: '' }]
+      const updated = { ...prev, [name]: { pipeline } }
+      persist(updated)
+      return updated
+    })
+  }
+
+  function handleChangeText(name, stepId, text) {
+    setMessages(prev => {
+      const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, text } : s)
+      return { ...prev, [name]: { pipeline } }
+    })
+  }
+
+  function handleSaveText(name) {
+    setMessages(prev => { persist(prev); return prev })
+  }
+
+  function handleDeleteStep(name, stepId) {
+    setMessages(prev => {
+      const pipeline = getPipeline(prev, name).filter(s => s.id !== stepId)
+      const updated = { ...prev, [name]: { pipeline } }
+      persist(updated)
+      return updated
     })
   }
 
@@ -224,8 +359,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
   }
 
   const campaignNames = campaigns.map(c => c.name)
-  const initiationTypes = countDistinctTypes(messages, 'initiation', campaignNames)
-  const replyTypes = countDistinctTypes(messages, 'reply', campaignNames)
+  const initiationTypes = countDistinctTypes(messages, campaignNames, ['initiation'])
+  const replyTypes = countDistinctTypes(messages, campaignNames, ['message', 'followup'])
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -382,8 +517,10 @@ export default function Campaigns({ data, user, config, isMobile }) {
         <CampaignPanel
           campaign={selectedCampaign}
           messages={messages}
-          onChangeField={handleChangeField}
-          onSaveField={handleSaveField}
+          onAddStep={handleAddStep}
+          onChangeText={handleChangeText}
+          onSaveText={handleSaveText}
+          onDeleteStep={handleDeleteStep}
           onClose={() => setSelected(null)}
           isMobile={isMobile}
         />

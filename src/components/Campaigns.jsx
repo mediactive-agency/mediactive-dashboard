@@ -50,14 +50,14 @@ function countDistinctTypes(messages, field, campaignNames) {
   return set.size
 }
 
-function FlowBox({ title, sub, value, onChange, onSave, saved }) {
+function FlowBox({ title, titleColor, sub, value, onChange, onSave, saved }) {
   return (
-    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
-        {saved && <div style={{ fontSize: 10, color: '#34D399', fontWeight: 600 }}>Saved</div>}
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: titleColor || 'var(--text)' }}>{title}</div>
+        {saved && <div style={{ fontSize: 12, color: '#34D399', fontWeight: 600 }}>Saved</div>}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 10 }}>{sub}</div>
+      <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 12 }}>{sub}</div>
       <textarea
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -74,17 +74,18 @@ function FlowBox({ title, sub, value, onChange, onSave, saved }) {
   )
 }
 
-function Connector({ label }) {
+function Connector({ label, sub, color }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 8px 16px' }}>
-      <div style={{ width: 1, height: 24, background: 'var(--border2)', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: -3, left: -3, width: 7, height: 7, borderRadius: '50%', background: 'var(--border2)' }} />
-        <div style={{ position: 'absolute', bottom: -3, left: -3, width: 7, height: 7, borderRadius: '50%', background: 'var(--border2)' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0 14px 4px' }}>
+      <div style={{ width: 2, height: 44, background: 'var(--border2)', flexShrink: 0 }} />
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: color || 'var(--text2)' }}>{label}</div>
+        {sub && <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{sub}</div>}
       </div>
-      <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>{label}</div>
     </div>
   )
 }
+
 
 function CampaignPanel({ campaign, messages, onChangeField, onSaveField, onClose, isMobile }) {
   const m = messages[campaign.name] || {}
@@ -113,17 +114,18 @@ function CampaignPanel({ campaign, messages, onChangeField, onSaveField, onClose
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 22 }}>{campaign.total} initiated · {fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{campaign.total} initiated · {fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
 
         <FlowBox
           title="Initiation Message"
+          titleColor="#60A5FA"
           sub="What you send to start the conversation"
           value={m.initiation || ''}
           onChange={v => onChangeField(campaign.name, 'initiation', v)}
           onSave={() => handleSave('initiation')}
           saved={savedFlash === 'initiation'}
         />
-        <Connector label={`${campaign.prr} positive replies · ${campaign.prrPct}%`} />
+        <Connector label="Prospect replies positively" sub={`${campaign.prr} replies · ${campaign.prrPct}%`} color="#FB923C" />
         <FlowBox
           title="Your Reply"
           sub="What you send back after a positive reply"
@@ -254,8 +256,8 @@ export default function Campaigns({ data, user, config, isMobile }) {
         {[
           { label: 'Campaigns Tracked', value: campaigns.length, color: '#60A5FA' },
           { label: 'Active Span', value: `${totalSpan}d`, color: '#FBBF24' },
-          { label: 'Initiation Message Types', value: initiationTypes, color: '#F472B6' },
-          { label: 'Positive Reply Types', value: replyTypes, color: '#34D399' },
+          { label: 'Initiation Message Types', value: initiationTypes, color: '#60A5FA' },
+          { label: 'Positive Reply Types', value: replyTypes, color: '#FB923C' },
         ].map(card => (
           <div key={card.label} style={{ background: 'var(--card)', borderRadius: 14, padding: '16px 18px', boxShadow: 'var(--card-shadow)' }}>
             <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{card.label}</div>

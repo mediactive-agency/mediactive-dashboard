@@ -137,7 +137,7 @@ function AddStepMenu({ onPick }) {
   const options = [
     { type: 'reply', label: 'Prospect positive reply' },
     { type: 'message', label: 'Another message (mine)' },
-    { type: 'followup', label: 'My follow-up' },
+    { type: 'followup', label: 'Follow-up' },
   ]
   return (
     <div style={{
@@ -183,7 +183,7 @@ function PlusButton({ onClick, children }) {
   )
 }
 
-function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onDragStart, onDragOver, onDrop, onDragEnd }) {
+function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelay, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd }) {
   const def = STEP_TYPES[step.type]
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
@@ -223,7 +223,26 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
       onDrop={onDrop}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      {showLine && <div style={{ width: 2, height: 28, background: 'var(--border2)', margin: '0 auto' }} />}
+      {showLine && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '2px 0' }}>
+          <div style={{ width: 2, height: 28, background: 'var(--border2)' }} />
+          {step.type === 'followup' && (
+            <input
+              type="text"
+              value={step.delay || ''}
+              onChange={e => onChangeDelay(e.target.value)}
+              onBlur={onSaveDelay}
+              placeholder="e.g. 3 days"
+              title="Time after which you send this follow-up"
+              style={{
+                fontSize: 11, color: 'var(--text2)', background: 'none', fontWeight: 600,
+                border: '1px dashed var(--border2)', borderRadius: 6, padding: '3px 8px',
+                width: 90, outline: 'none', fontFamily: 'inherit',
+              }}
+            />
+          )}
+        </div>
+      )}
 
       {editing && def.hasText ? (
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginTop: isFirst ? 0 : 6 }}>
@@ -260,7 +279,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   )
 }
 
-function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelay, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
   const realPipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -354,6 +373,8 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onSaveText
                   isDragging={dragId === step.id}
                   onEdit={() => setEditingId(step.id)}
                   onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
+                  onChangeDelay={(v) => onChangeDelay(campaign.name, step.id, v)}
+                  onSaveDelay={() => onSaveText(campaign.name)}
                   onConfirm={handleConfirm}
                   onDelete={() => onDeleteStep(campaign.name, step.id)}
                   onDragStart={() => setDragId(step.id)}
@@ -428,6 +449,13 @@ export default function Campaigns({ data, user, config, isMobile }) {
   function handleChangeText(name, stepId, text) {
     setMessages(prev => {
       const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, text } : s)
+      return { ...prev, [name]: { pipeline } }
+    })
+  }
+
+  function handleChangeDelay(name, stepId, delay) {
+    setMessages(prev => {
+      const pipeline = getPipeline(prev, name).map(s => s.id === stepId ? { ...s, delay } : s)
       return { ...prev, [name]: { pipeline } }
     })
   }
@@ -661,6 +689,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
           messages={messages}
           onAddStep={handleAddStep}
           onChangeText={handleChangeText}
+          onChangeDelay={handleChangeDelay}
           onSaveText={handleSaveText}
           onDeleteStep={handleDeleteStep}
           onReorderStep={handleReorderStep}

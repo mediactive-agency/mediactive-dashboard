@@ -113,17 +113,27 @@ function getInitiationEntries(messages, campaignNames) {
 // "Positive Reply Types" se počítá jen z kroků, které přijdou AŽ PO prvním "Prospect positive reply" v pipeline —
 // zprávy před první pozitivní odpovědí jsou pořád jen iniciační fáze, ne reakce na pozitivní odpověď.
 // Stará migrovaná data (legacy- id) se vylučují, ať nezkreslují nové počítání.
+// Pravidlo (dohodnuté s Kryštofem): od prvního "Prospect positive reply" se vezmou JEN po sobě
+// jdoucí kroky typu "message" (bez čárky, posílané hned za sebou) a spojí se do JEDNOHO typu —
+// i když je to v praxi rozsekané do 2-3 bublin, je to obsahově jedna odpověď na pozitivní reakci.
+// Jakmile se narazí na "followup" (= je tam čárka, časový odstup) nebo cokoliv jiného, zbytek
+// pipeline se ignoruje úplně — follow-up nudge zprávy (GIFka, připomínky) do téhle statistiky nepatří.
 function getPositiveReplyEntries(messages, campaignNames) {
   const seen = new Map()
   campaignNames.forEach(name => {
     const pipeline = getPipeline(messages, name).filter(s => !isLegacyStep(s))
     const replyIdx = pipeline.findIndex(s => s.type === 'reply')
     if (replyIdx < 0) return
-    pipeline.slice(replyIdx + 1).forEach(step => {
-      if (step.type !== 'message' && step.type !== 'followup') return
+    const parts = []
+    for (let i = replyIdx + 1; i < pipeline.length; i++) {
+      const step = pipeline[i]
+      if (step.type !== 'message') break
       const t = (step.text || '').trim()
-      if (t && !seen.has(t)) seen.set(t, name)
-    })
+      if (t) parts.push(t)
+    }
+    if (parts.length === 0) return
+    const combined = parts.join(' ')
+    if (!seen.has(combined)) seen.set(combined, name)
   })
   return Array.from(seen, ([text, campaign]) => ({ text, campaign }))
 }

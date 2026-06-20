@@ -104,6 +104,23 @@ function countDistinctTypes(messages, campaignNames, typeFilter) {
   return set.size
 }
 
+// "Positive Reply Types" se počítá jen z kroků, které přijdou AŽ PO prvním "Prospect positive reply" v pipeline —
+// zprávy před první pozitivní odpovědí jsou pořád jen iniciační fáze, ne reakce na pozitivní odpověď.
+function countPositiveReplyTypes(messages, campaignNames) {
+  const set = new Set()
+  campaignNames.forEach(name => {
+    const pipeline = getPipeline(messages, name)
+    const replyIdx = pipeline.findIndex(s => s.type === 'reply')
+    if (replyIdx < 0) return
+    pipeline.slice(replyIdx + 1).forEach(step => {
+      if (step.type !== 'message' && step.type !== 'followup') return
+      const t = (step.text || '').trim()
+      if (t) set.add(t)
+    })
+  })
+  return set.size
+}
+
 const ICON = {
   edit: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>,
   trash: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>,
@@ -135,9 +152,9 @@ function IconBtn({ onClick, title, children, draggable, onDragStart, onDragEnd, 
 
 function AddStepMenu({ onPick }) {
   const options = [
-    { type: 'reply', label: 'Prospect positive reply' },
-    { type: 'message', label: 'Another message (mine)' },
     { type: 'followup', label: 'Follow-up' },
+    { type: 'message', label: 'Another message (mine)' },
+    { type: 'reply', label: 'Prospect positive reply' },
   ]
   return (
     <div style={{
@@ -331,7 +348,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   )
 }
 
-function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelayValue, onChangeDelayUnit, onSaveText, onDeleteStep, onReorderStep, onClose, isMobile }) {
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelayValue, onChangeDelayUnit, onSaveText, onDeleteStep, onReorderStep, onSetPipeline, onClose, isMobile }) {
   const realPipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -380,6 +397,43 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
     }
   }
 
+  const [copyFlash, setCopyFlash] = useState(false)
+  const [saveFlash, setSaveFlash] = useState(false)
+  const [pasteError, setPasteError] = useState(false)
+
+  async function handleCopy() {
+    const exportable = realPipeline.map(({ id, ...rest }) => rest)
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(exportable))
+      setCopyFlash(true)
+      setTimeout(() => setCopyFlash(false), 1500)
+    } catch {
+      setPasteError(true)
+      setTimeout(() => setPasteError(false), 2000)
+    }
+  }
+
+  function handleSaveAll() {
+    onSaveText(campaign.name)
+    setSaveFlash(true)
+    setTimeout(() => setSaveFlash(false), 1500)
+  }
+
+  async function handlePaste() {
+    try {
+      const text = await navigator.clipboard.readText()
+      const parsed = JSON.parse(text)
+      if (!Array.isArray(parsed)) throw new Error('not an array')
+      const valid = parsed.every(s => s && STEP_TYPES[s.type])
+      if (!valid) throw new Error('invalid steps')
+      const withIds = parsed.map(s => ({ ...s, id: makeId() }))
+      onSetPipeline(campaign.name, withIds)
+    } catch {
+      setPasteError(true)
+      setTimeout(() => setPasteError(false), 2000)
+    }
+  }
+
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200 }} />
@@ -400,15 +454,27 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
         <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
 
         {pipeline.length === 0 ? (
-          <button
-            onClick={handleAddFirst}
-            style={{
-              width: '100%', padding: '14px', borderRadius: 10, border: '1px dashed var(--border2)',
-              background: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            }}
-          >
-            + Add Initiation Message
-          </button>
+          <div>
+            <button
+              onClick={handleAddFirst}
+              style={{
+                width: '100%', padding: '14px', borderRadius: 10, border: '1px dashed var(--border2)',
+                background: 'none', color: '#60A5FA', cursor: 'pointer', fontSize: 14, fontWeight: 700,
+              }}
+            >
+              + Add Initiation Message
+            </button>
+            <button
+              onClick={handlePaste}
+              style={{
+                width: '100%', marginTop: 10, padding: '10px', borderRadius: 10, border: 'none',
+                background: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                textDecoration: 'underline',
+              }}
+            >
+              {pasteError ? 'Could not paste — copy a pipeline first' : 'or paste a copied pipeline'}
+            </button>
+          </div>
         ) : (
           <>
             {pipeline.map((step, i) => {
@@ -441,6 +507,30 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
               {menuOpen && <AddStepMenu onPick={handlePick} />}
             </PlusButton>
           </>
+        )}
+
+        {pipeline.length > 0 && (
+          <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+            <button
+              onClick={handleCopy}
+              style={{
+                flex: 1, height: 40, borderRadius: 10, border: '1px solid var(--border2)',
+                background: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              {copyFlash ? 'Copied!' : 'Copy Pipeline'}
+            </button>
+            <button
+              onClick={handleSaveAll}
+              style={{
+                flex: 1, height: 40, borderRadius: 10, border: 'none',
+                background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              }}
+            >
+              {saveFlash ? 'Saved!' : 'Save'}
+            </button>
+          </div>
         )}
 
         <div style={{ display: 'flex', gap: 30, marginTop: 26, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
@@ -544,6 +634,14 @@ export default function Campaigns({ data, user, config, isMobile }) {
     })
   }
 
+  function handleSetPipeline(name, pipeline) {
+    setMessages(prev => {
+      const updated = { ...prev, [name]: { pipeline } }
+      persist(updated)
+      return updated
+    })
+  }
+
   const campaigns = useMemo(() => {
     if (!data) return []
     const monthKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
@@ -592,7 +690,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
 
   const campaignNames = campaigns.map(c => c.name)
   const initiationTypes = countDistinctTypes(messages, campaignNames, ['initiation'])
-  const replyTypes = countDistinctTypes(messages, campaignNames, ['message', 'followup'])
+  const replyTypes = countPositiveReplyTypes(messages, campaignNames)
 
   const globalFrom = campaigns.reduce((min, s) => !min || s.from < min ? s.from : min, null)
   const globalTo = campaigns.reduce((max, s) => !max || s.to > max ? s.to : max, null)
@@ -613,7 +711,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
     }
   }
 
-  const rowHeight = isMobile ? 62 : 60
+  const rowHeight = isMobile ? 50 : 48
   const labelWidth = isMobile ? 110 : 190
   const selectedCampaign = selected ? campaigns.find(c => c.name === selected) : null
 
@@ -697,7 +795,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
                           title={`${s.name}: ${fmtDate(seg.from)} – ${fmtDate(seg.to)}`}
                           style={{
                             position: 'absolute', left: `${left}%`, width: `${widthPct}%`, minWidth: 14,
-                            height: isHovered ? 32 : 28,
+                            height: isHovered ? 36 : 32,
                             borderRadius: 10,
                             background: s.color,
                             opacity: hovered && !isHovered ? 0.35 : 0.92,
@@ -756,6 +854,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
           onSaveText={handleSaveText}
           onDeleteStep={handleDeleteStep}
           onReorderStep={handleReorderStep}
+          onSetPipeline={handleSetPipeline}
           onClose={() => setSelected(null)}
           isMobile={isMobile}
         />

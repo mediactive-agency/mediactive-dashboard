@@ -241,33 +241,38 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
       {editing && def.hasText ? (
         <div style={{ marginTop: isFirst ? 0 : 6 }}>
           {step.type === 'followup' && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <input
-                type="number"
+                type="text"
                 value={step.delayValue ?? ''}
                 onChange={e => onChangeDelayValue(e.target.value)}
                 onBlur={onSaveDelay}
-                placeholder="Optional"
+                placeholder="Time"
                 title="Time after which you send this follow-up"
                 style={{
-                  width: 80, resize: 'none', fontFamily: 'inherit', fontSize: 13,
+                  width: 90, height: 40, boxSizing: 'border-box', fontFamily: 'inherit', fontSize: 14,
                   background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
-                  borderRadius: 8, padding: '6px 10px', outline: 'none',
+                  borderRadius: 8, padding: '0 12px', outline: 'none',
                 }}
               />
-              <select
-                value={step.delayUnit || 'days'}
-                onChange={e => { onChangeDelayUnit(e.target.value); onSaveDelay() }}
-                style={{
-                  fontFamily: 'inherit', fontSize: 13, cursor: 'pointer',
-                  background: 'var(--card)', color: 'var(--text)', border: '1px solid var(--border)',
-                  borderRadius: 8, padding: '6px 10px', outline: 'none',
-                }}
-              >
-                <option value="mins">Mins</option>
-                <option value="hrs">Hrs</option>
-                <option value="days">Days</option>
-              </select>
+              <div style={{ display: 'flex', alignItems: 'stretch', height: 40, background: 'var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
+                {[{ key: 'mins', label: 'Mins' }, { key: 'hrs', label: 'Hrs' }, { key: 'days', label: 'Days' }].map(opt => {
+                  const isSel = (step.delayUnit || 'days') === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => { onChangeDelayUnit(opt.key); onSaveDelay() }}
+                      style={{
+                        border: 'none', borderRadius: 8, padding: '0 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        background: isSel ? 'var(--card)' : 'transparent',
+                        color: isSel ? 'var(--text)' : 'var(--text3)',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>

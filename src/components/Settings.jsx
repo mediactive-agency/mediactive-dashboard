@@ -180,6 +180,9 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
     try {
       const link = await workspace.createInvite()
       setInviteLink(link)
+      await navigator.clipboard.writeText(link)
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 3000)
     } catch (e) { setInviteError(e.message || 'Could not create the invite link.') }
     setInviteBusy(false)
   }
@@ -187,7 +190,7 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
   function copyInvite() {
     navigator.clipboard.writeText(inviteLink)
     setInviteCopied(true)
-    setTimeout(() => setInviteCopied(false), 2000)
+    setTimeout(() => setInviteCopied(false), 3000)
   }
 
   async function handleRemoveMember(uid) {
@@ -204,19 +207,20 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
         </div>
         {isOwner && (
           <div style={{ marginBottom: 18 }}>
-            <button onClick={handleCreateInvite} disabled={inviteBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: inviteBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-              {inviteBusy ? 'Generating...' : '+ Create invite link'}
-            </button>
-            {inviteError && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 8, fontWeight: 600 }}>{inviteError}</div>}
-            {inviteLink && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+            {inviteLink ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input readOnly value={inviteLink} onFocus={e => e.target.select()}
                   style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
-                <button onClick={copyInvite} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                <button onClick={copyInvite} style={{ padding: '9px 14px', background: inviteCopied ? '#10B981' : 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: inviteCopied ? '#fff' : 'var(--text)', whiteSpace: 'nowrap', transition: 'background 0.15s, color 0.15s' }}>
                   {inviteCopied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
+            ) : (
+              <button onClick={handleCreateInvite} disabled={inviteBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: inviteBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                {inviteBusy ? 'Generating...' : '+ Create invite link'}
+              </button>
             )}
+            {inviteError && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 8, fontWeight: 600 }}>{inviteError}</div>}
             <div style={{ fontSize: 11.5, color: 'var(--text4)', marginTop: 8 }}>Link is valid for 7 days and works once.</div>
           </div>
         )}

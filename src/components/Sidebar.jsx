@@ -94,7 +94,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
           ))}
         </nav>
 
-        {/* Footer — always at bottom */}
+        {/* Footer, always at bottom */}
         <div style={{ padding: '14px 20px', paddingBottom: 'max(18px, env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0, overflowY: 'auto' }}>
           {isAdmin && (
             <>
@@ -128,7 +128,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         </div>
       </aside>
 
-      {/* Desktop sidebar — always visible */}
+      {/* Desktop sidebar, always visible */}
       <aside style={{
         width: 240, height: '100dvh',
         background: 'var(--bg2)',

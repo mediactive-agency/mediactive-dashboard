@@ -49,7 +49,7 @@ Pulls Fathom meeting summaries, extracts structured sales data, shows for review
 
 ---
 
-## Step 1 — Fetch the meeting
+## Step 1: Fetch the meeting
 
 | Input | Action |
 |-------|--------|
@@ -60,31 +60,31 @@ Pulls Fathom meeting summaries, extracts structured sales data, shows for review
 
 ---
 
-## Step 2 — Extract fields
+## Step 2: Extract fields
 
-**Prospect name** — Full name of the prospect
+**Prospect name**: Full name of the prospect
 
-**Call date** — DD MMM YYYY
+**Call date**: DD MMM YYYY
 
-**Current state** — \`Clients: X | Revenue: $X/month | [how they get clients]\`
+**Current state**: \`Clients: X | Revenue: $X/month | [how they get clients]\`
 
-**Goal** — \`X clients | $X/month | in X months\`
+**Goal**: \`X clients | $X/month | in X months\`
 
-**Objections** — One line per objection. Write \`None\` if none.
+**Objections**: One line per objection. Write \`None\` if none.
 
-**Closed?** — \`Yes\` / \`No\` / \`Follow-up\`
+**Closed?**: \`Yes\` / \`No\` / \`Follow-up\`
 
-**Notes** — One sentence max.
+**Notes**: One sentence max.
 
-**Duration** — Total minutes
+**Duration**: Total minutes
 
-**Service** — Service pitched (must be confirmed explicitly)
+**Service**: Service pitched (must be confirmed explicitly)
 
-**Lead quality** — Score 1–5 only (5=ready to buy, 1=bad fit)
+**Lead quality**: Score 1 to 5 only (5=ready to buy, 1=bad fit)
 
 ---
 
-## Step 3 — Show for review
+## Step 3: Show for review
 
 Display all fields cleanly, then ask: **"Looks good? I'll log it."**
 
@@ -92,7 +92,7 @@ Wait for confirmation before logging.
 
 ---
 
-## Step 4 — Log to sheet
+## Step 4: Log to sheet
 
 After confirmation, call:
 
@@ -109,7 +109,7 @@ execute_zapier_write_action(
 
 ---
 
-## Step 5 — Confirm
+## Step 5: Confirm
 
 After logging, confirm with:
 > ✅ Logged [Prospect name]
@@ -219,7 +219,7 @@ function ImportantWarning() {
         <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
       <div style={{ fontSize: 12.5, color: '#EF4444', lineHeight: 1.55, fontWeight: 600 }}>
-        You must use the template below. Your own spreadsheet will not work — the dashboard reads specific column positions and tab names. If the structure is different, data will be missing or broken.
+        You must use the template below. Your own spreadsheet will not work. The dashboard reads specific column positions and tab names. If the structure is different, data will be missing or broken.
       </div>
     </div>
   )
@@ -365,17 +365,17 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             ))}
           </div>
 
-          {/* Step 0 — Welcome */}
+          {/* Step 0: Welcome */}
           {step === 0 && (
             <>
               <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text)', margin: '0 0 10px' }}>Welcome to your sales dashboard</h1>
-              <P>Connect your tracking sheets and you'll have a full outreach and sales analytics dashboard in minutes. Your data stays in your Google account — we only read it, never store it.</P>
+              <P>Connect your tracking sheets and you'll have a full outreach and sales analytics dashboard in minutes. Your data stays in your Google account, we only read it, never store it.</P>
               <Label>What is your first name?</Label>
               <Input value={userName} onChange={setUserName} placeholder="e.g. Alex" />
             </>
           )}
 
-          {/* Step 1 — VSL */}
+          {/* Step 1: VSL */}
           {step === 1 && (
             <div>
               <H2>How do you send your booking link?</H2>
@@ -414,7 +414,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </div>
           )}
 
-          {/* Step 2 — Weekends */}
+          {/* Step 2: Weekends */}
           {step === 2 && (
             <div>
               <H2>Do you do outreach on weekends?</H2>
@@ -448,12 +448,12 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </div>
           )}
 
-          {/* Step 3 — Outreach sheet */}
+          {/* Step 3: Outreach sheet */}
           {step === 3 && (
             <>
               <H2>Outreach sheet</H2>
               <ImportantWarning />
-              <P>This is where you track your daily outreach — connections, replies, and bookings, one tab per month.</P>
+              <P>This is where you track your daily outreach: connections, replies, and bookings, one tab per month.</P>
               <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Don't have one yet?</div>
                 <P>Make a copy of our template. It has the right structure with all monthly tabs pre-built. Once you copy it, you can start logging your outreach right away.</P>
@@ -497,12 +497,12 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 4 — Sales calls sheet */}
+          {/* Step 4: Sales calls sheet */}
           {step === 4 && (
             <>
               <H2>Sales calls sheet</H2>
               <ImportantWarning />
-              <P>This is where every sales call gets logged — prospect, objections, outcome, lead quality.</P>
+              <P>This is where every sales call gets logged: prospect, objections, outcome, lead quality.</P>
               <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Don't have one yet?</div>
                 <P>Make a copy of our template. It has the right columns for all the data Claude will log automatically.</P>
@@ -526,11 +526,11 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 5 — Claude skill */}
+          {/* Step 5: Claude skill */}
           {step === 5 && (
             <>
               <H2>Claude call logging skill</H2>
-              <P>This skill lets Claude automatically log your sales calls from Fathom straight into your sheet. After your next call, just tell Claude "log my last call" — it handles the rest.</P>
+              <P>This skill lets Claude automatically log your sales calls from Fathom straight into your sheet. After your next call, just tell Claude "log my last call". It handles the rest.</P>
               {salesSheetId ? (
                 <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 16 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Your personalised skill file is ready</div>
@@ -553,7 +553,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 6 — Fathom */}
+          {/* Step 6: Fathom */}
           {step === 6 && (
             <>
               <H2>Fathom</H2>
@@ -567,7 +567,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 7 — Calendly */}
+          {/* Step 7: Calendly */}
           {step === 7 && (
             <>
               <H2 optional>Calendly</H2>
@@ -578,7 +578,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 8 — Logo */}
+          {/* Step 8: Logo */}
           {step === 8 && (
             <>
               <H2 optional>Your logo</H2>
@@ -606,7 +606,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
             </>
           )}
 
-          {/* Step 9 — Done */}
+          {/* Step 9: Done */}
           {step === 9 && (
             <>
               <H2>Setup complete</H2>

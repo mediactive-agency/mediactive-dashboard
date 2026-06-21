@@ -9,13 +9,13 @@ const PALETTE = ['#60A5FA', '#F472B6', '#FB923C', '#34D399', '#A78BFA', '#FBBF24
 const GAP_DAYS = 7
 
 // Definice typů kroků v pipeline:
-// initiation — první zpráva, kterou nasazuju (vždy první krok, vlastní text, bublina vpravo)
-// message    — další moje zpráva poslaná HNED po předchozí (bez čáry mezi nimi, bublina vpravo)
-// followup   — moje zpráva poslaná až po čase (čára mezi nimi, bublina vpravo)
-// reply      — událost "prospect odpověděl pozitivně" (jen pevná značka, žádný text, bublina vlevo)
-// boundary: true znamená "tento krok je oddělená událost v čase" — pokud je krok NEBO jeho
+// initiation, první zpráva, kterou nasazuju (vždy první krok, vlastní text, bublina vpravo)
+// message   , další moje zpráva poslaná HNED po předchozí (bez čáry mezi nimi, bublina vpravo)
+// followup  , moje zpráva poslaná až po čase (čára mezi nimi, bublina vpravo)
+// reply     , událost "prospect odpověděl pozitivně" (jen pevná značka, žádný text, bublina vlevo)
+// boundary: true znamená "tento krok je oddělená událost v čase", pokud je krok NEBO jeho
 // předchůdce boundary, mezi nimi se vykreslí svislá čára. Díky tomu, že se to počítá z OBOU
-// sousedů (ne jen z aktuálního kroku), čára se správně objeví i po přetažení pořadí —
+// sousedů (ne jen z aktuálního kroku), čára se správně objeví i po přetažení pořadí ,
 // např. když přesunu "Prospect positive reply" nad "Initiation", čára mezi nimi zůstane.
 const STEP_TYPES = {
   initiation: { hasText: true,  boundary: false, side: 'right' },
@@ -39,7 +39,7 @@ function makeId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
 }
 
-// Vezme unikátní seřazená data nasazení a rozdělí je na souvislé úseky —
+// Vezme unikátní seřazená data nasazení a rozdělí je na souvislé úseky ,
 // pauza delší než GAP_DAYS dní = nový segment (= kampaň byla na chvíli odložena a znovu spuštěna)
 function buildSegments(sortedUniqueDates) {
   if (sortedUniqueDates.length === 0) return []
@@ -61,7 +61,7 @@ function buildSegments(sortedUniqueDates) {
 }
 
 // Vrátí pipeline kroků pro danou kampaň. Pokud ještě neexistuje nový formát,
-// zkusí ho postavit ze starého (initiation/reply text fields) — ať se stará testovací data neztratí.
+// zkusí ho postavit ze starého (initiation/reply text fields), ať se stará testovací data neztratí.
 function getPipeline(messages, name) {
   const m = messages[name]
   if (m?.pipeline) return m.pipeline
@@ -74,9 +74,9 @@ function getPipeline(messages, name) {
   return legacy
 }
 
-// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data — commitne se až na drop
-// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data — commitne se až na drop.
-// `over` je { id, before } — before/after rozlišuje, na kterou stranu cílového kroku se má prvek vložit.
+// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data, commitne se až na drop
+// Při tažení spočítá náhledové pořadí, aniž by se sahalo na uložená data, commitne se až na drop.
+// `over` je { id, before }, before/after rozlišuje, na kterou stranu cílového kroku se má prvek vložit.
 // Bez tohoto rozlišení by se prvek pri "splice insert" vždy octl AŽ ZA cílem, což dělalo posun nahoru nefunkční.
 function previewReorder(pipeline, dragId, over) {
   if (!dragId || !over) return pipeline
@@ -105,7 +105,7 @@ function getCampaignInitiationText(messages, name) {
 
 // Vrátí spojený text odpovědi na pozitivní reakci pro KONKRÉTNÍ kampaň (nebo null).
 // Pravidlo: od prvního "Prospect positive reply" se vezmou jen po sobě jdoucí "message" kroky
-// (bez čárky, posílané hned za sebou) a spojí se do jednoho textu — i když je to v praxi
+// (bez čárky, posílané hned za sebou) a spojí se do jednoho textu, i když je to v praxi
 // rozsekané do 2-3 bublin, je to obsahově jedna odpověď. Jakmile přijde "followup" (časový
 // odstup) nebo cokoliv jiného, zbytek pipeline se ignoruje úplně.
 function getCampaignReplyText(messages, name) {
@@ -302,7 +302,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
     >
       {showLine && (
         <div style={{ position: 'relative', height: 40 }}>
-          {/* Čára je vždy přesně na střed přes absolutní pozicování — obsah vpravo od ní (label/ikona) ji nikdy neposune */}
+          {/* Čára je vždy přesně na střed přes absolutní pozicování, obsah vpravo od ní (label/ikona) ji nikdy neposune */}
           <div style={{ position: 'absolute', left: '50%', top: 0, width: 2, height: '100%', background: 'var(--border2)', transform: 'translateX(-50%)' }} />
           {step.type === 'followup' && (
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(14px, -50%)', display: 'flex', alignItems: 'center' }}>
@@ -407,7 +407,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
   const [dragId, setDragId] = useState(null)
   const [overTarget, setOverTarget] = useState(null) // { id, before }
 
-  // Při tažení se pipeline živě překresluje podle toho, kam zrovna draguju — commit teprve na drop
+  // Při tažení se pipeline živě překresluje podle toho, kam zrovna draguju, commit teprve na drop
   const pipeline = dragId ? previewReorder(realPipeline, dragId, overTarget) : realPipeline
 
   function handlePick(type) {
@@ -526,7 +526,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
                 textDecoration: 'underline',
               }}
             >
-              {pasteError ? 'Could not paste — copy a pipeline first' : 'or paste a copied pipeline'}
+              {pasteError ? 'Could not paste. Copy a pipeline first' : 'or paste a copied pipeline'}
             </button>
           </div>
         ) : (
@@ -791,7 +791,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
 
       <div style={{ background: 'var(--card)', borderRadius: 18, padding: isMobile ? '20px 14px' : '24px 26px', boxShadow: 'var(--card-shadow)' }}>
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDate(globalFrom)} — {fmtDate(globalTo)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDate(globalFrom)} – {fmtDate(globalTo)}</div>
         </div>
 
         <div style={{ display: 'flex' }}>

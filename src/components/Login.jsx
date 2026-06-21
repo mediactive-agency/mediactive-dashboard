@@ -8,7 +8,7 @@ export default function Login({ onLogin, loading }) {
       minHeight: '100vh', display: 'flex',
       background: 'var(--bg)',
     }}>
-      {/* Left panel — branding */}
+      {/* Left panel, branding */}
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
@@ -73,7 +73,7 @@ export default function Login({ onLogin, loading }) {
         </div>
       </div>
 
-      {/* Right panel — sign in */}
+      {/* Right panel, sign in */}
       <div style={{
         width: 440, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',

@@ -133,7 +133,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile, vslMode = false }) {
               {i < steps.length - 1 && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: dimmed ? 'var(--text4)' : 'var(--text)', lineHeight: 1 }}>
-                    {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
+                    {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '-'}
                   </div>
                   {ARROW(dimmed)}
                 </div>
@@ -207,7 +207,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       const from = filter === 'all' ? null : filter === '90d' ? ago(90) : ago(30)
       const filterFn = from ? (d => d >= from) : () => true
       for (const sheet of allSheets) {
-        // Stejná optimalizace jako dřív (přeskočit sheety mimo rozsah) — jen rozsah teď
+        // Stejná optimalizace jako dřív (přeskočit sheety mimo rozsah), jen rozsah teď
         // čteme z posledního skutečného data v sheetu, ne z natvrdo napsaných kalendářních dat.
         if (from) {
           let sheetEnd = null
@@ -350,7 +350,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
                   {i < mainSteps.length - 1 && (
                     <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
                       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                        {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
+                        {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '-'}
                       </div>
                       {ARROW(false)}
                     </div>
@@ -397,7 +397,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       <Divider label="Funnels by Variables" />
       {selected.size > 0 && (
         <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES, COMBINED</div>
           {isMobile ? (
             <div>
               {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},...(vslMode?[{val:agg.E,label:"Calendly'd",color:'#34D399'},{val:agg.VSLB,label:'Booked',color:'#A78BFA'}]:[{val:agg.C,label:'Booked',color:'#A78BFA'}])].map((step,i,arr) => {
@@ -439,7 +439,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
                   </div>
                   {i < arr.length - 1 && (
                     <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '-'}</div>
                       <svg width="44" height="14" viewBox="0 0 50 14" fill="none" style={{color:"var(--text3)"}}><line x1="0" y1="7" x2="42" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   )}
@@ -471,7 +471,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
 
       {inactiveVars.length > 0 && (
         <>
-          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text4)', marginTop: 12, marginBottom: 16 }}>Inactive — not used in last 14d</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text4)', marginTop: 12, marginBottom: 16 }}>Inactive, not used in last 14d</div>
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} vslMode={vslMode} />)}
         </>
       )}

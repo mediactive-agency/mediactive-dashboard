@@ -104,7 +104,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   const [trendValueMode, setTrendValueMode] = useState('pct') // 'pct' | 'count'
   const stats = useMemo(() => {
     if (!data) return null
-    // Dynamicky zpracuje VŠECHNY natažené outreach taby (cokoliv kromě sales/calendly) —
+    // Dynamicky zpracuje VŠECHNY natažené outreach taby (cokoliv kromě sales/calendly) ,
     // žádný pevný seznam měsíců, kolik tabů přijde ze sheetu, tolik se zpracuje.
     const tabKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
     const M = {}
@@ -334,7 +334,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                 {i < funnelSteps.length - 1 && (
                   <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                    {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
+                    {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '-'}
                     </div>
                     {ARROW}
                   </div>
@@ -351,7 +351,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
           <div key={r.label} style={{ background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 14px' : '20px 20px', boxShadow: 'var(--card-shadow)', minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
-              {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
+              {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '-'}{r.value !== null ? r.suffix : ''}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>{r.sub}</div>
           </div>
@@ -371,8 +371,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
           ))
           : [
             { label: 'Outreach',      value: `${outToday}/20`, color: outColor, sub: outToday >= 20 ? 'Goal reached' : 'Messages sent' },
-            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '—'}`, color: fuColor, sub: 'Due today' },
-            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '—'}`, color: pfuColor, sub: 'Active sequences' },
+            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '-'}`, color: fuColor, sub: 'Due today' },
+            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '-'}`, color: pfuColor, sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={s({})}>
               <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
@@ -492,7 +492,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                       <Tooltip
                         contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                         labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
-                        formatter={(value) => [value === null ? '—' : (trendValueMode === 'pct' ? `${value}%` : value), metric.label]}
+                        formatter={(value) => [value === null ? '-' : (trendValueMode === 'pct' ? `${value}%` : value), metric.label]}
                       />
                       <Area
                         type="monotone" dataKey={dataKey} name={metric.label}
@@ -546,7 +546,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
               <div key={t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{t.label}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: t.color, lineHeight: 1 }}>
-                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'—'}</span>
+                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'-'}</span>
                 </div>
               </div>
             ))}

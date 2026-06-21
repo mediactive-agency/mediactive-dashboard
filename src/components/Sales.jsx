@@ -146,7 +146,7 @@ function CallCard({ r, linkedinMap, isMobile }) {
         </div>
       </div>
 
-      {/* Current / Desired situation — dark inset panels */}
+      {/* Current / Desired situation, dark inset panels */}
       {(cur || goal || r[2] || r[3]) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px' }}>
@@ -302,7 +302,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           </div>
         ))}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '—'}</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '-'}</div>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Lead Quality</div>
         </div>
       </div>

@@ -208,9 +208,9 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
           <div style={{ display: 'flex', gap: 28 }}>
             {[
-              { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
-              { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
-              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#A855F7' },
+              { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '-', color: '#F472B6' },
+              { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '-', color: '#FB923C' },
+              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '-', color: '#A855F7' },
             ].map(m => (
               <div key={m.label}>
                 <div style={{ fontSize: 11, color: 'var(--text4)', marginBottom: 5, fontWeight: 600 }}>{m.label}</div>
@@ -261,7 +261,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
       {/* 2. Monthly Performance + Daily Tasks vedle sebe */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, margin: '28px 0' }}>
 
-        {/* Monthly Performance — zactly same layout as main dashboard */}
+        {/* Monthly Performance, zactly same layout as main dashboard */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
           {monthlyRows.map((m, mi) => (
@@ -301,12 +301,12 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
           ))}
         </div>
 
-        {/* Daily Tasks — standalone karty */}
+        {/* Daily Tasks, standalone karty */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[
             { label: 'Outreach',       value: `${outreachCount}/20`,        color: outreachCount >= 20 ? '#34D399' : '#EF4444',                                                    sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
-            { label: 'Followups',      value: `${fuDone}/${fuTotal||'—'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
-            { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
+            { label: 'Followups',      value: `${fuDone}/${fuTotal||'-'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
+            { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'-'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
               <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>

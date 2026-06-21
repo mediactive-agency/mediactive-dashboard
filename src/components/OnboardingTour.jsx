@@ -254,7 +254,7 @@ const OVERLAY_STEPS = [
   {
     target: '[data-tour="sidebar-campaigns"]',
     title: 'Campaigns',
-    body: 'Timeline of your outreach campaigns plus a message pipeline builder — track your initiation message, follow-up cadence, and what you send once a prospect replies positively.',
+    body: 'Timeline of your outreach campaigns plus a message pipeline builder. Track your initiation message, follow-up cadence, and what you send once a prospect replies positively.',
     placement: 'right',
   },
   {
@@ -345,7 +345,7 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, vsl
 
   useEffect(() => {
     if (phase !== 'overlay') return
-    const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'settings'}
+    const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'campaigns',6:'settings'}
     if (navMap[overlayStep] && onNav) onNav(navMap[overlayStep], true)
     setTimeout(() => {
       const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)

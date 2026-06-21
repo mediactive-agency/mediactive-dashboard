@@ -4,7 +4,7 @@ export function toDateStr(val) {
   if (!val) return null
   if (typeof val === 'string') {
     const s = val.trim()
-    // ISO with time component — apply local timezone offset to get correct date
+    // ISO with time component , apply local timezone offset to get correct date
     if (s.match(/^\d{4}-\d{2}-\d{2}T/)) {
       const d = new Date(s)
       const offset = d.getTimezoneOffset()
@@ -86,7 +86,7 @@ export function normName(n) {
 }
 
 // Vrátí VŠECHNY natažené outreach taby jako pole sheetů (cokoliv v `data` kromě sales/calendly).
-// Žádný hardcoded seznam měsíců — kolik tabů je ve Settings nakonfigurováno, tolik se vrátí.
+// Žádný hardcoded seznam měsíců , kolik tabů je ve Settings nakonfigurováno, tolik se vrátí.
 export function outreachSheets(data) {
   if (!data) return []
   return Object.keys(data)

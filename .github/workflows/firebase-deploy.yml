@@ -14,6 +14,12 @@ jobs:
           node-version: '20'
       - run: npm install
       - run: npm run build
+      - name: Authenticate gcloud / Firebase CLI
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$HOME/firebase-key.json"
+      - name: Deploy Firestore rules
+        run: npx firebase-tools@latest deploy --only firestore:rules --project mediactive-dashboard
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/firebase-key.json
       - name: Compute channel id
         id: channel
         run: |

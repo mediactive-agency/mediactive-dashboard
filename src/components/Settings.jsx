@@ -167,6 +167,7 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
   const [inviteLink, setInviteLink] = useState('')
   const [inviteBusy, setInviteBusy] = useState(false)
   const [inviteCopied, setInviteCopied] = useState(false)
+  const [inviteError, setInviteError] = useState('')
 
   useEffect(() => {
     if (!workspace || !workspaceId) return
@@ -175,11 +176,11 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
   }, [workspace, workspaceId])
 
   async function handleCreateInvite() {
-    setInviteBusy(true); setInviteCopied(false)
+    setInviteBusy(true); setInviteCopied(false); setInviteError('')
     try {
       const link = await workspace.createInvite()
       setInviteLink(link)
-    } catch (e) { setError(e.message) }
+    } catch (e) { setInviteError(e.message || 'Could not create the invite link.') }
     setInviteBusy(false)
   }
 
@@ -206,6 +207,7 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
             <button onClick={handleCreateInvite} disabled={inviteBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: inviteBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
               {inviteBusy ? 'Generating...' : '+ Create invite link'}
             </button>
+            {inviteError && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 8, fontWeight: 600 }}>{inviteError}</div>}
             {inviteLink && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
                 <input readOnly value={inviteLink} onFocus={e => e.target.select()}

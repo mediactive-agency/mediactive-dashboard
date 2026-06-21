@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LOGO_SVG } from '../utils/data'
 
 const NAV_ITEMS = [
@@ -43,7 +44,51 @@ function TogglePill({ isDark, onToggle }) {
 
 export { TogglePill }
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl, isAdmin }) {
+function WorkspaceSwitcher({ workspaces, activeWorkspaceId, onSwitch }) {
+  const [open, setOpen] = useState(false)
+  if (!workspaces || workspaces.length <= 1) return null
+  const active = workspaces.find(w => w.workspaceId === activeWorkspaceId)
+
+  return (
+    <div style={{ position: 'relative', padding: '10px 10px 0' }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+        width: '100%', padding: '9px 10px', borderRadius: 8,
+        background: 'var(--bg)', border: '1px solid var(--border)',
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text3)', flexShrink: 0 }}><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 9h6"/><path d="M9 13h6"/></svg>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active?.name || 'Workspace'}</span>
+        </div>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text4)', flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
+          <div style={{
+            position: 'absolute', top: '100%', left: 10, right: 10, marginTop: 4,
+            background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 9,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.18)', zIndex: 200, overflow: 'hidden',
+          }}>
+            {workspaces.map(w => (
+              <button key={w.workspaceId} onClick={() => { onSwitch(w.workspaceId); setOpen(false) }} style={{
+                display: 'block', width: '100%', textAlign: 'left', padding: '10px 12px',
+                background: w.workspaceId === activeWorkspaceId ? 'var(--sidebar-active)' : 'transparent',
+                border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{w.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{w.role === 'owner' ? 'Owner' : 'Member'}</div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl, isAdmin, workspaces, activeWorkspaceId, onSwitchWorkspace }) {
   const isDark = theme === 'dark'
 
   return (
@@ -70,6 +115,8 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+
+        <WorkspaceSwitcher workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSwitch={onSwitchWorkspace} />
 
         {/* Nav */}
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
@@ -142,6 +189,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
             ? <img src={logoUrl} alt="Logo" style={{ height: 28, maxWidth: 120, objectFit: 'contain' }} />
             : <span dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />}
         </div>
+        <WorkspaceSwitcher workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSwitch={onSwitchWorkspace} />
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
           {NAV_ITEMS.map(item => (

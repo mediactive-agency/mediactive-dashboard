@@ -57,7 +57,7 @@ function Section({ title, children }) {
   )
 }
 
-export default function Settings({ user, config, onSaved, isMobile }) {
+export default function Settings({ user, config, workspaceId, workspace, isOwner, onSaved, isMobile }) {
   const [userName, setUserName] = useState('')
   const [outreachSheets, setOutreachSheets] = useState([])
   const [salesSheetInput, setSalesSheetInput] = useState('')
@@ -145,7 +145,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   async function save() {
     setSaving(true); setError(''); setSaved(false)
     try {
-      await saveUserConfig(user.uid, {
+      await saveUserConfig(workspaceId || user.uid, {
         userName: userName.trim(),
         dailyGoal: Number(dailyGoal) || 20,
         vslMode: vslMode,
@@ -162,8 +162,87 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     setSaving(false)
   }
 
+  const [members, setMembers] = useState([])
+  const [membersLoading, setMembersLoading] = useState(false)
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteBusy, setInviteBusy] = useState(false)
+  const [inviteCopied, setInviteCopied] = useState(false)
+
+  useEffect(() => {
+    if (!workspace || !workspaceId) return
+    setMembersLoading(true)
+    workspace.listMembers(workspaceId).then(setMembers).finally(() => setMembersLoading(false))
+  }, [workspace, workspaceId])
+
+  async function handleCreateInvite() {
+    setInviteBusy(true); setInviteCopied(false)
+    try {
+      const link = await workspace.createInvite()
+      setInviteLink(link)
+    } catch (e) { setError(e.message) }
+    setInviteBusy(false)
+  }
+
+  function copyInvite() {
+    navigator.clipboard.writeText(inviteLink)
+    setInviteCopied(true)
+    setTimeout(() => setInviteCopied(false), 2000)
+  }
+
+  async function handleRemoveMember(uid) {
+    if (!workspace || !workspaceId) return
+    await workspace.removeMember(uid, workspaceId)
+    setMembers(prev => prev.filter(m => m.uid !== uid))
+  }
+
+  function TeamSection() {
+    return (
+      <Section title="Team">
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
+          Pozvi kolegu (settera, ops...), ať vidí tenhle workspace. Stačí poslat link, po přihlášení Googlem se sám přidá.
+        </div>
+        {isOwner && (
+          <div style={{ marginBottom: 18 }}>
+            <button onClick={handleCreateInvite} disabled={inviteBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: inviteBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+              {inviteBusy ? 'Generuju...' : '+ Vytvořit invite link'}
+            </button>
+            {inviteLink && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                <input readOnly value={inviteLink} onFocus={e => e.target.select()}
+                  style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
+                <button onClick={copyInvite} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                  {inviteCopied ? 'Zkopírováno!' : 'Zkopírovat'}
+                </button>
+              </div>
+            )}
+            <div style={{ fontSize: 11.5, color: 'var(--text4)', marginTop: 8 }}>Link platí 7 dní a jde použít jen jednou.</div>
+          </div>
+        )}
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Členové</div>
+        {membersLoading ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Načítám...</div>
+        ) : members.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Zatím jen ty.</div>
+        ) : (
+          members.map(m => (
+            <div key={m.uid} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 6 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.displayName || m.email || m.uid}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{m.role === 'owner' ? 'Owner' : 'Member'}</div>
+              </div>
+              {isOwner && m.role !== 'owner' && (
+                <button onClick={() => handleRemoveMember(m.uid)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Odebrat</button>
+              )}
+            </div>
+          ))
+        )}
+      </Section>
+    )
+  }
+
   return (
     <div style={{ maxWidth: 600 }}>
+      <TeamSection />
       <Section title="Profile">
         <Input label="First name" value={userName} onChange={setUserName} placeholder="e.g. Alex" />
         <div style={{ marginTop: 12 }}>

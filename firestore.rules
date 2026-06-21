@@ -1,11 +1,56 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    function isMember(workspaceId) {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId));
+    }
+    function isOwner(workspaceId) {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId)).data.role == 'owner';
+    }
+
+    // users/{workspaceId} doubles as the workspace config + data doc.
+    // The owner's own workspace always uses their uid as the workspaceId,
+    // so existing accounts keep working without any data migration.
+    match /users/{workspaceId} {
+      allow read, write: if isMember(workspaceId);
       // Admin může číst všechny user docs
       allow read: if request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+
+    // Membership records: docId = "{uid}_{workspaceId}"
+    match /workspaceMembers/{memberId} {
+      allow read: if request.auth != null && (
+        resource.data.uid == request.auth.uid || isOwner(resource.data.workspaceId)
+      );
+      // Bootstrap: a user can always create their own "owner" record on their own workspace
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.workspaceId == request.auth.uid &&
+        request.resource.data.role == 'owner';
+      // Joining via a valid, unused invite
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.role == 'member' &&
+        exists(/databases/$(database)/documents/invites/$(request.resource.data.inviteToken)) &&
+        get(/databases/$(database)/documents/invites/$(request.resource.data.inviteToken)).data.workspaceId == request.resource.data.workspaceId &&
+        get(/databases/$(database)/documents/invites/$(request.resource.data.inviteToken)).data.used == false;
+      allow update: if false;
+      allow delete: if request.auth != null && (
+        resource.data.uid == request.auth.uid || isOwner(resource.data.workspaceId)
+      );
+    }
+
+    // Invite links: docId = random token
+    match /invites/{token} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && isMember(request.resource.data.workspaceId);
+      allow update: if request.auth != null && resource.data.used == false && request.resource.data.used == true;
+      allow delete: if request.auth != null && isOwner(resource.data.workspaceId);
+    }
+
     match /clients/{clientId} {
       allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;

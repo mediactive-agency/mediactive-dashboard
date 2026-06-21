@@ -235,7 +235,7 @@ async function fetchSheetTabs(sheetId) {
 
 const STEPS = ['Welcome', 'VSL', 'Weekends', 'Outreach sheet', 'Sales calls sheet', 'Claude skill', 'Fathom', 'Calendly', 'Logo', 'Done']
 
-export default function Onboarding({ user, onComplete, isMobile }) {
+export default function Onboarding({ user, workspaceId, onComplete, isMobile }) {
   const [step, setStep] = useState(0)
   const [vslMode, setVslMode] = useState(null) // null = not answered yet
   const [weekendOutreach, setWeekendOutreach] = useState(null)
@@ -316,7 +316,7 @@ export default function Onboarding({ user, onComplete, isMobile }) {
   async function finish() {
     setSaving(true)
     try {
-      await saveUserConfig(user.uid, {
+      await saveUserConfig(workspaceId || user.uid, {
         email: user.email,
         userName: userName || user.displayName || '',
         outreachSheets: outreachSheets.length > 0 ? outreachSheets : [{ id: outreachSheetId, tabs: outreachTabs }],

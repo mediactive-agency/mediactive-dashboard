@@ -40,7 +40,7 @@ export async function getUserConfig(userId) {
   return snap.exists() ? snap.data() : null
 }
 
-export function useData(user) {
+export function useData(user, workspaceId) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -48,13 +48,15 @@ export function useData(user) {
   const [config, setConfig] = useState(null)
   const [needsSetup, setNeedsSetup] = useState(false)
 
+  const effectiveId = workspaceId || user?.uid
+
   async function load() {
-    if (!user) return
+    if (!user || !effectiveId) return
     setLoading(true)
     setError(null)
     try {
-      // Načti user config z Firestore
-      const cfg = await getUserConfig(user.uid)
+      // Načti config aktivního workspace z Firestore
+      const cfg = await getUserConfig(effectiveId)
       if (!cfg || !cfg.outreachSheetId) {
         setNeedsSetup(true)
         setLoading(false)
@@ -107,7 +109,7 @@ export function useData(user) {
     }
   }
 
-  useEffect(() => { load() }, [user?.uid])
+  useEffect(() => { load() }, [user?.uid, effectiveId])
 
   return { data, loading, error, reload: load, loadedAt, config, needsSetup }
 }

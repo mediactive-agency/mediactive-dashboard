@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
+import { useWorkspace } from './hooks/useWorkspace'
 import { useTheme } from './hooks/useTheme'
 import { useWindowSize } from './hooks/useWindowSize'
 import Sidebar, { TogglePill } from './components/Sidebar'
@@ -37,11 +38,27 @@ export default function App() {
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
+  const [inviteToken] = useState(() => {
+    const m = window.location.pathname.match(/^\/invite\/([^/]+)/)
+    return m ? m[1] : null
+  })
+  const [inviteError, setInviteError] = useState('')
+  const redeemedRef = useRef(false)
 
   const { user, isAdmin, allowed, loading: authLoading, login, logout } = useAuth()
-  const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user)
+  const workspace = useWorkspace(user)
+  const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user, workspace.activeWorkspaceId)
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
+
+  // Pokud uživatel přišel na invite link, po přihlášení ho rovnou napojíme na ten workspace
+  useEffect(() => {
+    if (!inviteToken || !user || workspace.loading || redeemedRef.current) return
+    redeemedRef.current = true
+    workspace.redeemInvite(inviteToken)
+      .then(() => { window.history.replaceState({}, '', '/') })
+      .catch(e => { setInviteError(e.message); window.history.replaceState({}, '', '/') })
+  }, [inviteToken, user, workspace.loading])
 
   // Compute task stats directly here, no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false, weekendOutreach: config?.weekendOutreach ?? false }), [data, config?.vslMode, config?.weekendOutreach])
@@ -66,12 +83,13 @@ export default function App() {
   const isDark = theme === 'dark'
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
-  if (!user || !allowed) return <Login onLogin={login} />
+  if (!user || !allowed) return <Login onLogin={login} inviteToken={inviteToken} />
+  if (workspace.loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   function handleSetupComplete(opts) {
     reload()
     if (opts?.showTour) setTourOpen(true)
   }
-  if (needsSetup) return <Onboarding user={user} onComplete={handleSetupComplete} isMobile={isMobile} />
+  if (needsSetup) return <Onboarding user={user} workspaceId={workspace.activeWorkspaceId} onComplete={handleSetupComplete} isMobile={isMobile} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -83,9 +101,18 @@ export default function App() {
         onLogout={logout}
         logoUrl={config?.logoUrl}
         isAdmin={isAdmin}
+        workspaces={workspace.workspaces}
+        activeWorkspaceId={workspace.activeWorkspaceId}
+        onSwitchWorkspace={workspace.switchWorkspace}
       />
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>
+        {inviteError && (
+          <div style={{ margin: isMobile ? '16px 16px 0' : '24px 40px 0', padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 9, color: '#B91C1C', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <span>{inviteError}</span>
+            <button onClick={() => setInviteError('')} style={{ background: 'none', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>×</button>
+          </div>
+        )}
         {/* Topbar */}
         <div style={{ padding: isMobile ? '20px 16px 0' : '28px 40px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -126,7 +153,7 @@ export default function App() {
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
               {page === 'campaigns' && <Campaigns data={data} user={user} config={config} isMobile={isMobile} isTablet={isTablet} />}
-              {page === 'settings'  && <Settings  user={user} config={config} onSaved={reload} isMobile={isMobile} />}
+              {page === 'settings'  && <Settings  user={user} config={config} workspaceId={workspace.activeWorkspaceId} workspace={workspace} isOwner={workspace.activeRole === 'owner'} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}
             </>
           ) : null}

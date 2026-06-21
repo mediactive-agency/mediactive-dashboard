@@ -2,7 +2,7 @@ import { LOGO_SVG } from '../utils/data'
 
 const GRADIENT = 'linear-gradient(135deg, #B16CEA 0%, #FF5E69 50%, #FFA84B 100%)'
 
-export default function Login({ onLogin, loading }) {
+export default function Login({ onLogin, loading, inviteToken }) {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex',
@@ -86,6 +86,12 @@ export default function Login({ onLogin, loading }) {
           <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 36, lineHeight: 1.5 }}>
             Use your Google account to access your dashboard.
           </div>
+
+          {inviteToken && (
+            <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
+              You've been invited to a workspace. Sign in to join it.
+            </div>
+          )}
 
           <button
             onClick={onLogin}

@@ -192,7 +192,7 @@ a { text-decoration: none; }
 }
 .btn-outline-hover {
   transition: background-color 0.15s, color 0.15s, border-color 0.15s;
-  border: 1px solid transparent;
+  border: 2px solid transparent !important;
 }
 .btn-outline-hover:hover {
   background: transparent !important;

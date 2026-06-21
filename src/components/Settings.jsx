@@ -180,17 +180,22 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
     try {
       const link = await workspace.createInvite()
       setInviteLink(link)
-      await navigator.clipboard.writeText(link)
-      setInviteCopied(true)
-      setTimeout(() => setInviteCopied(false), 3000)
+      try {
+        await navigator.clipboard.writeText(link)
+        setInviteCopied(true)
+        setTimeout(() => setInviteCopied(false), 3000)
+      } catch { /* browser blocked auto-copy after the network call, link is still shown below for manual copy */ }
     } catch (e) { setInviteError(e.message || 'Could not create the invite link.') }
     setInviteBusy(false)
   }
 
   function copyInvite() {
-    navigator.clipboard.writeText(inviteLink)
-    setInviteCopied(true)
-    setTimeout(() => setInviteCopied(false), 3000)
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 3000)
+    }).catch(() => {
+      setInviteError('Could not copy automatically, select the text above and copy it manually.')
+    })
   }
 
   async function handleRemoveMember(uid) {

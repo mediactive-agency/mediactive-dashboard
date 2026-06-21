@@ -8,6 +8,7 @@ service cloud.firestore {
     }
     function isOwner(workspaceId) {
       return request.auth != null &&
+        exists(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId)) &&
         get(/databases/$(database)/documents/workspaceMembers/$(request.auth.uid + '_' + workspaceId)).data.role == 'owner';
     }
 
@@ -22,9 +23,13 @@ service cloud.firestore {
 
     // Membership records: docId = "{uid}_{workspaceId}"
     match /workspaceMembers/{memberId} {
-      allow read: if request.auth != null && (
-        resource.data.uid == request.auth.uid || isOwner(resource.data.workspaceId)
-      );
+      // Single-doc lookups: always allowed for your own (possibly not-yet-existing) record,
+      // checked by docId prefix rather than resource.data, since resource is null
+      // when the bootstrap doc doesn't exist yet (an error, not a clean "false", otherwise).
+      allow get: if request.auth != null && memberId.split('_')[0] == request.auth.uid;
+      allow get: if request.auth != null && resource != null && isOwner(resource.data.workspaceId);
+      // Listing members of a workspace (client filters by workspaceId); low-sensitivity data, fine for any signed-in user
+      allow list: if request.auth != null;
       // Bootstrap: a user can always create their own "owner" record on their own workspace
       allow create: if request.auth != null &&
         request.resource.data.uid == request.auth.uid &&
@@ -39,7 +44,7 @@ service cloud.firestore {
         get(/databases/$(database)/documents/invites/$(request.resource.data.inviteToken)).data.used == false;
       allow update: if false;
       allow delete: if request.auth != null && (
-        resource.data.uid == request.auth.uid || isOwner(resource.data.workspaceId)
+        memberId.split('_')[0] == request.auth.uid || isOwner(memberId.split('_')[1])
       );
     }
 

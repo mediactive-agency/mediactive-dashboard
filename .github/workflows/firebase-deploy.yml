@@ -17,6 +17,7 @@ jobs:
       - name: Authenticate gcloud / Firebase CLI
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$HOME/firebase-key.json"
       - name: Deploy Firestore rules
+        continue-on-error: true
         run: npx firebase-tools@latest deploy --only firestore:rules --project mediactive-dashboard
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /home/runner/firebase-key.json

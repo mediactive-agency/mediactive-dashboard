@@ -175,18 +175,24 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
     workspace.listMembers(workspaceId).then(setMembers).finally(() => setMembersLoading(false))
   }, [workspace, workspaceId])
 
-  async function handleCreateInvite() {
+  function handleCreateInvite() {
     setInviteBusy(true); setInviteCopied(false); setInviteError('')
-    try {
-      const link = await workspace.createInvite()
-      setInviteLink(link)
-      try {
-        await navigator.clipboard.writeText(link)
+
+    const linkPromise = workspace.createInvite()
+      .then(link => { setInviteLink(link); return link })
+      .catch(e => { setInviteError(e.message || 'Could not create the invite link.'); throw e })
+      .finally(() => setInviteBusy(false))
+
+    // Clipboard write must stay synchronously tied to this click to work in Safari/Firefox.
+    // Passing a promise for the text (instead of writing after an await) keeps that link intact.
+    if (navigator.clipboard?.write && window.ClipboardItem) {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'text/plain': linkPromise.then(link => new Blob([link], { type: 'text/plain' })) }),
+      ]).then(() => {
         setInviteCopied(true)
         setTimeout(() => setInviteCopied(false), 3000)
-      } catch { /* browser blocked auto-copy after the network call, link is still shown below for manual copy */ }
-    } catch (e) { setInviteError(e.message || 'Could not create the invite link.') }
-    setInviteBusy(false)
+      }).catch(() => { /* browser blocked it, link is still shown below for manual copy */ })
+    }
   }
 
   function copyInvite() {
@@ -216,7 +222,7 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input readOnly value={inviteLink} onFocus={e => e.target.select()}
                   style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
-                <button onClick={copyInvite} style={{ padding: '9px 14px', background: inviteCopied ? '#10B981' : 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: inviteCopied ? '#fff' : 'var(--text)', whiteSpace: 'nowrap', transition: 'background 0.15s, color 0.15s' }}>
+                <button onClick={copyInvite} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
                   {inviteCopied ? 'Copied!' : 'Copy'}
                 </button>
               </div>

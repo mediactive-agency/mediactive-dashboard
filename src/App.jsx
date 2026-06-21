@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
 import { useWorkspace } from './hooks/useWorkspace'
@@ -13,6 +13,7 @@ import Tasks from './components/Tasks'
 import Clients from './components/Clients'
 import Campaigns from './components/Campaigns'
 import Login from './components/Login'
+import InviteLanding from './components/InviteLanding'
 import OnboardingTour, { HelpButton } from './components/OnboardingTour'
 import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
@@ -38,12 +39,10 @@ export default function App() {
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
-  const [inviteToken] = useState(() => {
+  const [inviteToken, setInviteToken] = useState(() => {
     const m = window.location.pathname.match(/^\/invite\/([^/]+)/)
     return m ? m[1] : null
   })
-  const [inviteError, setInviteError] = useState('')
-  const redeemedRef = useRef(false)
 
   const { user, isAdmin, allowed, loading: authLoading, login, logout } = useAuth()
   const workspace = useWorkspace(user)
@@ -51,14 +50,11 @@ export default function App() {
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
 
-  // Pokud uživatel přišel na invite link, po přihlášení ho rovnou napojíme na ten workspace
-  useEffect(() => {
-    if (!inviteToken || !user || workspace.loading || redeemedRef.current) return
-    redeemedRef.current = true
-    workspace.redeemInvite(inviteToken)
-      .then(() => { window.history.replaceState({}, '', '/') })
-      .catch(e => { setInviteError(e.message); window.history.replaceState({}, '', '/') })
-  }, [inviteToken, user, workspace.loading])
+  async function handleAcceptInvite(token) {
+    await workspace.redeemInvite(token)
+    window.history.replaceState({}, '', '/')
+    setInviteToken(null)
+  }
 
   // Compute task stats directly here, no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false, weekendOutreach: config?.weekendOutreach ?? false }), [data, config?.vslMode, config?.weekendOutreach])
@@ -83,7 +79,8 @@ export default function App() {
   const isDark = theme === 'dark'
 
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
-  if (!user || !allowed) return <Login onLogin={login} inviteToken={inviteToken} />
+  if (inviteToken) return <InviteLanding token={inviteToken} user={user} onLogin={login} onAccept={handleAcceptInvite} />
+  if (!user || !allowed) return <Login onLogin={login} />
   if (workspace.loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   function handleSetupComplete(opts) {
     reload()
@@ -107,12 +104,6 @@ export default function App() {
       />
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>
-        {inviteError && (
-          <div style={{ margin: isMobile ? '16px 16px 0' : '24px 40px 0', padding: '10px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 9, color: '#B91C1C', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-            <span>{inviteError}</span>
-            <button onClick={() => setInviteError('')} style={{ background: 'none', border: 'none', color: '#B91C1C', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>×</button>
-          </div>
-        )}
         {/* Topbar */}
         <div style={{ padding: isMobile ? '20px 16px 0' : '28px 40px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

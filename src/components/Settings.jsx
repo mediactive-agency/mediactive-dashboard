@@ -222,7 +222,7 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input readOnly value={inviteLink} onFocus={e => e.target.select()}
                   style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
-                <button onClick={copyInvite} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                <button onClick={copyInvite} style={{ padding: '9px 14px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', border: inviteCopied ? '1px solid var(--border)' : 'none', background: inviteCopied ? 'var(--bg)' : 'var(--text)', color: inviteCopied ? 'var(--text)' : 'var(--bg)' }}>
                   {inviteCopied ? 'Copied!' : 'Copy'}
                 </button>
               </div>

@@ -73,10 +73,23 @@ export function useWorkspace(user) {
 
   async function createInvite() {
     if (!activeWorkspaceId) throw new Error('No active workspace.')
+    let workspaceName = ''
+    let logoUrl = ''
+    try {
+      const wSnap = await getDoc(doc(db, 'users', activeWorkspaceId))
+      if (wSnap.exists()) {
+        workspaceName = wSnap.data().workspaceName || wSnap.data().userName || ''
+        logoUrl = wSnap.data().logoUrl || ''
+      }
+    } catch { /* best effort, invite still works without the display info */ }
+
     const ref = await addDoc(collection(db, 'invites'), {
       workspaceId: activeWorkspaceId,
       role: 'member',
       createdBy: user.uid,
+      createdByName: user.displayName || user.email || '',
+      workspaceName,
+      logoUrl,
       createdAt: serverTimestamp(),
       expiresAt: Date.now() + INVITE_TTL_MS,
       used: false,

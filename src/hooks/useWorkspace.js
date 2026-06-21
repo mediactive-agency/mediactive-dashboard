@@ -87,10 +87,10 @@ export function useWorkspace(user) {
   async function redeemInvite(token) {
     const inviteRef = doc(db, 'invites', token)
     const inviteSnap = await getDoc(inviteRef)
-    if (!inviteSnap.exists()) throw new Error('Tahle pozvánka neexistuje nebo už byla zrušená.')
+    if (!inviteSnap.exists()) throw new Error('This invite link does not exist or was revoked.')
     const invite = inviteSnap.data()
-    if (invite.used) throw new Error('Tahle pozvánka už byla použitá.')
-    if (invite.expiresAt && Date.now() > invite.expiresAt) throw new Error('Tahle pozvánka už vypršela.')
+    if (invite.used) throw new Error('This invite link was already used.')
+    if (invite.expiresAt && Date.now() > invite.expiresAt) throw new Error('This invite link has expired.')
 
     const memberRef = doc(db, 'workspaceMembers', `${user.uid}_${invite.workspaceId}`)
     await setDoc(memberRef, {

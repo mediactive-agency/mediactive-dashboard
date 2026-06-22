@@ -15,13 +15,12 @@ import Tasks from './Tasks'
 import Clients from './Clients'
 import Campaigns from './Campaigns'
 
-function getGreeting(name) {
-  const h = parseInt(new Date().toLocaleString('en-US', { timeZone: 'Europe/Prague', hour: 'numeric', hour12: false }))
-  const n = name || 'there'
-  if (h >= 5 && h < 12) return `Good morning, ${n}`
-  if (h >= 12 && h < 18) return `Good afternoon, ${n}`
-  if (h >= 18 && h < 22) return `Good evening, ${n}`
-  return `Good night, ${n}`
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h >= 5 && h < 12) return 'Good morning'
+  if (h >= 12 && h < 18) return 'Good afternoon'
+  if (h >= 18 && h < 22) return 'Good evening'
+  return 'Good night'
 }
 
 function CenteredMessage({ title, body }) {
@@ -111,7 +110,7 @@ export default function PreviewDashboard({ token }) {
     return <CenteredMessage title="Preview link expired" body="This preview link is no longer active. Ask whoever sent it for a new one." />
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns' }
+  const PAGE_TITLES = { dashboard: getGreeting(), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns' }
   const isDark = theme === 'dark'
 
   return (

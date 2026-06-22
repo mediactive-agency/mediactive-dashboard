@@ -81,10 +81,6 @@ export default function Login({ onLogin, loading, inviteToken }) {
 
           <GoogleButton onLogin={onLogin} loading={loading} />
 
-          <div style={{ marginTop: 14, fontSize: 12, color: 'var(--text4)', lineHeight: 1.6 }}>
-            By signing in you agree to store your outreach data in your own Google Sheets. We never access or sell your data.
-          </div>
-
           {/* Trust badges */}
           <div style={{ display: 'flex', gap: 20, marginTop: 24 }}>
             {[
@@ -97,19 +93,21 @@ export default function Login({ onLogin, loading, inviteToken }) {
               </div>
             ))}
           </div>
+
+          <div style={{ marginTop: 20, fontSize: 12, color: 'var(--text4)', lineHeight: 1.6 }}>
+            By signing in you agree to store your outreach data in your own Google Sheets. We never access or sell your data.
+          </div>
         </div>
       </div>
 
-      {/* Right panel, quotes in a gray box */}
+      {/* Right panel, gray, plain quotes, no bubble */}
       <div className="login-right" style={{
         width: 400, flexShrink: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '40px 36px', boxSizing: 'border-box',
+        background: 'var(--border)',
       }}>
-        <div style={{
-          maxWidth: 320, width: '100%', background: 'var(--border)',
-          borderRadius: 16, padding: '26px 24px',
-        }}>
+        <div style={{ maxWidth: 320, width: '100%' }}>
           <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 10px', fontStyle: 'italic' }}>
             "The best feedback is data. Make objective decisions, not emotional ones. Move faster."
           </p>

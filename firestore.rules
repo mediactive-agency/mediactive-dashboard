@@ -56,6 +56,19 @@ service cloud.firestore {
       allow delete: if request.auth != null && isOwner(resource.data.workspaceId);
     }
 
+    // Preview links: docId = random token. Unlike invites, these are read by visitors
+    // who never sign in at all, the token itself is the only secret, so a direct get()
+    // by anyone is allowed (same trust model as an unlisted share link). Listing is never
+    // allowed, so links can't be enumerated. The doc carries a denormalized snapshot of
+    // the workspace config so the preview page never needs an authenticated Firestore read.
+    match /previewLinks/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null && isMember(request.resource.data.workspaceId);
+      allow update: if request.auth != null && isOwner(resource.data.workspaceId);
+      allow delete: if request.auth != null && isOwner(resource.data.workspaceId);
+    }
+
     match /clients/{clientId} {
       allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;

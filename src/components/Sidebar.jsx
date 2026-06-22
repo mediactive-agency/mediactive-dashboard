@@ -88,8 +88,9 @@ function WorkspaceSwitcher({ workspaces, activeWorkspaceId, onSwitch }) {
   )
 }
 
-export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl, isAdmin, workspaces, activeWorkspaceId, onSwitchWorkspace }) {
+export default function Sidebar({ active, onNav, loadedAt, loading, error, theme, onThemeToggle, isManualTheme, mobileOpen, onMobileClose, onLogout, logoUrl, isAdmin, workspaces, activeWorkspaceId, onSwitchWorkspace, navItems }) {
   const isDark = theme === 'dark'
+  const items = navItems ? NAV_ITEMS.filter(i => navItems.includes(i.key)) : NAV_ITEMS
 
   return (
     <>
@@ -121,7 +122,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         {/* Nav */}
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
-          {NAV_ITEMS.map(item => (
+          {items.map(item => (
             <button
               key={item.key}
               className="nav-item-btn"
@@ -192,7 +193,7 @@ export default function Sidebar({ active, onNav, loadedAt, loading, error, theme
         <WorkspaceSwitcher workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSwitch={onSwitchWorkspace} />
         <nav style={{ padding: '12px 10px', flex: 1, overflowY: 'auto' }}>
           <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: '14px 10px 6px', fontWeight: 600 }}>Analytics</div>
-          {NAV_ITEMS.map(item => (
+          {items.map(item => (
             <button
               key={item.key}
               className="nav-item-btn"

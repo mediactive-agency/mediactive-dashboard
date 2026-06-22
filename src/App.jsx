@@ -14,6 +14,7 @@ import Clients from './components/Clients'
 import Campaigns from './components/Campaigns'
 import Login from './components/Login'
 import InviteLanding from './components/InviteLanding'
+import PreviewDashboard from './components/PreviewDashboard'
 import OnboardingTour, { HelpButton } from './components/OnboardingTour'
 import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
@@ -41,6 +42,10 @@ export default function App() {
   const [tourOpen, setTourOpen] = useState(false)
   const [inviteToken, setInviteToken] = useState(() => {
     const m = window.location.pathname.match(/^\/invite\/([^/]+)/)
+    return m ? m[1] : null
+  })
+  const [previewToken] = useState(() => {
+    const m = window.location.pathname.match(/^\/preview\/([^/]+)/)
     return m ? m[1] : null
   })
 
@@ -78,6 +83,7 @@ export default function App() {
   const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns', settings: 'Settings', members: 'AGP Members' }
   const isDark = theme === 'dark'
 
+  if (previewToken) return <PreviewDashboard token={previewToken} />
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   if (inviteToken) return <InviteLanding token={inviteToken} user={user} onLogin={login} onAccept={handleAcceptInvite} />
   if (!user || !allowed) return <Login onLogin={login} />

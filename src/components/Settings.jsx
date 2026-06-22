@@ -169,6 +169,57 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
   const [inviteCopied, setInviteCopied] = useState(false)
   const [inviteError, setInviteError] = useState('')
 
+  const [previewLinks, setPreviewLinks] = useState([])
+  const [previewLinksLoading, setPreviewLinksLoading] = useState(false)
+  const [previewDurationValue, setPreviewDurationValue] = useState(24)
+  const [previewDurationUnit, setPreviewDurationUnit] = useState('hours') // 'hours' | 'days'
+  const [previewBusy, setPreviewBusy] = useState(false)
+  const [previewError, setPreviewError] = useState('')
+  const [previewCopiedToken, setPreviewCopiedToken] = useState('')
+
+  function loadPreviewLinks() {
+    if (!workspace || !workspaceId) return
+    setPreviewLinksLoading(true)
+    workspace.listPreviewLinks().then(setPreviewLinks).catch(() => {}).finally(() => setPreviewLinksLoading(false))
+  }
+
+  useEffect(() => { loadPreviewLinks() }, [workspace, workspaceId])
+
+  function handleCreatePreviewLink() {
+    setPreviewBusy(true); setPreviewError('')
+    const ms = previewDurationValue * (previewDurationUnit === 'days' ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000)
+    workspace.createPreviewLink(ms)
+      .then(link => {
+        navigator.clipboard?.writeText(link).catch(() => {})
+        loadPreviewLinks()
+      })
+      .catch(e => setPreviewError(e.message || 'Could not create the preview link.'))
+      .finally(() => setPreviewBusy(false))
+  }
+
+  function copyPreviewLink(token) {
+    const link = `${window.location.origin}/preview/${token}`
+    navigator.clipboard.writeText(link).then(() => {
+      setPreviewCopiedToken(token)
+      setTimeout(() => setPreviewCopiedToken(''), 3000)
+    }).catch(() => {
+      setPreviewError('Could not copy automatically, copy the link manually.')
+    })
+  }
+
+  function handleRevokePreviewLink(token) {
+    workspace.revokePreviewLink(token).then(loadPreviewLinks).catch(() => {})
+  }
+
+  function fmtExpiry(ms) {
+    if (!ms) return ''
+    const diff = ms - Date.now()
+    if (diff <= 0) return 'Expired'
+    const hrs = Math.round(diff / (60 * 60 * 1000))
+    if (hrs < 24) return `Expires in ${hrs}h`
+    return `Expires in ${Math.round(hrs / 24)}d`
+  }
+
   useEffect(() => {
     if (!workspace || !workspaceId) return
     setMembersLoading(true)
@@ -257,9 +308,61 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
     )
   }
 
+  function PreviewLinksSection() {
+    if (!isOwner) return null
+    return (
+      <Section title="Preview link">
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
+          Share a read view of this dashboard with someone who doesn't need an account. No sign in required, no Settings, no AGP Members, no sign out. Set how long the link should stay active.
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <input type="number" min="1" value={previewDurationValue} onChange={e => setPreviewDurationValue(Math.max(1, Number(e.target.value) || 1))}
+            style={{ width: 70, padding: '9px 10px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+          <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 8, padding: 3, gap: 2 }}>
+            {[{ key: 'hours', label: 'Hours' }, { key: 'days', label: 'Days' }].map(opt => {
+              const isSel = previewDurationUnit === opt.key
+              return (
+                <button key={opt.key} onClick={() => setPreviewDurationUnit(opt.key)}
+                  style={{ border: 'none', borderRadius: 6, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: isSel ? 'var(--card)' : 'transparent', color: isSel ? 'var(--text)' : 'var(--text3)' }}>
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+          <button onClick={handleCreatePreviewLink} disabled={previewBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: previewBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+            {previewBusy ? 'Generating...' : '+ Create preview link'}
+          </button>
+        </div>
+        {previewError && <div style={{ fontSize: 12, color: '#EF4444', marginBottom: 12, fontWeight: 600 }}>{previewError}</div>}
+
+        {previewLinksLoading ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Loading...</div>
+        ) : previewLinks.filter(l => !l.revoked && l.expiresAt > Date.now()).length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>No active preview links.</div>
+        ) : (
+          previewLinks.filter(l => !l.revoked && l.expiresAt > Date.now()).map(l => (
+            <div key={l.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 6 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/preview/{l.id}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{fmtExpiry(l.expiresAt)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <button onClick={() => copyPreviewLink(l.id)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  {previewCopiedToken === l.id ? 'Copied!' : 'Copy'}
+                </button>
+                <button onClick={() => handleRevokePreviewLink(l.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Revoke</button>
+              </div>
+            </div>
+          ))
+        )}
+      </Section>
+    )
+  }
+
   return (
     <div style={{ maxWidth: 600 }}>
       <TeamSection />
+      <PreviewLinksSection />
       <Section title="Profile">
         <Input label="First name" value={userName} onChange={setUserName} placeholder="e.g. Alex" />
         <div style={{ marginTop: 12 }}>

@@ -256,7 +256,7 @@ function fmtDelay(step) {
   return `${n} ${unitLabel}${Number(n) === 1 ? '' : 's'}`
 }
 
-function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelayValue, onChangeDelayUnit, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd }) {
+function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, onEdit, onChangeText, onConfirm, onDelete, onChangeDelayValue, onChangeDelayUnit, onSaveDelay, onDragStart, onDragOver, onDrop, onDragEnd, readOnly }) {
   const def = STEP_TYPES[step.type]
   const isRight = def.side === 'right'
   const rowJustify = isRight ? 'flex-end' : 'flex-start'
@@ -284,7 +284,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
     </div>
   )
 
-  const icons = (
+  const icons = readOnly ? null : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
       {hasEdit && <IconBtn onClick={onEdit} title="Edit">{ICON.edit}</IconBtn>}
       <IconBtn onClick={onDelete} title="Remove" hoverColor="#EF4444">{ICON.trash}</IconBtn>
@@ -306,7 +306,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
           <div style={{ position: 'absolute', left: '50%', top: 0, width: 2, height: '100%', background: 'var(--border2)', transform: 'translateX(-50%)' }} />
           {step.type === 'followup' && (
             <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(14px, -50%)', display: 'flex', alignItems: 'center' }}>
-              {hovered ? (
+              {hovered && !readOnly ? (
                 <button
                   onClick={onEdit}
                   className="hoverable"
@@ -400,7 +400,7 @@ function PipelineStep({ step, showLine, isFirst, hasEdit, editing, isDragging, o
   )
 }
 
-function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelayValue, onChangeDelayUnit, onSaveText, onDeleteStep, onReorderStep, onSetPipeline, onClose, isMobile }) {
+function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDelayValue, onChangeDelayUnit, onSaveText, onDeleteStep, onReorderStep, onSetPipeline, onClose, isMobile, readOnly }) {
   const realPipeline = getPipeline(messages, campaign.name)
   const [menuOpen, setMenuOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -506,6 +506,9 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
         <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{fmtDate(campaign.from)} – {fmtDate(campaign.to)}</div>
 
         {pipeline.length === 0 ? (
+          readOnly ? (
+            <div style={{ fontSize: 13, color: 'var(--text3)' }}>No pipeline set for this campaign yet.</div>
+          ) : (
           <div>
             <button
               onClick={handleAddFirst}
@@ -529,6 +532,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
               {pasteError ? 'Could not paste. Copy a pipeline first' : 'or paste a copied pipeline'}
             </button>
           </div>
+          )
         ) : (
           <>
             {pipeline.map((step, i) => {
@@ -543,6 +547,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
                   hasEdit={STEP_TYPES[step.type].hasText}
                   editing={editingId === step.id}
                   isDragging={dragId === step.id}
+                  readOnly={readOnly}
                   onEdit={() => setEditingId(step.id)}
                   onChangeText={(v) => onChangeText(campaign.name, step.id, v)}
                   onChangeDelayValue={(v) => onChangeDelayValue(campaign.name, step.id, v)}
@@ -557,9 +562,11 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
                 />
               )
             })}
+            {!readOnly && (
             <PlusButton onClick={() => setMenuOpen(o => !o)}>
               {menuOpen && <AddStepMenu onPick={handlePick} />}
             </PlusButton>
+            )}
           </>
         )}
 
@@ -575,6 +582,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
             >
               {copyFlash ? 'Copied!' : 'Copy Pipeline'}
             </button>
+            {!readOnly && (
             <button
               onClick={handleSaveAll}
               className="hoverable-fade"
@@ -586,6 +594,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
             >
               {saveFlash ? 'Saved!' : 'Save'}
             </button>
+            )}
           </div>
         )}
 
@@ -618,7 +627,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
   )
 }
 
-export default function Campaigns({ data, user, config, isMobile }) {
+export default function Campaigns({ data, user, config, isMobile, readOnly }) {
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
@@ -946,6 +955,7 @@ export default function Campaigns({ data, user, config, isMobile }) {
           onSetPipeline={handleSetPipeline}
           onClose={() => setSelected(null)}
           isMobile={isMobile}
+          readOnly={readOnly}
         />
       )}
     </div>

@@ -122,6 +122,70 @@ export function useWorkspace(user) {
     return invite.workspaceId
   }
 
+  async function createPreviewLink(durationMs) {
+    if (!activeWorkspaceId) throw new Error('No active workspace.')
+    const wSnap = await getDoc(doc(db, 'users', activeWorkspaceId))
+    const cfg = wSnap.exists() ? wSnap.data() : {}
+    if (!cfg.outreachSheetId && !cfg.outreachSheets) throw new Error('Finish onboarding before creating a preview link.')
+
+    // Snapshot config needed to render the dashboard, since the preview visitor
+    // never signs in and Firestore reads require auth.
+    const configSnapshot = {
+      outreachSheetId: cfg.outreachSheetId || null,
+      outreachSheets: cfg.outreachSheets || null,
+      outreachTabs: cfg.outreachTabs || null,
+      salesSheetId: cfg.salesSheetId || null,
+      salesTab: cfg.salesTab || null,
+      calendlyPat: cfg.calendlyPat || null,
+      dailyGoal: cfg.dailyGoal ?? 20,
+      vslMode: cfg.vslMode ?? false,
+      weekendOutreach: cfg.weekendOutreach ?? false,
+      userName: cfg.userName || '',
+      logoUrl: cfg.logoUrl || null,
+      campaignMessages: cfg.campaignMessages || null,
+    }
+
+    // Snapshot the client list too (Clients tab reads Firestore by uid, which an
+    // unauthenticated preview visitor can't do), live sheet data for each client
+    // is still fetched fresh on every view.
+    let clientsSnapshot = []
+    try {
+      const clientsSnap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
+      clientsSnapshot = clientsSnap.docs.map(d => ({
+        id: d.id,
+        name: d.data().name,
+        color: d.data().color,
+        outreachSheetId: d.data().outreachSheetId,
+        sheetTabs: d.data().sheetTabs,
+        calendlyPat: d.data().calendlyPat || '',
+        calendlyUserUri: d.data().calendlyUserUri || '',
+      }))
+    } catch { /* best effort, preview still works without the client snapshot */ }
+
+    const ref = await addDoc(collection(db, 'previewLinks'), {
+      workspaceId: activeWorkspaceId,
+      createdBy: user.uid,
+      createdByName: user.displayName || user.email || '',
+      config: configSnapshot,
+      clients: clientsSnapshot,
+      createdAt: serverTimestamp(),
+      expiresAt: Date.now() + durationMs,
+      revoked: false,
+    })
+    return `${window.location.origin}/preview/${ref.id}`
+  }
+
+  async function listPreviewLinks() {
+    if (!activeWorkspaceId) return []
+    const q = query(collection(db, 'previewLinks'), where('workspaceId', '==', activeWorkspaceId))
+    const snap = await getDocs(q)
+    return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.expiresAt || 0) - (a.expiresAt || 0))
+  }
+
+  async function revokePreviewLink(token) {
+    await setDoc(doc(db, 'previewLinks', token), { revoked: true }, { merge: true })
+  }
+
   async function listMembers(workspaceId) {
     const q = query(collection(db, 'workspaceMembers'), where('workspaceId', '==', workspaceId))
     const snap = await getDocs(q)
@@ -142,6 +206,9 @@ export function useWorkspace(user) {
     switchWorkspace,
     createInvite,
     redeemInvite,
+    createPreviewLink,
+    listPreviewLinks,
+    revokePreviewLink,
     listMembers,
     removeMember,
     reload: load,

@@ -40,6 +40,45 @@ export async function getUserConfig(userId) {
   return snap.exists() ? snap.data() : null
 }
 
+export async function fetchDashboardData(cfg) {
+  const salesId = cfg.salesSheetId
+
+  // Podpora více outreach sheetů (multi-year)
+  const outreachSheets = cfg.outreachSheets ||
+    (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
+
+  // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
+  const tabData = {}
+  await Promise.all(outreachSheets.map(async sheet => {
+    const sheetTabs = sheet.tabs || []
+    const results = await Promise.all(
+      sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
+    )
+    sheetTabs.forEach((tab, i) => {
+      const key = tab.toLowerCase().slice(0, 3)
+      if (!tabData[key]) tabData[key] = []
+      tabData[key] = [...tabData[key], ...results[i]]
+    })
+  }))
+
+  const salesTab = cfg.salesTab || 'Sheet1'
+  const sales = salesId
+    ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
+    : []
+
+  const calendly = await fetchCalendly(cfg.calendlyPat)
+
+  // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
+  //, žádný hardcoded seznam měsíců, kolik tabů je ve Settings nakonfigurováno, tolik se sem propíše.
+  // mar/apr/may/jun mají fallback na [], protože na ně přímo spoléhá starší Dashboard kód.
+  return {
+    mar: [], apr: [], may: [], jun: [],
+    ...tabData,
+    sales,
+    calendly,
+  }
+}
+
 export function useData(user, workspaceId) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -65,42 +104,8 @@ export function useData(user, workspaceId) {
       setConfig(cfg)
       setNeedsSetup(false)
 
-      const salesId = cfg.salesSheetId
-
-      // Podpora více outreach sheetů (multi-year)
-      const outreachSheets = cfg.outreachSheets || 
-        (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
-      
-      // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
-      const tabData = {}
-      await Promise.all(outreachSheets.map(async sheet => {
-        const sheetTabs = sheet.tabs || []
-        const results = await Promise.all(
-          sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
-        )
-        sheetTabs.forEach((tab, i) => {
-          const key = tab.toLowerCase().slice(0, 3)
-          if (!tabData[key]) tabData[key] = []
-          tabData[key] = [...tabData[key], ...results[i]]
-        })
-      }))
-
-      const salesTab = cfg.salesTab || 'Sheet1'
-      const sales = salesId
-        ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
-        : []
-
-      const calendly = await fetchCalendly(cfg.calendlyPat)
-
-      // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
-      //, žádný hardcoded seznam měsíců, kolik tabů je ve Settings nakonfigurováno, tolik se sem propíše.
-      // mar/apr/may/jun mají fallback na [], protože na ně přímo spoléhá starší Dashboard kód.
-      setData({
-        mar: [], apr: [], may: [], jun: [],
-        ...tabData,
-        sales,
-        calendly,
-      })
+      const result = await fetchDashboardData(cfg)
+      setData(result)
       setLoadedAt(new Date())
     } catch (e) {
       setError(e.message)

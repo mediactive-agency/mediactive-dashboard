@@ -1,52 +1,51 @@
 import { LOGO_SVG } from '../utils/data'
 
-const GRADIENT = 'linear-gradient(135deg, #B16CEA 0%, #FF5E69 50%, #FFA84B 100%)'
-
 export default function Login({ onLogin, loading, inviteToken }) {
   return (
     <div className="login-root" style={{
-      minHeight: '100vh', display: 'flex',
+      height: '100vh', display: 'flex', overflow: 'hidden',
       background: 'var(--bg)',
     }}>
-      {/* Left panel, branding */}
+      {/* Left panel, branding, scrolls internally if its content is taller than the viewport */}
       <div className="login-left" style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '60px 48px',
+        padding: '40px 36px', boxSizing: 'border-box',
+        overflowY: 'auto',
         background: 'var(--card)',
         borderRight: '1px solid var(--border)',
       }}>
-        <div style={{ maxWidth: 400, width: '100%' }}>
+        <div style={{ maxWidth: 380, width: '100%' }}>
           {/* Logo */}
           <div
-            style={{ marginBottom: 32, filter: 'var(--logo-filter, none)' }}
+            style={{ marginBottom: 22, filter: 'var(--logo-filter, none)' }}
             dangerouslySetInnerHTML={{ __html: LOGO_SVG }}
           />
 
           {/* Title */}
           <div style={{
             fontSize: 13, fontWeight: 700, letterSpacing: '0.12em',
-            textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 16,
+            textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 12,
           }}>
             AGP Tracking Dashboard
           </div>
 
           {/* Tagline */}
           <h1 style={{
-            fontSize: 32, fontWeight: 800, color: 'var(--text)',
-            lineHeight: 1.2, letterSpacing: '-0.03em', margin: '0 0 20px',
+            fontSize: 30, fontWeight: 800, color: 'var(--text)',
+            lineHeight: 1.2, letterSpacing: '-0.03em', margin: '0 0 14px',
           }}>
             Track your outreach.<br />Close more deals.
           </h1>
 
           <p style={{
-            fontSize: 15, color: 'var(--text3)', lineHeight: 1.7, margin: 0,
+            fontSize: 15, color: 'var(--text3)', lineHeight: 1.6, margin: 0,
           }}>
             One place for your social outreach, sales calls, daily tasks and pipeline.
           </p>
 
           {/* Trust badges */}
-          <div style={{ display: 'flex', gap: 20, marginTop: 40 }}>
+          <div style={{ display: 'flex', gap: 20, marginTop: 24 }}>
             {[
               { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>, label: '100% free' },
               { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, label: 'Your data stays yours' },
@@ -59,13 +58,13 @@ export default function Login({ onLogin, loading, inviteToken }) {
           </div>
 
           {/* Quote */}
-          <div style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--border)' }}>
-            <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, margin: '0 0 12px', fontStyle: 'italic' }}>
+          <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
+            <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 10px', fontStyle: 'italic' }}>
               "The best feedback is data. Make objective decisions, not emotional ones. Move faster."
             </p>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>Mediactive</div>
 
-            <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, margin: '24px 0 12px', fontStyle: 'italic' }}>
+            <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '16px 0 10px', fontStyle: 'italic' }}>
               "Don't be a nerd."
             </p>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text3)' }}>Ethan Welby</div>
@@ -73,22 +72,22 @@ export default function Login({ onLogin, loading, inviteToken }) {
         </div>
       </div>
 
-      {/* Right panel, sign in */}
+      {/* Right panel, sign in, always centered in the viewport regardless of left panel height */}
       <div className="login-right" style={{
-        width: 440, display: 'flex', flexDirection: 'column',
+        width: 400, flexShrink: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '60px 48px',
+        padding: '40px 36px', boxSizing: 'border-box',
       }}>
         <div style={{ maxWidth: 320, width: '100%' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 8, letterSpacing: '-0.02em' }}>
             Sign in
           </div>
-          <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 36, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24, lineHeight: 1.5 }}>
             Use your Google account to access your dashboard.
           </div>
 
           {inviteToken && (
-            <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>
+            <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>
               You've been invited to a workspace. Sign in to join it.
             </div>
           )}
@@ -118,7 +117,7 @@ export default function Login({ onLogin, loading, inviteToken }) {
             {loading ? 'Signing in...' : 'Continue with Google'}
           </button>
 
-          <div style={{ marginTop: 24, fontSize: 12, color: 'var(--text4)', lineHeight: 1.6, textAlign: 'center' }}>
+          <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text4)', lineHeight: 1.6, textAlign: 'center' }}>
             By signing in you agree to store your outreach data in your own Google Sheets. We never access or sell your data.
           </div>
         </div>
@@ -126,9 +125,9 @@ export default function Login({ onLogin, loading, inviteToken }) {
 
       <style>{`
         @media (max-width: 768px) {
-          .login-root { flex-direction: column; }
-          .login-left { flex: none; width: 100%; box-sizing: border-box; border-right: none; border-bottom: 1px solid var(--border); padding: 40px 24px; }
-          .login-right { width: 100%; box-sizing: border-box; padding: 40px 24px; }
+          .login-root { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; }
+          .login-left { flex: none; width: 100%; overflow-y: visible; border-right: none; border-bottom: 1px solid var(--border); padding: 32px 24px; }
+          .login-right { width: 100%; padding: 32px 24px; }
         }
       `}</style>
     </div>

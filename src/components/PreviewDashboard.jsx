@@ -29,7 +29,16 @@ function CenteredMessage({ title, body }) {
       <div style={{ maxWidth: 400, width: '100%', textAlign: 'center', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '44px 36px', boxShadow: 'var(--card-shadow)' }}>
         <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center', filter: 'var(--logo-filter, none)' }} dangerouslySetInnerHTML={{ __html: LOGO_SVG }} />
         <div style={{ fontSize: 19, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>{title}</div>
-        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6 }}>{body}</div>
+        <div style={{ fontSize: 14, color: 'var(--text3)', lineHeight: 1.6, marginBottom: 28 }}>{body}</div>
+        <a href="/" style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          padding: '11px 22px', borderRadius: 10, border: '1px solid var(--border)',
+          background: 'var(--bg)', color: 'var(--text)', fontWeight: 600, fontSize: 14,
+          textDecoration: 'none', fontFamily: 'inherit',
+        }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Back to home
+        </a>
       </div>
     </div>
   )

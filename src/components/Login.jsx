@@ -4,12 +4,12 @@ const GRADIENT = 'linear-gradient(135deg, #B16CEA 0%, #FF5E69 50%, #FFA84B 100%)
 
 export default function Login({ onLogin, loading, inviteToken }) {
   return (
-    <div style={{
+    <div className="login-root" style={{
       minHeight: '100vh', display: 'flex',
       background: 'var(--bg)',
     }}>
       {/* Left panel, branding */}
-      <div style={{
+      <div className="login-left" style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '60px 48px',
@@ -74,7 +74,7 @@ export default function Login({ onLogin, loading, inviteToken }) {
       </div>
 
       {/* Right panel, sign in */}
-      <div style={{
+      <div className="login-right" style={{
         width: 440, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '60px 48px',
@@ -123,6 +123,14 @@ export default function Login({ onLogin, loading, inviteToken }) {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .login-root { flex-direction: column; }
+          .login-left { flex: none; width: 100%; box-sizing: border-box; border-right: none; border-bottom: 1px solid var(--border); padding: 40px 24px; }
+          .login-right { width: 100%; box-sizing: border-box; padding: 40px 24px; }
+        }
+      `}</style>
     </div>
   )
 }

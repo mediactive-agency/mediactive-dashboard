@@ -124,8 +124,14 @@ export function useWorkspace(user) {
 
   async function createPreviewLink(durationMs) {
     if (!activeWorkspaceId) throw new Error('No active workspace.')
-    const wSnap = await getDoc(doc(db, 'users', activeWorkspaceId))
-    const cfg = wSnap.exists() ? wSnap.data() : {}
+
+    let cfg = {}
+    try {
+      const wSnap = await getDoc(doc(db, 'users', activeWorkspaceId))
+      cfg = wSnap.exists() ? wSnap.data() : {}
+    } catch (e) {
+      throw new Error(`[users read] ${e.code || ''} ${e.message}`)
+    }
     if (!cfg.outreachSheetId && !cfg.outreachSheets) throw new Error('Finish onboarding before creating a preview link.')
 
     // Snapshot config needed to render the dashboard, since the preview visitor
@@ -171,7 +177,7 @@ export function useWorkspace(user) {
       createdAt: serverTimestamp(),
       expiresAt: Date.now() + durationMs,
       revoked: false,
-    })
+    }).catch(e => { throw new Error(`[previewLinks create] ${e.code || ''} ${e.message}`) })
     return `${window.location.origin}/preview/${ref.id}`
   }
 

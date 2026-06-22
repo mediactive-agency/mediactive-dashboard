@@ -129,8 +129,8 @@ export function useWorkspace(user) {
     try {
       const wSnap = await getDoc(doc(db, 'users', activeWorkspaceId))
       cfg = wSnap.exists() ? wSnap.data() : {}
-    } catch (e) {
-      throw new Error(`[users read] ${e.code || ''} ${e.message}`)
+    } catch {
+      throw new Error('Could not read workspace config.')
     }
     if (!cfg.outreachSheetId && !cfg.outreachSheets) throw new Error('Finish onboarding before creating a preview link.')
 
@@ -177,7 +177,7 @@ export function useWorkspace(user) {
       createdAt: serverTimestamp(),
       expiresAt: Date.now() + durationMs,
       revoked: false,
-    }).catch(e => { throw new Error(`[previewLinks create] ${e.code || ''} ${e.message}`) })
+    })
     return `${window.location.origin}/preview/${ref.id}`
   }
 

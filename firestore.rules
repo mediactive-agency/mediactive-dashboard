@@ -63,7 +63,9 @@ service cloud.firestore {
     // the workspace config so the preview page never needs an authenticated Firestore read.
     match /previewLinks/{token} {
       allow get: if true;
-      allow list: if false;
+      // Members can list their own workspace's links (Settings page); a stranger with only
+      // a token can still only get() that one doc directly, never enumerate others.
+      allow list: if request.auth != null && isMember(resource.data.workspaceId);
       allow create: if request.auth != null && isMember(request.resource.data.workspaceId);
       allow update: if request.auth != null && isOwner(resource.data.workspaceId);
       allow delete: if request.auth != null && isOwner(resource.data.workspaceId);

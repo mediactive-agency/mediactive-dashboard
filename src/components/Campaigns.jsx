@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { parseOutreachMonth } from './Dashboard'
 import { dateStr } from '../utils/data'
-import { saveUserConfig } from '../hooks/useData'
+import { saveUserConfig, saveClientConfig } from '../hooks/useData'
 
 const PALETTE = ['#60A5FA', '#F472B6', '#FB923C', '#34D399', '#A78BFA', '#FBBF24', '#22D3EE', '#F87171', '#818CF8', '#4ADE80', '#E879F9', '#FACC15']
 
@@ -627,7 +627,7 @@ function CampaignPanel({ campaign, messages, onAddStep, onChangeText, onChangeDe
   )
 }
 
-export default function Campaigns({ data, user, config, isMobile, readOnly }) {
+export default function Campaigns({ data, user, config, isMobile, readOnly, clientId }) {
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
   const [messages, setMessages] = useState(config?.campaignMessages || {})
@@ -641,6 +641,10 @@ export default function Campaigns({ data, user, config, isMobile, readOnly }) {
   }, [config?.campaignMessages])
 
   function persist(updated) {
+    if (clientId) {
+      saveClientConfig(clientId, { campaignMessages: updated }).catch(() => {})
+      return
+    }
     if (!user) return
     saveUserConfig(user.uid, { campaignMessages: updated }).catch(() => {})
   }

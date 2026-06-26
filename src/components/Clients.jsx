@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
+import Campaigns from './Campaigns'
 import { parseOutreachMonth } from './Dashboard'
 import { outreachSheets } from '../utils/data'
 import { db } from '../firebase'
@@ -224,7 +225,7 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
   )
 }
 
-function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet }) {
+function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet, user, readOnly }) {
   if (!data) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
       <div style={{ width: 28, height: 28, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -323,6 +324,17 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 
       {/* 3. Variable funnels */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="variables" />
+
+      {/* 4. Campaigns / pipelines, scoped to this client (separate from your own) */}
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '28px 0 16px' }}>Campaigns</div>
+      <Campaigns
+        data={data}
+        user={user}
+        config={{ campaignMessages: client.campaignMessages }}
+        clientId={client.ID}
+        isMobile={isMobile}
+        readOnly={readOnly}
+      />
     </div>
   )
 }
@@ -341,10 +353,10 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
       let list
       if (readOnly) {
         // Preview mode: no Firestore auth available, use the snapshot taken when the link was created.
-        list = (clientsOverride || []).map(c => ({ ID: c.id, Name: c.name, Color: c.color, 'Outreach Sheet ID': c.outreachSheetId, 'Sheet Tabs': c.sheetTabs, 'Calendly PAT': c.calendlyPat, 'Calendly User URI': c.calendlyUserUri, 'Created At': new Date() }))
+        list = (clientsOverride || []).map(c => ({ ID: c.id, Name: c.name, Color: c.color, 'Outreach Sheet ID': c.outreachSheetId, 'Sheet Tabs': c.sheetTabs, 'Calendly PAT': c.calendlyPat, 'Calendly User URI': c.calendlyUserUri, 'Created At': new Date(), campaignMessages: c.campaignMessages || {} }))
       } else {
         const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
-        list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date() }))
+        list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date(), campaignMessages: d.data().campaignMessages || {} }))
       }
       setClients(list)
       // Load data for all clients
@@ -388,7 +400,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
       </div>
-      <ClientStats client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
+      <ClientStats key={selected.ID} client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} user={user} readOnly={readOnly} />
     </div>
   )
 

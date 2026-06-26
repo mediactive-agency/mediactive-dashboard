@@ -35,6 +35,10 @@ export async function saveUserConfig(userId, config) {
   await setDoc(doc(db, 'users', userId), config, { merge: true })
 }
 
+export async function saveClientConfig(clientId, config) {
+  await setDoc(doc(db, 'clients', clientId), config, { merge: true })
+}
+
 export async function getUserConfig(userId) {
   const snap = await getDoc(doc(db, 'users', userId))
   return snap.exists() ? snap.data() : null

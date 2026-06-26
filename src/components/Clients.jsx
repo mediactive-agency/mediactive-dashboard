@@ -23,7 +23,7 @@ function extractSheetId(input) {
   return ''
 }
 
-function AddClientWizard({ onClose, onAdded }) {
+function AddClientWizard({ onClose, onAdded, user }) {
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [link, setLink] = useState('')
@@ -60,7 +60,7 @@ function AddClientWizard({ onClose, onAdded }) {
       })
       onAdded(); onClose()
     } catch(e) {
-      setError('Network error')
+      setError(e.message || 'Network error')
     }
     setLoading(false)
   }
@@ -412,7 +412,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         </div>
       )}
 
-      {showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} />}
+      {showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} user={user} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )

@@ -44,7 +44,7 @@ export async function getUserConfig(userId) {
   return snap.exists() ? snap.data() : null
 }
 
-export async function fetchDashboardData(cfg) {
+async function fetchCoreData(cfg) {
   const salesId = cfg.salesSheetId
   const salesTab = cfg.salesTab || 'Sheet1'
 
@@ -52,11 +52,7 @@ export async function fetchDashboardData(cfg) {
   const outreachSheets = cfg.outreachSheets ||
     (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
 
-  // Outreach sheets, sales sheet, and Calendly don't depend on each other at all,
-  // so fetch all three concurrently instead of one after another. Calendly in
-  // particular goes through a slow Apps Script proxy, no reason to make the
-  // (fast, direct) sheet fetches wait behind it or vice versa.
-  const [tabData, sales, calendly] = await Promise.all([
+  const [tabData, sales] = await Promise.all([
     (async () => {
       // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
       const tabData = {}
@@ -74,7 +70,6 @@ export async function fetchDashboardData(cfg) {
       return tabData
     })(),
     salesId ? fetchRange(salesId, `${salesTab}!A:J`).catch(() => []) : Promise.resolve([]),
-    fetchCalendly(cfg.calendlyPat),
   ])
 
   // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
@@ -84,8 +79,17 @@ export async function fetchDashboardData(cfg) {
     mar: [], apr: [], may: [], jun: [],
     ...tabData,
     sales,
-    calendly,
   }
+}
+
+// Used by PreviewDashboard, where there's no progressive UI to patch into, so it
+// just waits for both core data and Calendly together like before.
+export async function fetchDashboardData(cfg) {
+  const [core, calendly] = await Promise.all([
+    fetchCoreData(cfg),
+    fetchCalendly(cfg.calendlyPat),
+  ])
+  return { ...core, calendly }
 }
 
 export function useData(user, workspaceId) {
@@ -113,12 +117,22 @@ export function useData(user, workspaceId) {
       setConfig(cfg)
       setNeedsSetup(false)
 
-      const result = await fetchDashboardData(cfg)
-      setData(result)
+      // Calendly goes through a slow Apps Script proxy (cold starts). Kick it off
+      // now, but don't make the whole dashboard wait on it: render as soon as the
+      // much faster sheets + sales data is back, then quietly patch calendly into
+      // state whenever it actually lands. fetchCalendly never throws (it has its
+      // own try/catch), so this doesn't need separate error handling.
+      const calendlyPromise = fetchCalendly(cfg.calendlyPat)
+      const core = await fetchCoreData(cfg)
+      setData({ ...core, calendly: null })
       setLoadedAt(new Date())
+      setLoading(false)
+
+      calendlyPromise.then(calendly => {
+        setData(prev => prev ? { ...prev, calendly } : prev)
+      })
     } catch (e) {
       setError(e.message)
-    } finally {
       setLoading(false)
     }
   }

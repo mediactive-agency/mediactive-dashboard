@@ -46,31 +46,36 @@ export async function getUserConfig(userId) {
 
 export async function fetchDashboardData(cfg) {
   const salesId = cfg.salesSheetId
+  const salesTab = cfg.salesTab || 'Sheet1'
 
   // Podpora více outreach sheetů (multi-year)
   const outreachSheets = cfg.outreachSheets ||
     (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
 
-  // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
-  const tabData = {}
-  await Promise.all(outreachSheets.map(async sheet => {
-    const sheetTabs = sheet.tabs || []
-    const results = await Promise.all(
-      sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
-    )
-    sheetTabs.forEach((tab, i) => {
-      const key = tab.toLowerCase().slice(0, 3)
-      if (!tabData[key]) tabData[key] = []
-      tabData[key] = [...tabData[key], ...results[i]]
-    })
-  }))
-
-  const salesTab = cfg.salesTab || 'Sheet1'
-  const sales = salesId
-    ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
-    : []
-
-  const calendly = await fetchCalendly(cfg.calendlyPat)
+  // Outreach sheets, sales sheet, and Calendly don't depend on each other at all,
+  // so fetch all three concurrently instead of one after another. Calendly in
+  // particular goes through a slow Apps Script proxy, no reason to make the
+  // (fast, direct) sheet fetches wait behind it or vice versa.
+  const [tabData, sales, calendly] = await Promise.all([
+    (async () => {
+      // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
+      const tabData = {}
+      await Promise.all(outreachSheets.map(async sheet => {
+        const sheetTabs = sheet.tabs || []
+        const results = await Promise.all(
+          sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
+        )
+        sheetTabs.forEach((tab, i) => {
+          const key = tab.toLowerCase().slice(0, 3)
+          if (!tabData[key]) tabData[key] = []
+          tabData[key] = [...tabData[key], ...results[i]]
+        })
+      }))
+      return tabData
+    })(),
+    salesId ? fetchRange(salesId, `${salesTab}!A:J`).catch(() => []) : Promise.resolve([]),
+    fetchCalendly(cfg.calendlyPat),
+  ])
 
   // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
   //, žádný hardcoded seznam měsíců, kolik tabů je ve Settings nakonfigurováno, tolik se sem propíše.

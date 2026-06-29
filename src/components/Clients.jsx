@@ -6,7 +6,7 @@ import Campaigns from './Campaigns'
 import { parseOutreachMonth } from './Dashboard'
 import { outreachSheets } from '../utils/data'
 import { db } from '../firebase'
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
@@ -340,35 +340,23 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 }
 
 
-// Module-level cache so switching away from the Clients tab and back doesn't
-// re-run the slow per-client Apps Script fetches every time. Keyed by uid,
-// not cleared on unmount (only a real navigation-cycle of the SPA resets it).
-const clientsCache = new Map()
-const CACHE_STALE_MS = 60 * 1000 // refresh quietly in the background if older than this
-
-export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo, readOnly, clientsOverride }) {
-  const cacheKey = readOnly ? null : user?.uid
-  const cached = cacheKey ? clientsCache.get(cacheKey) : null
-
-  const [clients, setClients] = useState(cached?.clients || [])
-  const [clientData, setClientData] = useState(cached?.clientData || {})
-  const [loading, setLoading] = useState(!cached)
+export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo, readOnly, clientsOverride, clients: clientsProp, clientData: clientDataProp, clientsLoading, onClientsReload }) {
+  // Authenticated mode: clients + their sheet data come from useClients() up in
+  // App.jsx, which starts loading in the background once your own dashboard data
+  // is ready, regardless of which tab is open. Read-only preview links have no
+  // App-level loader to plug into, so they keep loading themselves below.
+  const [previewClients, setPreviewClients] = useState([])
+  const [previewClientData, setPreviewClientData] = useState({})
+  const [previewLoading, setPreviewLoading] = useState(true)
   const [showWizard, setShowWizard] = useState(false)
   const [selected, setSelected] = useState(null)
 
-  async function loadClients({ background = false } = {}) {
-    if (!background) setLoading(true)
+  async function loadPreviewClients() {
+    setPreviewLoading(true)
     try {
-      let list
-      if (readOnly) {
-        // Preview mode: no Firestore auth available, use the snapshot taken when the link was created.
-        list = (clientsOverride || []).map(c => ({ ID: c.id, Name: c.name, Color: c.color, 'Outreach Sheet ID': c.outreachSheetId, 'Sheet Tabs': c.sheetTabs, 'Calendly PAT': c.calendlyPat, 'Calendly User URI': c.calendlyUserUri, 'Created At': new Date(), campaignMessages: c.campaignMessages || {} }))
-      } else {
-        const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
-        list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date(), campaignMessages: d.data().campaignMessages || {} }))
-      }
-      setClients(list)
-      // Load data for all clients
+      // Preview mode: no Firestore auth available, use the snapshot taken when the link was created.
+      const list = (clientsOverride || []).map(c => ({ ID: c.id, Name: c.name, Color: c.color, 'Outreach Sheet ID': c.outreachSheetId, 'Sheet Tabs': c.sheetTabs, 'Calendly PAT': c.calendlyPat, 'Calendly User URI': c.calendlyUserUri, 'Created At': new Date(), campaignMessages: c.campaignMessages || {} }))
+      setPreviewClients(list)
       const dataMap = {}
       await Promise.all(list.map(async c => {
         try {
@@ -388,23 +376,19 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
           }
         } catch(e) { dataMap[c.ID] = null }
       }))
-      setClientData(dataMap)
-      if (cacheKey) clientsCache.set(cacheKey, { clients: list, clientData: dataMap, ts: Date.now() })
+      setPreviewClientData(dataMap)
     } catch(e) {
-      if (!background) setClients([])
+      setPreviewClients([])
     }
-    if (!background) setLoading(false)
+    setPreviewLoading(false)
   }
 
-  useEffect(() => {
-    if (cached) {
-      // Already showing cached data instantly. Only hit the network again
-      // if it's gotten a bit stale, and do it quietly without a spinner.
-      if (Date.now() - cached.ts > CACHE_STALE_MS) loadClients({ background: true })
-    } else {
-      loadClients()
-    }
-  }, [])
+  useEffect(() => { if (readOnly) loadPreviewClients() }, [])
+
+  const clients = readOnly ? previewClients : (clientsProp || [])
+  const clientData = readOnly ? previewClientData : (clientDataProp || {})
+  const loading = readOnly ? previewLoading : !!clientsLoading
+  const reload = readOnly ? loadPreviewClients : (onClientsReload || (() => {}))
 
   if (selected) return (
     <div>
@@ -451,7 +435,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         </div>
       )}
 
-      {!readOnly && showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} user={user} />}
+      {!readOnly && showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={reload} user={user} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )

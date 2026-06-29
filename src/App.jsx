@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
+import { useClients } from './hooks/useClients'
 import { useWorkspace } from './hooks/useWorkspace'
 import { useTheme } from './hooks/useTheme'
 import { useWindowSize } from './hooks/useWindowSize'
@@ -52,6 +53,10 @@ export default function App() {
   const { user, isAdmin, allowed, loading: authLoading, login, logout } = useAuth()
   const workspace = useWorkspace(user)
   const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user, workspace.activeWorkspaceId)
+  // Loads quietly in the background once the dashboard data above is ready, so it
+  // doesn't compete with it on login, and is usually already there by the time
+  // you click the Clients tab.
+  const clientsState = useClients(user, { enabled: !loading && !!data })
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
 
@@ -148,7 +153,7 @@ export default function App() {
               {page === 'outreach'  && <Outreach  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} vslMode={config?.vslMode ?? false} />}
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
-              {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
+              {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} clients={clientsState.clients} clientData={clientsState.clientData} clientsLoading={clientsState.loading} onClientsReload={clientsState.reload} />}
               {page === 'campaigns' && <Campaigns data={data} user={user} config={config} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'settings'  && <Settings  user={user} config={config} workspaceId={workspace.activeWorkspaceId} workspace={workspace} isOwner={workspace.activeRole === 'owner'} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}

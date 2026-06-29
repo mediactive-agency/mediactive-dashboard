@@ -340,15 +340,24 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 }
 
 
+// Module-level cache so switching away from the Clients tab and back doesn't
+// re-run the slow per-client Apps Script fetches every time. Keyed by uid,
+// not cleared on unmount (only a real navigation-cycle of the SPA resets it).
+const clientsCache = new Map()
+const CACHE_STALE_MS = 60 * 1000 // refresh quietly in the background if older than this
+
 export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo, readOnly, clientsOverride }) {
-  const [clients, setClients] = useState([])
-  const [clientData, setClientData] = useState({})
-  const [loading, setLoading] = useState(true)
+  const cacheKey = readOnly ? null : user?.uid
+  const cached = cacheKey ? clientsCache.get(cacheKey) : null
+
+  const [clients, setClients] = useState(cached?.clients || [])
+  const [clientData, setClientData] = useState(cached?.clientData || {})
+  const [loading, setLoading] = useState(!cached)
   const [showWizard, setShowWizard] = useState(false)
   const [selected, setSelected] = useState(null)
 
-  async function loadClients() {
-    setLoading(true)
+  async function loadClients({ background = false } = {}) {
+    if (!background) setLoading(true)
     try {
       let list
       if (readOnly) {
@@ -380,13 +389,22 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         } catch(e) { dataMap[c.ID] = null }
       }))
       setClientData(dataMap)
+      if (cacheKey) clientsCache.set(cacheKey, { clients: list, clientData: dataMap, ts: Date.now() })
     } catch(e) {
-      setClients([])
+      if (!background) setClients([])
     }
-    setLoading(false)
+    if (!background) setLoading(false)
   }
 
-  useEffect(() => { loadClients() }, [])
+  useEffect(() => {
+    if (cached) {
+      // Already showing cached data instantly. Only hit the network again
+      // if it's gotten a bit stale, and do it quietly without a spinner.
+      if (Date.now() - cached.ts > CACHE_STALE_MS) loadClients({ background: true })
+    } else {
+      loadClients()
+    }
+  }, [])
 
   if (selected) return (
     <div>

@@ -13,6 +13,7 @@ export default function FilterBar({ active, onFilter, customFrom, customTo, onCu
           <button
             key={f.key}
             onClick={() => onFilter(f.key)}
+            className={active === f.key ? 'hoverable-fade' : 'hoverable'}
             style={{
               padding: isMobile ? '6px 10px' : '5px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
               fontSize: isMobile ? 12 : 11,
@@ -33,7 +34,7 @@ export default function FilterBar({ active, onFilter, customFrom, customTo, onCu
                 style={{ background: 'var(--bg)', border: '1px solid var(--border2)', borderRadius: 7, color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontSize: 13, padding: '7px 12px', outline: 'none', width: 140 }} />
             </div>
           ))}
-          <button onClick={onCustomApply} style={{ padding: '8px 18px', background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Apply</button>
+          <button onClick={onCustomApply} className="hoverable-fade" style={{ padding: '8px 18px', background: 'var(--filter-active-bg)', color: 'var(--filter-active-text)', border: 'none', borderRadius: 7, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>Apply</button>
         </div>
       )}
     </div>

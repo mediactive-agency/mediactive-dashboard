@@ -2,7 +2,7 @@ name: Deploy to Firebase Hosting
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'preview/**' ]
 
 jobs:
   deploy:
@@ -14,9 +14,37 @@ jobs:
           node-version: '20'
       - run: npm install
       - run: npm run build
+      - name: Authenticate gcloud / Firebase CLI
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$HOME/firebase-key.json"
+      - name: Deploy Firestore rules
+        continue-on-error: true
+        run: npx firebase-tools@latest deploy --only firestore:rules --project mediactive-dashboard
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/firebase-key.json
+      - name: Compute channel id
+        id: channel
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "id=live" >> "$GITHUB_OUTPUT"
+          else
+            SAFE=$(echo "${{ github.ref_name }}" | tr '/' '-' | tr -cd 'a-zA-Z0-9-' | cut -c1-30)
+            echo "id=$SAFE" >> "$GITHUB_OUTPUT"
+          fi
       - uses: FirebaseExtended/action-hosting-deploy@v0
+        id: deploy
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
           projectId: mediactive-dashboard
+          channelId: ${{ steps.channel.outputs.id }}
+          expires: ${{ github.ref == 'refs/heads/main' && '' || '7d' }}
+      - name: Print preview URL
+        run: echo "DEPLOY URL -> ${{ steps.deploy.outputs.details_url }}"
+      - name: Post deploy URL as commit comment
+        if: always()
+        run: |
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/comments" \
+            -d "{\"body\": \"Preview URL: ${{ steps.deploy.outputs.details_url }}\"}"

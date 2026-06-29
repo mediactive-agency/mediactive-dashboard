@@ -252,6 +252,12 @@ const OVERLAY_STEPS = [
     placement: 'right',
   },
   {
+    target: '[data-tour="sidebar-campaigns"]',
+    title: 'Campaigns',
+    body: 'Timeline of your outreach campaigns plus a message pipeline builder. Track your initiation message, follow-up cadence, and what you send once a prospect replies positively.',
+    placement: 'right',
+  },
+  {
     target: '[data-tour="sidebar-settings"]',
     title: 'Settings',
     body: 'Add a new outreach sheet for a new year or second spreadsheet. Download the Claude skill here.',
@@ -339,7 +345,7 @@ export default function OnboardingTour({ userName, onClose, onNav, isMobile, vsl
 
   useEffect(() => {
     if (phase !== 'overlay') return
-    const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'settings'}
+    const navMap = {0:'dashboard',1:'outreach',2:'sales',3:'tasks',4:'clients',5:'campaigns',6:'settings'}
     if (navMap[overlayStep] && onNav) onNav(navMap[overlayStep], true)
     setTimeout(() => {
       const el = document.querySelector(OVERLAY_STEPS[overlayStep].target)
@@ -451,10 +457,10 @@ export function HelpButton({ onClick }) {
         background: 'var(--bg)', border: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer', color: 'var(--text2)', flexShrink: 0,
-        transition: 'border-color 0.15s, color 0.15s',
+        transition: 'border-color 0.15s, color 0.15s, background-color 0.15s',
       }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--text)'; e.currentTarget.style.color = 'var(--text)' }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--text)'; e.currentTarget.style.color = 'var(--bg)' }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text2)' }}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
         <circle cx="12" cy="12" r="10"/>

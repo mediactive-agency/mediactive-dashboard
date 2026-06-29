@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import './index.css'
 import { useData } from './hooks/useData'
+import { useWorkspace } from './hooks/useWorkspace'
 import { useTheme } from './hooks/useTheme'
 import { useWindowSize } from './hooks/useWindowSize'
 import Sidebar, { TogglePill } from './components/Sidebar'
@@ -10,7 +11,10 @@ import Outreach from './components/Outreach'
 import Sales from './components/Sales'
 import Tasks from './components/Tasks'
 import Clients from './components/Clients'
+import Campaigns from './components/Campaigns'
 import Login from './components/Login'
+import InviteLanding from './components/InviteLanding'
+import PreviewDashboard from './components/PreviewDashboard'
 import OnboardingTour, { HelpButton } from './components/OnboardingTour'
 import Onboarding from './components/Onboarding'
 import { useAuth } from './hooks/useAuth'
@@ -36,13 +40,28 @@ export default function App() {
   const [appliedTo, setAppliedTo] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [tourOpen, setTourOpen] = useState(false)
+  const [inviteToken, setInviteToken] = useState(() => {
+    const m = window.location.pathname.match(/^\/invite\/([^/]+)/)
+    return m ? m[1] : null
+  })
+  const [previewToken] = useState(() => {
+    const m = window.location.pathname.match(/^\/preview\/([^/]+)/)
+    return m ? m[1] : null
+  })
 
   const { user, isAdmin, allowed, loading: authLoading, login, logout } = useAuth()
-  const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user)
+  const workspace = useWorkspace(user)
+  const { data, loading, error, reload, loadedAt, needsSetup, config } = useData(user, workspace.activeWorkspaceId)
   const { theme, toggle, isManual } = useTheme()
   const { isMobile, isTablet } = useWindowSize()
 
-  // Compute task stats directly here — no dependency on Tasks tab being visible
+  async function handleAcceptInvite(token) {
+    await workspace.redeemInvite(token)
+    window.history.replaceState({}, '', '/')
+    setInviteToken(null)
+  }
+
+  // Compute task stats directly here, no dependency on Tasks tab being visible
   const taskStats = useMemo(() => computeTaskStats(data, { vslMode: config?.vslMode ?? false, weekendOutreach: config?.weekendOutreach ?? false }), [data, config?.vslMode, config?.weekendOutreach])
   const dailyStats = taskStats ? {
     fuToday: taskStats.fuTotal,
@@ -61,16 +80,19 @@ export default function App() {
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', settings: 'Settings', members: 'AGP Members' }
+  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns', settings: 'Settings', members: 'AGP Members' }
   const isDark = theme === 'dark'
 
+  if (previewToken) return <PreviewDashboard token={previewToken} />
   if (authLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
+  if (inviteToken) return <InviteLanding token={inviteToken} user={user} onLogin={login} onAccept={handleAcceptInvite} />
   if (!user || !allowed) return <Login onLogin={login} />
+  if (workspace.loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div style={{ width: 32, height: 32, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style></div>
   function handleSetupComplete(opts) {
     reload()
     if (opts?.showTour) setTourOpen(true)
   }
-  if (needsSetup) return <Onboarding user={user} onComplete={handleSetupComplete} isMobile={isMobile} />
+  if (needsSetup) return <Onboarding user={user} workspaceId={workspace.activeWorkspaceId} onComplete={handleSetupComplete} isMobile={isMobile} />
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -82,6 +104,9 @@ export default function App() {
         onLogout={logout}
         logoUrl={config?.logoUrl}
         isAdmin={isAdmin}
+        workspaces={workspace.workspaces}
+        activeWorkspaceId={workspace.activeWorkspaceId}
+        onSwitchWorkspace={workspace.switchWorkspace}
       />
 
       <main style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minHeight: '100vh', transition: 'margin 0.25s' }}>
@@ -124,7 +149,8 @@ export default function App() {
               {page === 'sales'     && <Sales     data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} theme={theme} isMobile={isMobile} isTablet={isTablet} />}
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} />}
-              {page === 'settings'  && <Settings  user={user} config={config} onSaved={reload} isMobile={isMobile} />}
+              {page === 'campaigns' && <Campaigns data={data} user={user} config={config} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'settings'  && <Settings  user={user} config={config} workspaceId={workspace.activeWorkspaceId} workspace={workspace} isOwner={workspace.activeRole === 'owner'} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}
             </>
           ) : null}

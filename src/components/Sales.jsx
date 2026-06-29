@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { TODAY, toDateStr, toSalesDateStr, inRange } from '../utils/data'
+import { TODAY, toDateStr, toSalesDateStr, inRange, outreachSheets } from '../utils/data'
 
 const OBJ_CATS = [
   { key: 'too_expensive', label: 'Too Expensive',      color: '#EF4444', patterns: ['price','expensive','budget','afford','cost','payment','invest','money','fund','cash','financial','runway'] },
@@ -146,7 +146,7 @@ function CallCard({ r, linkedinMap, isMobile }) {
         </div>
       </div>
 
-      {/* Current / Desired situation — dark inset panels */}
+      {/* Current / Desired situation, dark inset panels */}
       {(cur || goal || r[2] || r[3]) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '14px 16px' }}>
@@ -193,7 +193,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
 
     // LinkedIn map from outreach
     const linkedinMap = {}
-    const allOutreach = [...data.mar, ...data.apr, ...data.may, ...(data.jun||[])]
+    const allOutreach = outreachSheets(data).flat()
     let foundH = false
     for (const r of allOutreach) {
       if (!foundH) { if (r && r[1] === 'Name' && r[3] === 'Date') { foundH = true } continue }
@@ -243,9 +243,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
   return (
     <div>
       {/* Upcoming */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Upcoming Calls</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Upcoming Calls</div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
         {upcomingCalls.length === 0
           ? <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E7EB', padding: '20px 24px', color: 'var(--text4)', fontSize: 13 }}>No upcoming calls scheduled</div>
@@ -304,7 +302,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
           </div>
         ))}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '22px 24px', boxShadow: 'var(--card-shadow)' }}>
-          <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '—'}</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: avgQColor, lineHeight: 1, marginTop: 8 }}>{avgQ !== null ? avgQ : '-'}</div>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 4 }}>Lead Quality</div>
         </div>
       </div>
@@ -348,9 +346,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
       </div>
 
       {/* Call log */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} /><div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Call Log</div><div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Call Log</div>
       <div style={{ marginBottom: 20 }}>
         {filtered.length === 0
           ? <div style={{ color: 'var(--text4)', fontSize: 14, textAlign: 'center', padding: 48 }}>No calls in selected period</div>

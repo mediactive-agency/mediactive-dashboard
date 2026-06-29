@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
+import Campaigns from './Campaigns'
 import { parseOutreachMonth } from './Dashboard'
+import { outreachSheets } from '../utils/data'
 import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore'
 
@@ -73,7 +75,7 @@ function AddClientWizard({ onClose, onAdded, user }) {
       <div style={{ background: 'var(--card)', borderRadius: 16, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
           <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>Add New Client</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4 }}>
+          <button onClick={onClose} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, borderRadius: 8 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -87,7 +89,7 @@ function AddClientWizard({ onClose, onAdded, user }) {
             <label style={labelStyle}>COLOR</label>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {COLORS.map(c => (
-                <button key={c} onClick={() => setColor(c)} style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
+                <button key={c} onClick={() => setColor(c)} className="hoverable-fade" style={{ width: 32, height: 32, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--text)' : '3px solid transparent', cursor: 'pointer', padding: 0 }} />
               ))}
             </div>
           </div>
@@ -98,7 +100,7 @@ function AddClientWizard({ onClose, onAdded, user }) {
           </div>
 
           {!showCalendly ? (
-            <button onClick={() => setShowCalendly(true)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={() => setShowCalendly(true)} className="hoverable-fade" style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 13, fontWeight: 600, padding: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Calendly (optional)
             </button>
@@ -118,7 +120,7 @@ function AddClientWizard({ onClose, onAdded, user }) {
 
         {error && <div style={{ color: '#EF4444', fontSize: 13, marginTop: 16 }}>{error}</div>}
 
-        <button onClick={submit} disabled={loading} style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, marginTop: 28, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
+        <button onClick={submit} disabled={loading} className="hoverable-fade" style={{ width: '100%', padding: '12px', borderRadius: 8, border: 'none', background: color, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 14, marginTop: 28, opacity: loading ? 0.7 : 1 }}>{loading ? 'Adding...' : 'Add Client'}</button>
       </div>
     </div>
   )
@@ -127,7 +129,7 @@ function AddClientWizard({ onClose, onAdded, user }) {
 function calcStats(data, filter, customFrom, customTo) {
   if (!data) return null
   const allRows = []
-  for (const sheet of [data.mar||[], data.apr||[], data.may||[], data.jun||[]]) {
+  for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) {
       if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
@@ -207,9 +209,9 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
           <div style={{ width: 1, alignSelf: 'stretch', background: 'var(--border)' }} />
           <div style={{ display: 'flex', gap: 28 }}>
             {[
-              { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '—', color: '#F472B6' },
-              { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '—', color: '#FB923C' },
-              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '—', color: '#A855F7' },
+              { label: 'MSR', val: stats.msr !== null ? stats.msr+'%' : '-', color: '#F472B6' },
+              { label: 'PRR', val: stats.prr !== null ? stats.prr+'%' : '-', color: '#FB923C' },
+              { label: 'ABR', val: stats.abr !== null ? stats.abr+'%' : '-', color: '#A855F7' },
             ].map(m => (
               <div key={m.label}>
                 <div style={{ fontSize: 11, color: 'var(--text4)', marginBottom: 5, fontWeight: 600 }}>{m.label}</div>
@@ -223,7 +225,7 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
   )
 }
 
-function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet }) {
+function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet, user, readOnly }) {
   if (!data) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
       <div style={{ width: 28, height: 28, border: '2px solid var(--text)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -260,7 +262,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
       {/* 2. Monthly Performance + Daily Tasks vedle sebe */}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, margin: '28px 0' }}>
 
-        {/* Monthly Performance — zactly same layout as main dashboard */}
+        {/* Monthly Performance, zactly same layout as main dashboard */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
           {monthlyRows.map((m, mi) => (
@@ -300,12 +302,12 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
           ))}
         </div>
 
-        {/* Daily Tasks — standalone karty */}
+        {/* Daily Tasks, standalone karty */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[
             { label: 'Outreach',       value: `${outreachCount}/20`,        color: outreachCount >= 20 ? '#34D399' : '#EF4444',                                                    sub: outreachCount >= 20 ? 'Goal reached' : 'Messages sent' },
-            { label: 'Followups',      value: `${fuDone}/${fuTotal||'—'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
-            { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'—'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
+            { label: 'Followups',      value: `${fuDone}/${fuTotal||'-'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
+            { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'-'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
               <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
@@ -322,12 +324,23 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
 
       {/* 3. Variable funnels */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="variables" />
+
+      {/* 4. Campaigns / pipelines, scoped to this client (separate from your own) */}
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '28px 0 16px' }}>Campaigns</div>
+      <Campaigns
+        data={data}
+        user={user}
+        config={{ campaignMessages: client.campaignMessages }}
+        clientId={client.ID}
+        isMobile={isMobile}
+        readOnly={readOnly}
+      />
     </div>
   )
 }
 
 
-export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo }) {
+export default function Clients({ user, isMobile, isTablet, filter, customFrom, customTo, readOnly, clientsOverride }) {
   const [clients, setClients] = useState([])
   const [clientData, setClientData] = useState({})
   const [loading, setLoading] = useState(true)
@@ -337,8 +350,14 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
   async function loadClients() {
     setLoading(true)
     try {
-      const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
-      const list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date() }))
+      let list
+      if (readOnly) {
+        // Preview mode: no Firestore auth available, use the snapshot taken when the link was created.
+        list = (clientsOverride || []).map(c => ({ ID: c.id, Name: c.name, Color: c.color, 'Outreach Sheet ID': c.outreachSheetId, 'Sheet Tabs': c.sheetTabs, 'Calendly PAT': c.calendlyPat, 'Calendly User URI': c.calendlyUserUri, 'Created At': new Date(), campaignMessages: c.campaignMessages || {} }))
+      } else {
+        const snap = await getDocs(query(collection(db, 'clients'), where('active', '==', true), where('userId', '==', user.uid)))
+        list = snap.docs.map(d => ({ ID: d.id, Name: d.data().name, Color: d.data().color, 'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs, 'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri, 'Created At': d.data().createdAt?.toDate?.() || new Date(), campaignMessages: d.data().campaignMessages || {} }))
+      }
       setClients(list)
       // Load data for all clients
       const dataMap = {}
@@ -371,7 +390,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
 
   if (selected) return (
     <div>
-      <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
+      <button onClick={() => setSelected(null)} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
         All Clients
       </button>
@@ -381,7 +400,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
       </div>
-      <ClientStats client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} />
+      <ClientStats key={selected.ID} client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} user={user} readOnly={readOnly} />
     </div>
   )
 
@@ -389,10 +408,12 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ fontSize: 13, color: 'var(--text3)' }}>{clients.length} active client{clients.length !== 1 ? 's' : ''}</div>
-        <button onClick={() => setShowWizard(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+        {!readOnly && (
+        <button onClick={() => setShowWizard(true)} className="btn-outline-hover" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Client
         </button>
+        )}
       </div>
 
       {loading ? (
@@ -403,8 +424,8 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         <div style={{ textAlign: 'center', padding: '60px 20px' }}>
           <div style={{ fontSize: 40, marginBottom: 16 }}>👥</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No clients yet</div>
-          <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>Add your first client to start tracking their outreach</div>
-          <button onClick={() => setShowWizard(true)} style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>
+          <div style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 24 }}>{readOnly ? 'No clients to show.' : 'Add your first client to start tracking their outreach'}</div>
+          {!readOnly && <button onClick={() => setShowWizard(true)} className="btn-outline-hover" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>Add First Client</button>}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>
@@ -412,7 +433,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
         </div>
       )}
 
-      {showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} user={user} />}
+      {!readOnly && showWizard && <AddClientWizard onClose={() => setShowWizard(false)} onAdded={loadClients} user={user} />}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )

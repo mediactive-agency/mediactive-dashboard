@@ -35,12 +35,55 @@ export async function saveUserConfig(userId, config) {
   await setDoc(doc(db, 'users', userId), config, { merge: true })
 }
 
+export async function saveClientConfig(clientId, config) {
+  await setDoc(doc(db, 'clients', clientId), config, { merge: true })
+}
+
 export async function getUserConfig(userId) {
   const snap = await getDoc(doc(db, 'users', userId))
   return snap.exists() ? snap.data() : null
 }
 
-export function useData(user) {
+export async function fetchDashboardData(cfg) {
+  const salesId = cfg.salesSheetId
+
+  // Podpora více outreach sheetů (multi-year)
+  const outreachSheets = cfg.outreachSheets ||
+    (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
+
+  // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
+  const tabData = {}
+  await Promise.all(outreachSheets.map(async sheet => {
+    const sheetTabs = sheet.tabs || []
+    const results = await Promise.all(
+      sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
+    )
+    sheetTabs.forEach((tab, i) => {
+      const key = tab.toLowerCase().slice(0, 3)
+      if (!tabData[key]) tabData[key] = []
+      tabData[key] = [...tabData[key], ...results[i]]
+    })
+  }))
+
+  const salesTab = cfg.salesTab || 'Sheet1'
+  const sales = salesId
+    ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
+    : []
+
+  const calendly = await fetchCalendly(cfg.calendlyPat)
+
+  // tabData obsahuje VŠECHNY natažené taby (klíč = první 3 písmena tabu, lowercase)
+  //, žádný hardcoded seznam měsíců, kolik tabů je ve Settings nakonfigurováno, tolik se sem propíše.
+  // mar/apr/may/jun mají fallback na [], protože na ně přímo spoléhá starší Dashboard kód.
+  return {
+    mar: [], apr: [], may: [], jun: [],
+    ...tabData,
+    sales,
+    calendly,
+  }
+}
+
+export function useData(user, workspaceId) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -48,13 +91,15 @@ export function useData(user) {
   const [config, setConfig] = useState(null)
   const [needsSetup, setNeedsSetup] = useState(false)
 
+  const effectiveId = workspaceId || user?.uid
+
   async function load() {
-    if (!user) return
+    if (!user || !effectiveId) return
     setLoading(true)
     setError(null)
     try {
-      // Načti user config z Firestore
-      const cfg = await getUserConfig(user.uid)
+      // Načti config aktivního workspace z Firestore
+      const cfg = await getUserConfig(effectiveId)
       if (!cfg || !cfg.outreachSheetId) {
         setNeedsSetup(true)
         setLoading(false)
@@ -63,41 +108,8 @@ export function useData(user) {
       setConfig(cfg)
       setNeedsSetup(false)
 
-      const salesId = cfg.salesSheetId
-
-      // Podpora více outreach sheetů (multi-year)
-      const outreachSheets = cfg.outreachSheets || 
-        (cfg.outreachSheetId ? [{ id: cfg.outreachSheetId, tabs: cfg.outreachTabs || ['Mar','Apr','May','Jun'] }] : [])
-      
-      // Fetch všechny sheety, merguj taby — stejný tab z různých sheetů se sloučí
-      const tabData = {}
-      await Promise.all(outreachSheets.map(async sheet => {
-        const sheetTabs = sheet.tabs || []
-        const results = await Promise.all(
-          sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
-        )
-        sheetTabs.forEach((tab, i) => {
-          const key = tab.toLowerCase().slice(0, 3)
-          if (!tabData[key]) tabData[key] = []
-          tabData[key] = [...tabData[key], ...results[i]]
-        })
-      }))
-
-      const salesTab = cfg.salesTab || 'Sheet1'
-      const sales = salesId
-        ? await fetchRange(salesId, `${salesTab}!A:J`).catch(() => [])
-        : []
-
-      const calendly = await fetchCalendly(cfg.calendlyPat)
-
-      setData({
-        mar: tabData['mar'] || [],
-        apr: tabData['apr'] || [],
-        may: tabData['may'] || [],
-        jun: tabData['jun'] || [],
-        sales,
-        calendly,
-      })
+      const result = await fetchDashboardData(cfg)
+      setData(result)
       setLoadedAt(new Date())
     } catch (e) {
       setError(e.message)
@@ -106,7 +118,7 @@ export function useData(user) {
     }
   }
 
-  useEffect(() => { load() }, [user?.uid])
+  useEffect(() => { load() }, [user?.uid, effectiveId])
 
   return { data, loading, error, reload: load, loadedAt, config, needsSetup }
 }

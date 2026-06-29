@@ -57,7 +57,7 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
         <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: textC, lineHeight: 1 }}>{d.getDate()}</div>
         {!isWeekend && (
           <div style={{ fontSize: isMobile ? 10 : 12, fontWeight: 600, color: numC, lineHeight: 1.5, marginTop: 4 }}>
-            <div>{initiated > 0 ? <>{initiated}<span style={{ fontWeight: 400, opacity: 0.7 }}>/{dailyGoal}</span></> : <span style={{ opacity: 0.2 }}>—</span>}</div>
+            <div>{initiated > 0 ? <>{initiated}<span style={{ fontWeight: 400, opacity: 0.7 }}>/{dailyGoal}</span></> : <span style={{ opacity: 0.2 }}>-</span>}</div>
             {fuT > 0 && <div>{fuD}/{fuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> fu</span></div>}
             {pfuT > 0 && <div>{pfuD}/{pfuT}<span style={{ fontWeight: 400, opacity: 0.7 }}> pfu</span></div>}
           </div>
@@ -99,7 +99,7 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
         <>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: showBar ? 10 : 0 }}>
             <span style={{ fontSize: 40, fontWeight: 800, color, lineHeight: 1 }}>{value}</span>
-            <span style={{ fontSize: 16, color: 'var(--text3)' }}>/ {total || '—'}</span>
+            <span style={{ fontSize: 16, color: 'var(--text3)' }}>/ {total || '-'}</span>
           </div>
           {showBar && <div style={{ height: 5, background: 'var(--border)', borderRadius: 3 }}><div style={{ height: '100%', width: `${Math.min((value/(total||1))*100,100)}%`, background: color, borderRadius: 3 }} /></div>}
         </>
@@ -134,7 +134,6 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
           <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
           <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
         </div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
     )
@@ -143,7 +142,6 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
   return (
     <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>Streak Calendar</div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
       <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>

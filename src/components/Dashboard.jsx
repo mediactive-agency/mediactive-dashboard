@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
-import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct } from '../utils/data'
+import { useMemo, useState } from 'react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct, dateStr, ago, todayStr, outreachSheets } from '../utils/data'
 
 export function parseOutreachMonth(rows) {
   let summary = null
@@ -31,7 +32,8 @@ export function parseOutreachMonth(rows) {
         for (let fi = 16; fi <= 22; fi++) { if (r[fi]) { const fd = toDateStr(r[fi]); if (fd && fd <= calendlyDate) followups++ } }
       }
       const daysToBook = hasC && r[3] && r[27] ? (() => { const d1 = new Date(toDateStr(r[3])); const d2 = new Date(toDateStr(r[27])); const diff = Math.round((d2-d1)/(1000*60*60*24)); return diff >= 0 ? diff : null })() : null
-      rawRows.push({ date, hasMS, hasB, hasC, hasD, hasE, hasVSLB, followups, daysToBook })
+      const varName = r[4] ? normName(String(r[4]).trim()) : null
+      rawRows.push({ date, hasMS, hasB, hasC, hasD, hasE, hasVSLB, followups, daysToBook, varName })
     }
   }
   if (!summary && rawRows.length > 0) {
@@ -98,15 +100,17 @@ function getGreeting() {
 }
 
 export default function Dashboard({ data, filter, customFrom, customTo, vslMode = false, dailyStats, isMobile, isTablet, clientMode }) {
+  const [selectedVars, setSelectedVars] = useState(['__all__'])
+  const [trendValueMode, setTrendValueMode] = useState('pct') // 'pct' | 'count'
   const stats = useMemo(() => {
     if (!data) return null
-    const M = {
-      Mar: parseOutreachMonth(data.mar),
-      Apr: parseOutreachMonth(data.apr),
-      May: parseOutreachMonth(data.may),
-      Jun: parseOutreachMonth(data.jun || []),
-    }
-    const allRaw = [...M.Mar.rawRows, ...M.Apr.rawRows, ...M.May.rawRows, ...M.Jun.rawRows]
+    // Dynamicky zpracuje VŠECHNY natažené outreach taby (cokoliv kromě sales/calendly) ,
+    // žádný pevný seznam měsíců, kolik tabů přijde ze sheetu, tolik se zpracuje.
+    const tabKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
+    const M = {}
+    tabKeys.forEach(k => { M[k] = parseOutreachMonth(data[k]) })
+
+    const allRaw = tabKeys.flatMap(k => M[k].rawRows)
     const filtered = filter === 'all' ? allRaw : allRaw.filter(r => inRange(r.date, filter, customFrom, customTo))
     const A = filtered.length
     const MS = filtered.filter(r => r.hasMS).length
@@ -116,14 +120,91 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     const E = filtered.filter(r => r.hasE).length
     const VSLB = filtered.filter(r => r.hasVSLB).length
 
-    const ALL_MONTHS = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb']
-    const currentMonthIdx = new Date().getMonth()
-    const MONTH_TO_KEY = { Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11, Jan:0, Feb:1 }
-    const lastThree = ALL_MONTHS.filter(m => MONTH_TO_KEY[m] <= currentMonthIdx && M[m]).slice(-3)
-    const monthlyTable = lastThree.map(m => {
-      const s = M[m] && M[m].summary; if (!s) return null
-      return { month: m, ...s, msr: pct(s.MS, s.A), abr: pct(s.C, s.A) }
+    // Pořadí a label pro "poslední 3 měsíce" odvozené z reálných dat v tabu, ne z názvu tabu
+    const monthEntries = tabKeys
+      .map(k => {
+        const dates = M[k].rawRows.map(r => r.date).filter(Boolean).sort()
+        if (dates.length === 0) return null
+        return { key: k, label: k.charAt(0).toUpperCase() + k.slice(1, 3), firstDate: dates[0], summary: M[k].summary }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.firstDate.localeCompare(b.firstDate))
+    const lastThree = monthEntries.slice(-3)
+    const monthlyPerf = lastThree.map(({ label, summary: s }) => {
+      if (!s) return null
+      return { month: label, ...s, msr: pct(s.MS, s.A), prr: pct(s.B, s.A), abr: pct(s.C, s.A) }
     }).filter(Boolean)
+
+    // ---- Date-range-aware trend buckets (daily if range < 30 days, otherwise weekly) ----
+    const allDates = filtered.map(r => r.date).filter(Boolean).sort()
+    let rangeStart = null, rangeEnd = null
+    if (filter === 'custom') {
+      rangeStart = customFrom || (allDates[0] || null)
+      rangeEnd = customTo || (allDates[allDates.length - 1] || null)
+    } else if (filter === 'all') {
+      rangeStart = allDates[0] || null
+      rangeEnd = allDates[allDates.length - 1] || null
+    } else {
+      const map = { today: 0, yesterday: 1, '7d': 7, '14d': 14, '30d': 30, '90d': 90 }
+      const days = map[filter] ?? 30
+      rangeStart = ago(days)
+      rangeEnd = todayStr
+    }
+
+    const fmtShort = (ds) => { const [y, mo, d] = ds.split('-'); return `${d}.${mo}.` }
+
+    let buckets = [] // [{ key, label, start, end }]
+    if (rangeStart && rangeEnd) {
+      const start = new Date(rangeStart)
+      const end = new Date(rangeEnd)
+      const spanDays = Math.max(1, Math.round((end - start) / 86400000) + 1)
+      const useWeekly = spanDays >= 30
+      if (useWeekly) {
+        let cursor = new Date(start)
+        while (cursor <= end) {
+          const wStart = dateStr(cursor)
+          const wEndDate = new Date(cursor); wEndDate.setDate(wEndDate.getDate() + 6)
+          const wEnd = dateStr(wEndDate > end ? end : wEndDate)
+          buckets.push({ key: wStart, label: fmtShort(wEnd), start: wStart, end: wEnd })
+          cursor.setDate(cursor.getDate() + 7)
+        }
+      } else {
+        let cursor = new Date(start)
+        while (cursor <= end) {
+          const ds = dateStr(cursor)
+          buckets.push({ key: ds, label: fmtShort(ds), start: ds, end: ds })
+          cursor.setDate(cursor.getDate() + 1)
+        }
+      }
+    }
+
+    function bucketAgg(rows) {
+      return buckets.map(b => {
+        const inBucket = rows.filter(r => r.date >= b.start && r.date <= b.end)
+        const a = inBucket.length
+        const ms = inBucket.filter(r => r.hasMS).length
+        const b_ = inBucket.filter(r => r.hasB).length
+        const c = inBucket.filter(r => r.hasC).length
+        return {
+          period: b.label,
+          msr: a > 0 ? pct(ms, a) : null, prr: a > 0 ? pct(b_, a) : null, abr: a > 0 ? pct(c, a) : null,
+          msrCount: a > 0 ? ms : null, prrCount: a > 0 ? b_ : null, abrCount: a > 0 ? c : null,
+        }
+      })
+    }
+
+    const monthlyTable = bucketAgg(filtered)
+
+    // Per-variable trend across the same buckets (for "By Variable" toggle)
+    const varTotals = {}
+    filtered.forEach(r => { if (r.varName) varTotals[r.varName] = (varTotals[r.varName] || 0) + 1 })
+    const allVariables = Object.keys(varTotals)
+      .sort((a, b) => varTotals[b] - varTotals[a])
+      .map(name => ({
+        name,
+        total: varTotals[name],
+        series: bucketAgg(filtered.filter(r => r.varName === name)),
+      }))
 
     const bookedRows = filtered.filter(r => r.hasC)
     const avgFollowups = bookedRows.length > 0 ? +(bookedRows.reduce((s, r) => s + r.followups, 0) / bookedRows.length).toFixed(1) : null
@@ -147,12 +228,14 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     })
     const topObj = OBJ_CATS.map(c => ({ ...c, count: objCounts[c.key] })).filter(c => c.count > 0).sort((a, b) => b.count - a.count)
 
-    return { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj }
+    return { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyPerf, monthlyTable, allVariables, avgFollowups, avgDaysToBook, topObj }
   }, [data, filter, customFrom, customTo])
 
   if (!stats) return null
 
-  const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyTable, avgFollowups, avgDaysToBook, topObj } = stats
+  const { A, MS, B, C, D, E, VSLB, total, closed, followUp, lost, monthlyPerf, monthlyTable, allVariables, avgFollowups, avgDaysToBook, topObj } = stats
+  const top4Variables = allVariables.slice(0, 4)
+  const otherVariables = allVariables.slice(4)
 
   const bookedCount = vslMode ? VSLB : C
   const funnelSteps = clientMode ? [
@@ -192,7 +275,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   if (now.getHours() < 3) tod.setDate(tod.getDate() - 1)
   const todStr = tod.getFullYear() + '-' + String(tod.getMonth()+1).padStart(2,'0') + '-' + String(tod.getDate()).padStart(2,'0')
   let outToday = 0
-  for (const sheet of [data.mar, data.apr, data.may, data.jun || []]) {
+  for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
     if (ds < 0) continue
@@ -210,7 +293,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     <div>
       {/* Funnel */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16, fontWeight: 600 }}>Full Sales Funnel</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Full Sales Funnel</div>
         {isMobile ? (
           <div style={{ background: 'var(--card)', borderRadius: 12, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
             {funnelSteps.map((step, i) => {
@@ -251,7 +334,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
                 {i < funnelSteps.length - 1 && (
                   <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2px', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                    {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '—'}
+                    {step.count > 0 ? +((funnelSteps[i+1].count / step.count) * 100).toFixed(1) + '%' : '-'}
                     </div>
                     {ARROW}
                   </div>
@@ -268,7 +351,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
           <div key={r.label} style={{ background: 'var(--card)', borderRadius: 12, padding: isMobile ? '16px 14px' : '20px 20px', boxShadow: 'var(--card-shadow)', minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 14 }}>{r.label}</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: r.color, lineHeight: 1, marginBottom: 10 }}>
-              {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '—'}{r.value !== null ? r.suffix : ''}
+              {r.value !== null ? (Number.isInteger(r.value) ? r.value : r.value) : '-'}{r.value !== null ? r.suffix : ''}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text3)' }}>{r.sub}</div>
           </div>
@@ -277,11 +360,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
 
       {/* Today's Tasks */}
       {!clientMode && <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Today's Tasks</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Today's Tasks</div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {isWeekend
           ? ['Outreach', 'Followups', 'Pos. Followups'].map(l => (
@@ -292,8 +371,8 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
           ))
           : [
             { label: 'Outreach',      value: `${outToday}/20`, color: outColor, sub: outToday >= 20 ? 'Goal reached' : 'Messages sent' },
-            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '—'}`, color: fuColor, sub: 'Due today' },
-            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '—'}`, color: pfuColor, sub: 'Active sequences' },
+            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '-'}`, color: fuColor, sub: 'Due today' },
+            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '-'}`, color: pfuColor, sub: 'Active sequences' },
           ].map(k => (
             <div key={k.label} style={s({})}>
               <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
@@ -316,17 +395,125 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
       </>}
 
       {/* Breakdown */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text3)' }}>Breakdown</div>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 16 }}>Breakdown</div>
+
+      {/* Rate Trends */}
+      {monthlyTable.length > 1 && (
+      <div style={{ background: 'var(--card)', borderRadius: 18, padding: '24px 26px', boxShadow: 'var(--card-shadow)', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: isMobile ? 11 : 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Rate Trends</div>
+            <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 10, padding: 3, gap: 2 }}>
+              {[{ key: 'pct', label: '%' }, { key: 'count', label: '#' }].map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setTrendValueMode(opt.key)}
+                  className={trendValueMode === opt.key ? 'hoverable-fade' : 'hoverable'}
+                  style={{
+                    border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: trendValueMode === opt.key ? 'var(--card)' : 'transparent',
+                    color: trendValueMode === opt.key ? 'var(--text)' : 'var(--text3)',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+            {[{ name: '__all__', label: 'All', count: A }, ...top4Variables.map(v => ({ name: v.name, label: v.name, count: v.total }))].map(chip => {
+              const isSel = selectedVars[0] === chip.name
+              return (
+                <button
+                  key={chip.name}
+                  onClick={() => setSelectedVars([chip.name])}
+                  className={isSel ? 'hoverable-fade' : 'hoverable'}
+                  style={{
+                    border: isSel ? '1px solid transparent' : '1px solid var(--border)',
+                    borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: isSel ? 'var(--filter-active-bg)' : 'transparent', color: isSel ? 'var(--filter-active-text)' : 'var(--text3)',
+                  }}
+                >
+                  {chip.label} <span style={{ opacity: 0.65, fontWeight: 500 }}>({chip.count})</span>
+                </button>
+              )
+            })}
+            {otherVariables.length > 0 && (
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={otherVariables.some(v => v.name === selectedVars[0]) ? selectedVars[0] : ''}
+                  onChange={(e) => { const name = e.target.value; if (name) setSelectedVars([name]) }}
+                  style={{
+                    appearance: 'none',
+                    border: otherVariables.some(v => v.name === selectedVars[0]) ? '1px solid transparent' : '1px solid var(--border)',
+                    borderRadius: 20, padding: '6px 28px 6px 14px',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: otherVariables.some(v => v.name === selectedVars[0]) ? 'var(--filter-active-bg)' : 'transparent',
+                    color: otherVariables.some(v => v.name === selectedVars[0]) ? 'var(--filter-active-text)' : 'var(--text3)',
+                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2388888B' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+                  }}
+                >
+                  <option value="">Other ({otherVariables.length})</option>
+                  {otherVariables.map(v => (
+                    <option key={v.name} value={v.name}>{v.name} ({v.total})</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 28 }}>
+          {[
+            { key: 'msr', countKey: 'msrCount', label: 'MSR', color: '#F472B6' },
+            { key: 'prr', countKey: 'prrCount', label: 'PRR', color: '#FB923C' },
+            { key: 'abr', countKey: 'abrCount', label: 'ABR', color: '#34D399' },
+          ].map(metric => {
+            const isAll = selectedVars[0] === '__all__'
+            const series = isAll ? monthlyTable : (allVariables.find(x => x.name === selectedVars[0])?.series || [])
+            const dataKey = trendValueMode === 'pct' ? metric.key : metric.countKey
+            return (
+              <div key={metric.key}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: metric.color, lineHeight: 1, marginBottom: 22 }}>{metric.label}</div>
+                <div style={{ width: '100%', height: isMobile ? 180 : 200 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={series} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id={`fill-${metric.key}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={metric.color} stopOpacity={0.28} />
+                          <stop offset="100%" stopColor={metric.color} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                      <XAxis dataKey="period" stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval="preserveStartEnd" />
+                      <YAxis stroke="var(--text4)" fontSize={11} tickLine={false} axisLine={false} unit={trendValueMode === 'pct' ? '%' : ''} width={44} allowDecimals={false} domain={[0, 'auto']} />
+                      <Tooltip
+                        contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                        labelStyle={{ color: 'var(--text2)', fontWeight: 700, marginBottom: 4 }}
+                        formatter={(value) => [value === null ? '-' : (trendValueMode === 'pct' ? `${value}%` : value), metric.label]}
+                      />
+                      <Area
+                        type="monotone" dataKey={dataKey} name={metric.label}
+                        stroke={metric.color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
+                        fill={`url(#fill-${metric.key})`} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: isMobile || isTablet ? '1fr' : clientMode ? '1fr 1fr' : 'repeat(3,1fr)', gap: 12 }}>
         {/* Monthly */}
         <div style={{ background: 'var(--card)', borderRadius: 12, padding: '24px 26px', boxShadow: 'var(--card-shadow)' }}>
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Monthly Performance</div>
-          {monthlyTable.map((m, mi) => (
-            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: mi < monthlyTable.length - 1 ? '1px solid var(--border)' : 'none' }}>
+          {monthlyPerf.map((m, mi) => (
+            <div key={m.month} style={{ paddingBottom: 14, marginBottom: 14, borderBottom: mi < monthlyPerf.length - 1 ? '1px solid var(--border)' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontWeight: 700, color: 'var(--text2)', fontSize: 13 }}>{m.month} 2026</span>
               </div>
@@ -359,7 +546,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
               <div key={t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{t.label}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: t.color, lineHeight: 1 }}>
-                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'—'}</span>
+                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'-'}</span>
                 </div>
               </div>
             ))}

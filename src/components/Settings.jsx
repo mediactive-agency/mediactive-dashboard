@@ -26,7 +26,7 @@ function TabPills({ tabs, isSelected, onPick }) {
       {tabs.map(tab => {
         const on = isSelected(tab)
         return (
-          <button key={tab} onClick={() => onPick(tab)} style={{
+          <button key={tab} onClick={() => onPick(tab)} className={on ? 'hoverable-fade' : 'hoverable'} style={{
             padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
             cursor: 'pointer', border: '1px solid', borderColor: on ? 'var(--text)' : 'var(--border)',
             background: on ? 'var(--text)' : 'transparent', color: on ? 'var(--bg)' : 'var(--text2)',
@@ -57,7 +57,7 @@ function Section({ title, children }) {
   )
 }
 
-export default function Settings({ user, config, onSaved, isMobile }) {
+export default function Settings({ user, config, workspaceId, workspace, isOwner, onSaved, isMobile }) {
   const [userName, setUserName] = useState('')
   const [outreachSheets, setOutreachSheets] = useState([])
   const [salesSheetInput, setSalesSheetInput] = useState('')
@@ -145,7 +145,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
   async function save() {
     setSaving(true); setError(''); setSaved(false)
     try {
-      await saveUserConfig(user.uid, {
+      await saveUserConfig(workspaceId || user.uid, {
         userName: userName.trim(),
         dailyGoal: Number(dailyGoal) || 20,
         vslMode: vslMode,
@@ -162,8 +162,207 @@ export default function Settings({ user, config, onSaved, isMobile }) {
     setSaving(false)
   }
 
+  const [members, setMembers] = useState([])
+  const [membersLoading, setMembersLoading] = useState(false)
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteBusy, setInviteBusy] = useState(false)
+  const [inviteCopied, setInviteCopied] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+
+  const [previewLinks, setPreviewLinks] = useState([])
+  const [previewLinksLoading, setPreviewLinksLoading] = useState(false)
+  const [previewDurationValue, setPreviewDurationValue] = useState(24)
+  const [previewDurationUnit, setPreviewDurationUnit] = useState('hours') // 'hours' | 'days'
+  const [previewBusy, setPreviewBusy] = useState(false)
+  const [previewError, setPreviewError] = useState('')
+  const [previewCopiedToken, setPreviewCopiedToken] = useState('')
+
+  function loadPreviewLinks() {
+    if (!workspace || !workspaceId) return
+    setPreviewLinksLoading(true)
+    workspace.listPreviewLinks().then(setPreviewLinks).catch(() => {}).finally(() => setPreviewLinksLoading(false))
+  }
+
+  useEffect(() => { loadPreviewLinks() }, [workspace, workspaceId])
+
+  function handleCreatePreviewLink() {
+    setPreviewBusy(true); setPreviewError('')
+    const ms = previewDurationValue * (previewDurationUnit === 'days' ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000)
+    workspace.createPreviewLink(ms)
+      .then(link => {
+        navigator.clipboard?.writeText(link).catch(() => {})
+        loadPreviewLinks()
+      })
+      .catch(e => setPreviewError(e.message || 'Could not create the preview link.'))
+      .finally(() => setPreviewBusy(false))
+  }
+
+  function copyPreviewLink(token) {
+    const link = `${window.location.origin}/preview/${token}`
+    navigator.clipboard.writeText(link).then(() => {
+      setPreviewCopiedToken(token)
+      setTimeout(() => setPreviewCopiedToken(''), 3000)
+    }).catch(() => {
+      setPreviewError('Could not copy automatically, copy the link manually.')
+    })
+  }
+
+  function handleRevokePreviewLink(token) {
+    workspace.revokePreviewLink(token).then(loadPreviewLinks).catch(() => {})
+  }
+
+  function fmtExpiry(ms) {
+    if (!ms) return ''
+    const diff = ms - Date.now()
+    if (diff <= 0) return 'Expired'
+    const hrs = Math.round(diff / (60 * 60 * 1000))
+    if (hrs < 24) return `Expires in ${hrs}h`
+    return `Expires in ${Math.round(hrs / 24)}d`
+  }
+
+  useEffect(() => {
+    if (!workspace || !workspaceId) return
+    setMembersLoading(true)
+    workspace.listMembers(workspaceId).then(setMembers).finally(() => setMembersLoading(false))
+  }, [workspace, workspaceId])
+
+  function handleCreateInvite() {
+    setInviteBusy(true); setInviteCopied(false); setInviteError('')
+
+    const linkPromise = workspace.createInvite()
+      .then(link => { setInviteLink(link); return link })
+      .catch(e => { setInviteError(e.message || 'Could not create the invite link.'); throw e })
+      .finally(() => setInviteBusy(false))
+
+    // Clipboard write must stay synchronously tied to this click to work in Safari/Firefox.
+    // Passing a promise for the text (instead of writing after an await) keeps that link intact.
+    if (navigator.clipboard?.write && window.ClipboardItem) {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'text/plain': linkPromise.then(link => new Blob([link], { type: 'text/plain' })) }),
+      ]).then(() => {
+        setInviteCopied(true)
+        setTimeout(() => setInviteCopied(false), 3000)
+      }).catch(() => { /* browser blocked it, link is still shown below for manual copy */ })
+    }
+  }
+
+  function copyInvite() {
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      setInviteCopied(true)
+      setTimeout(() => setInviteCopied(false), 3000)
+    }).catch(() => {
+      setInviteError('Could not copy automatically, select the text above and copy it manually.')
+    })
+  }
+
+  async function handleRemoveMember(uid) {
+    if (!workspace || !workspaceId) return
+    await workspace.removeMember(uid, workspaceId)
+    setMembers(prev => prev.filter(m => m.uid !== uid))
+  }
+
+  function TeamSection() {
+    return (
+      <Section title="Team">
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
+          Invite a teammate (setter, ops...) to see this workspace. Send them the link, they sign in with Google and they're in.
+        </div>
+        {isOwner && (
+          <div style={{ marginBottom: 18 }}>
+            {inviteLink ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input readOnly value={inviteLink} onFocus={e => e.target.select()}
+                  style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
+                <button onClick={copyInvite} style={{ padding: '9px 14px', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', border: inviteCopied ? '1px solid var(--border)' : 'none', background: inviteCopied ? 'var(--bg)' : 'var(--text)', color: inviteCopied ? 'var(--text)' : 'var(--bg)' }}>
+                  {inviteCopied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleCreateInvite} disabled={inviteBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: inviteBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                {inviteBusy ? 'Generating...' : '+ Create invite link'}
+              </button>
+            )}
+            {inviteError && <div style={{ fontSize: 12, color: '#EF4444', marginTop: 8, fontWeight: 600 }}>{inviteError}</div>}
+            <div style={{ fontSize: 11.5, color: 'var(--text4)', marginTop: 8 }}>Link is valid for 7 days and works once.</div>
+          </div>
+        )}
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Members</div>
+        {membersLoading ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Loading...</div>
+        ) : members.length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Just you for now.</div>
+        ) : (
+          members.map(m => (
+            <div key={m.uid} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 6 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{m.displayName || m.email || m.uid}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{m.role === 'owner' ? 'Owner' : 'Member'}</div>
+              </div>
+              {isOwner && m.role !== 'owner' && (
+                <button onClick={() => handleRemoveMember(m.uid)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>Remove</button>
+              )}
+            </div>
+          ))
+        )}
+      </Section>
+    )
+  }
+
+  function PreviewLinksSection() {
+    if (!isOwner) return null
+    return (
+      <Section title="Preview link">
+        <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
+          Share a read view of this dashboard with someone who doesn't need an account. No sign in required, no Settings, no AGP Members, no sign out. Set how long the link should stay active.
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <input type="number" min="1" value={previewDurationValue} onChange={e => setPreviewDurationValue(Math.max(1, Number(e.target.value) || 1))}
+            style={{ width: 70, padding: '9px 10px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+          <div style={{ display: 'flex', background: 'var(--border)', borderRadius: 8, padding: 3, gap: 2 }}>
+            {[{ key: 'hours', label: 'Hours' }, { key: 'days', label: 'Days' }].map(opt => {
+              const isSel = previewDurationUnit === opt.key
+              return (
+                <button key={opt.key} onClick={() => setPreviewDurationUnit(opt.key)}
+                  style={{ border: 'none', borderRadius: 6, padding: '7px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: isSel ? 'var(--card)' : 'transparent', color: isSel ? 'var(--text)' : 'var(--text3)' }}>
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+          <button onClick={handleCreatePreviewLink} disabled={previewBusy} style={{ padding: '9px 16px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: previewBusy ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+            {previewBusy ? 'Generating...' : '+ Create preview link'}
+          </button>
+        </div>
+        {previewError && <div style={{ fontSize: 12, color: '#EF4444', marginBottom: 12, fontWeight: 600 }}>{previewError}</div>}
+
+        {previewLinksLoading ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>Loading...</div>
+        ) : previewLinks.filter(l => !l.revoked && l.expiresAt > Date.now()).length === 0 ? (
+          <div style={{ fontSize: 13, color: 'var(--text4)' }}>No active preview links.</div>
+        ) : (
+          previewLinks.filter(l => !l.revoked && l.expiresAt > Date.now()).map(l => (
+            <div key={l.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 6 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>/preview/{l.id}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{fmtExpiry(l.expiresAt)}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <button onClick={() => copyPreviewLink(l.id)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                  {previewCopiedToken === l.id ? 'Copied!' : 'Copy'}
+                </button>
+                <button onClick={() => handleRevokePreviewLink(l.id)} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Revoke</button>
+              </div>
+            </div>
+          ))
+        )}
+      </Section>
+    )
+  }
+
   return (
     <div style={{ maxWidth: 600 }}>
+      <TeamSection />
+      <PreviewLinksSection />
       <Section title="Profile">
         <Input label="First name" value={userName} onChange={setUserName} placeholder="e.g. Alex" />
         <div style={{ marginTop: 12 }}>
@@ -215,10 +414,10 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         {logoPreview && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
             <img src={logoPreview} alt="Logo" style={{ height: 40, maxWidth: 140, objectFit: 'contain', borderRadius: 6 }} />
-            <button onClick={() => { setLogoPreview(null); setLogoUrl('') }} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+            <button onClick={() => { setLogoPreview(null); setLogoUrl('') }} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
           </div>
         )}
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 12 }}>
+        <label className="hoverable" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: 'var(--text2)', marginBottom: 12 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload logo
           <input type="file" accept="image/*,.svg" onChange={handleLogoFile} style={{ display: 'none' }} />
@@ -251,14 +450,14 @@ export default function Settings({ user, config, onSaved, isMobile }) {
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', fontFamily: 'monospace' }}>{s.id.slice(0, 24)}...</div>
               <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>{s.tabs.join(', ')}</div>
             </div>
-            <button onClick={() => setOutreachSheets(prev => prev.filter(x => x.id !== s.id))} style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
+            <button onClick={() => setOutreachSheets(prev => prev.filter(x => x.id !== s.id))} className="hoverable" style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Remove</button>
           </div>
         ))}
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', margin: '14px 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add another sheet</div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input value={newSheetInput} onChange={e => setNewSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
             style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
-          <button onClick={loadNewSheetTabs} disabled={sheetBusy || !newSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+          <button onClick={loadNewSheetTabs} disabled={sheetBusy || !newSheetInput.trim()} className="hoverable-fade" style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
             {sheetBusy ? 'Loading...' : 'Load tabs'}
           </button>
         </div>
@@ -266,7 +465,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
           <>
             <TabPills tabs={newSheetTabsAvail} isSelected={t => newSheetTabs.includes(t)} onPick={t => setNewSheetTabs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])} />
             {newSheetId && newSheetTabs.length > 0 && (
-              <button onClick={addSheet} style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
+              <button onClick={addSheet} className="hoverable-fade" style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8 }}>
                 + Add sheet
               </button>
             )}
@@ -292,7 +491,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <input value={salesSheetInput} onChange={e => setSalesSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
             style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
-          <button onClick={loadSalesSheetTabs} disabled={salesSheetBusy || !salesSheetInput.trim()} style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+          <button onClick={loadSalesSheetTabs} disabled={salesSheetBusy || !salesSheetInput.trim()} className="hoverable-fade" style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
             {salesSheetBusy ? 'Loading...' : 'Connect'}
           </button>
         </div>
@@ -304,7 +503,7 @@ export default function Settings({ user, config, onSaved, isMobile }) {
 
       {error && <div style={{ color: '#EF4444', fontSize: 13, marginBottom: 12 }}>{error}</div>}
 
-      <button onClick={save} disabled={saving} style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
+      <button onClick={save} disabled={saving} className="hoverable-fade" style={{ padding: '12px 24px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, fontFamily: 'inherit' }}>
         {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save changes'}
       </button>
     </div>

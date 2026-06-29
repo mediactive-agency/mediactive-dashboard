@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { TODAY, toDateStr, inRange, normName, ago, todayStr } from '../utils/data'
+import { TODAY, toDateStr, inRange, normName, ago, todayStr, outreachSheets } from '../utils/data'
 
 const VAR_COLORS = {
   'Main acc — Normal':   '#60A5FA', '2nd acc — Normal':    '#A78BFA',
@@ -80,7 +80,8 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile, vslMode = false }) {
   return (
     <div
       onClick={onToggle}
-      style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s' }}
+      className="hoverable"
+      style={{ background: 'var(--card)', borderRadius: 12, padding: '14px 18px', marginBottom: 14, cursor: 'pointer', boxShadow: 'var(--card-shadow)', outline: selected ? '2px solid var(--text)' : 'none', outlineOffset: 2, transition: 'outline 0.15s, background-color 0.15s' }}
     >
       <div style={{ fontSize: 14, fontWeight: 600, color: dimmed ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>
         {v.name}
@@ -132,7 +133,7 @@ function VarCard({ v, dimmed, selected, onToggle, isMobile, vslMode = false }) {
               {i < steps.length - 1 && (
                 <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: dimmed ? 'var(--text4)' : 'var(--text)', lineHeight: 1 }}>
-                    {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '—'}
+                    {step.val > 0 ? +((steps[i+1].val / step.val) * 100).toFixed(1) + '%' : '-'}
                   </div>
                   {ARROW(dimmed)}
                 </div>
@@ -179,12 +180,11 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
   const { activeVars, inactiveVars, tot } = useMemo(() => {
     if (!data) return { activeVars: [], inactiveVars: [], tot: { A:0,MS:0,B:0,C:0 } }
 
-    const allSheets = [data.mar, data.apr, data.may, data.jun||[]]
+    const allSheets = outreachSheets(data)
     const cutoff14 = ago(14)
 
     let aggMap = {}
     const useRaw = ['14d','7d','yesterday','today','custom'].includes(filter)
-    const monthRanges = { Mar: ['2026-03-01','2026-03-31'], Apr: ['2026-04-01','2026-04-30'], May: ['2026-05-01','2026-05-31'], Jun: ['2026-06-01','2026-06-30'] }
 
     if (useRaw) {
       let filterFn
@@ -206,12 +206,18 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
     } else {
       const from = filter === 'all' ? null : filter === '90d' ? ago(90) : ago(30)
       const filterFn = from ? (d => d >= from) : () => true
-      const months = ['Mar','Apr','May','Jun']
-      const sheetMap = { Mar: data.mar, Apr: data.apr, May: data.may, Jun: data.jun||[] }
-      for (const m of months) {
-        const [start, end] = monthRanges[m]
-        if (from && end < from) continue
-        const vars = parseRawVars(sheetMap[m], filterFn)
+      for (const sheet of allSheets) {
+        // Stejná optimalizace jako dřív (přeskočit sheety mimo rozsah), jen rozsah teď
+        // čteme z posledního skutečného data v sheetu, ne z natvrdo napsaných kalendářních dat.
+        if (from) {
+          let sheetEnd = null
+          for (let i = sheet.length - 1; i >= 0; i--) {
+            const r = sheet[i]
+            if (r && r[3]) { const d = toDateStr(r[3]); if (d) { sheetEnd = d; break } }
+          }
+          if (sheetEnd && sheetEnd < from) continue
+        }
+        const vars = parseRawVars(sheet, filterFn)
         for (const [name, v] of Object.entries(vars)) {
           if (!aggMap[name]) aggMap[name] = { name, A:0, MS:0, B:0, C:0, D:0, E:0, VSLB:0, fuTotal:0, fuCount:0, daysTotal:0, daysCount:0 }
           for (const k of ['A','MS','B','C','D','fuTotal','fuCount','daysTotal','daysCount']) aggMap[name][k] += v[k]
@@ -285,16 +291,12 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
   ]
 
   const Divider = ({ label, dim }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 16px' }}>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: dim ? '#2a2a2c' : '#666669' }}>{label}</div>
-      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-    </div>
+    <div style={{ fontSize: 20, fontWeight: 800, color: dim ? 'var(--text4)' : 'var(--text)', marginBottom: 16 }}>{label}</div>
   )
 
   return (
     <div>
-      {mode !== 'variables' && (<><Divider label="Total Active Funnel" />
+      {mode !== 'variables' && (<>
       <div style={{ borderRadius: 12, marginBottom: 20, boxShadow: 'var(--card-shadow)', overflow: 'hidden' }}>
         {tot.A === 0
           ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text5)', fontSize: 12 }}>No data for selected period</div>
@@ -348,7 +350,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
                   {i < mainSteps.length - 1 && (
                     <div key={`a${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--card)', gap: 4, flexShrink: 0, width: 80 }}>
                       <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', lineHeight: 1 }}>
-                        {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}
+                        {step.val > 0 ? +((mainSteps[i+1].val/step.val)*100).toFixed(1)+'%' : '-'}
                       </div>
                       {ARROW(false)}
                     </div>
@@ -392,9 +394,10 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
       )}
 
       {mode !== 'funnel' && (<>
+      <Divider label="Funnels by Variables" />
       {selected.size > 0 && (
         <div style={{ borderRadius: 12, padding: '16px 22px', marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES — COMBINED</div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 12, letterSpacing: '0.08em', fontWeight: 600 }}>SELECTED VARIABLES, COMBINED</div>
           {isMobile ? (
             <div>
               {[{ val:agg.A,label:'Initiated',color:'#60A5FA'},{val:agg.MS,label:'Media Seen',color:'#F472B6'},{val:agg.B,label:'Replies',color:'#FB923C'},...(vslMode?[{val:agg.E,label:"Calendly'd",color:'#34D399'},{val:agg.VSLB,label:'Booked',color:'#A78BFA'}]:[{val:agg.C,label:'Booked',color:'#A78BFA'}])].map((step,i,arr) => {
@@ -436,7 +439,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
                   </div>
                   {i < arr.length - 1 && (
                     <div key={`sa${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0, margin: '0 48px' }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '—'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{step.val > 0 ? +((arr[i+1].val/step.val)*100).toFixed(1)+'%' : '-'}</div>
                       <svg width="44" height="14" viewBox="0 0 50 14" fill="none" style={{color:"var(--text3)"}}><line x1="0" y1="7" x2="42" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><polyline points="35 2 42 7 35 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   )}
@@ -468,11 +471,7 @@ export default function Outreach({ data, filter, customFrom, customTo, isMobile,
 
       {inactiveVars.length > 0 && (
         <>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0 16px' }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text5)' }}>Inactive — not used in last 14d</div>
-            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-          </div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text4)', marginTop: 12, marginBottom: 16 }}>Inactive, not used in last 14d</div>
           {inactiveVars.map(v => <VarCard key={v.name} v={v} dimmed={true} selected={selected.has(v.name)} onToggle={() => toggle(v.name)} isMobile={isMobile} vslMode={vslMode} />)}
         </>
       )}

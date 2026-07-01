@@ -4,20 +4,30 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
+// Same idea as the per-user config (useData.js): a client can have one legacy
+// single sheet, or a list of sheets that all get merged into the client's data.
+function normalizeClientSheets(c) {
+  return c['Outreach Sheets'] || (c['Outreach Sheet ID'] ? [{ id: c['Outreach Sheet ID'], tabs: (c['Sheet Tabs'] || 'Mar,Apr,May,Jun').split(',').map(t => t.trim()) }] : [])
+}
+
 async function fetchClientSheetData(client) {
-  const tabs = (client['Sheet Tabs'] || 'Mar,Apr,May,Jun').split(',').map(t => t.trim())
-  const sheetId = client['Outreach Sheet ID']
-  const results = await Promise.all(tabs.map(tab =>
-    fetch(`${PROXY}?id=${sheetId}&range=${encodeURIComponent(tab + '!A1:AZ700')}`)
-      .then(r => r.json()).then(d => d.values || []).catch(() => [])
-  ))
-  const dataObj = {}
-  tabs.forEach((tab, i) => { dataObj[tab.toLowerCase().slice(0, 3)] = results[i] })
+  const sheets = normalizeClientSheets(client)
+  const tabData = {}
+  await Promise.all(sheets.map(async sheet => {
+    const tabs = sheet.tabs || []
+    const results = await Promise.all(tabs.map(tab =>
+      fetch(`${PROXY}?id=${sheet.id}&range=${encodeURIComponent(tab + '!A1:AZ700')}`)
+        .then(r => r.json()).then(d => d.values || []).catch(() => [])
+    ))
+    tabs.forEach((tab, i) => {
+      const key = tab.toLowerCase().slice(0, 3)
+      if (!tabData[key]) tabData[key] = []
+      tabData[key] = [...tabData[key], ...(results[i] || [])]
+    })
+  }))
   return {
-    mar: dataObj['mar'] || results[0] || [],
-    apr: dataObj['apr'] || results[1] || [],
-    may: dataObj['may'] || results[2] || [],
-    jun: dataObj['jun'] || results[3] || [],
+    mar: [], apr: [], may: [], jun: [],
+    ...tabData,
   }
 }
 
@@ -40,6 +50,7 @@ export function useClients(user, { enabled = true } = {}) {
       const list = snap.docs.map(d => ({
         ID: d.id, Name: d.data().name, Color: d.data().color,
         'Outreach Sheet ID': d.data().outreachSheetId, 'Sheet Tabs': d.data().sheetTabs,
+        'Outreach Sheets': d.data().outreachSheets || null,
         'Calendly PAT': d.data().calendlyPat, 'Calendly User URI': d.data().calendlyUserUri,
         'Created At': d.data().createdAt?.toDate?.() || new Date(),
         campaignMessages: d.data().campaignMessages || {},

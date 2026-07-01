@@ -163,6 +163,7 @@ export function useWorkspace(user) {
         color: d.data().color,
         outreachSheetId: d.data().outreachSheetId,
         sheetTabs: d.data().sheetTabs,
+        outreachSheets: d.data().outreachSheets || null,
         calendlyPat: d.data().calendlyPat || '',
         calendlyUserUri: d.data().calendlyUserUri || '',
       }))

@@ -6,7 +6,7 @@ import Campaigns from './Campaigns'
 import { parseOutreachMonth } from './Dashboard'
 import { outreachSheets } from '../utils/data'
 import { db } from '../firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
 
@@ -225,6 +225,132 @@ function ClientCard({ client, data, filter, customFrom, customTo, onSelect }) {
   )
 }
 
+function TabPills({ tabs, isSelected, onPick }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+      {tabs.map(tab => {
+        const on = isSelected(tab)
+        return (
+          <button key={tab} onClick={() => onPick(tab)} className={on ? 'hoverable-fade' : 'hoverable'} style={{
+            padding: '5px 12px', borderRadius: 7, fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+            cursor: 'pointer', border: '1px solid', borderColor: on ? 'var(--text)' : 'var(--border)',
+            background: on ? 'var(--text)' : 'transparent', color: on ? 'var(--bg)' : 'var(--text2)',
+          }}>{tab}</button>
+        )
+      })}
+    </div>
+  )
+}
+
+function ClientSettingsPanel({ client, onClose, onSaved, onDeleted }) {
+  const [sheetInput, setSheetInput] = useState('')
+  const [tabsAvail, setTabsAvail] = useState(null)
+  const [pickedTabs, setPickedTabs] = useState([])
+  const [newSheetId, setNewSheetId] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [deleteArmed, setDeleteArmed] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const currentTabs = (client['Sheet Tabs'] || '').split(',').map(t => t.trim()).filter(Boolean)
+
+  async function loadTabs() {
+    const id = extractSheetId(sheetInput)
+    if (!id) { setStatus({ type: 'err', msg: 'Paste a valid Google Sheets link' }); return }
+    setBusy(true); setStatus(null)
+    try {
+      const res = await fetch(`${PROXY}?action=getSheetTabs&sheetId=${encodeURIComponent(id)}`)
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      const tabs = data.tabs || []
+      if (!tabs.length) throw new Error('No tabs found in this sheet')
+      setNewSheetId(id); setTabsAvail(tabs)
+      const monthTabs = tabs.filter(t => /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i.test(t))
+      setPickedTabs(monthTabs.length > 0 ? monthTabs : tabs)
+      setStatus({ type: 'ok', msg: `Found ${tabs.length} tabs.` })
+    } catch(e) { setStatus({ type: 'err', msg: e.message || 'Could not read that sheet' }) }
+    setBusy(false)
+  }
+
+  async function saveSheet() {
+    if (!newSheetId || pickedTabs.length === 0) return
+    setSaving(true); setStatus(null)
+    try {
+      await updateDoc(doc(db, 'clients', client.ID), {
+        outreachSheetId: newSheetId,
+        sheetTabs: pickedTabs.join(','),
+      })
+      onSaved(newSheetId, pickedTabs.join(','))
+      setSheetInput(''); setNewSheetId(''); setTabsAvail(null); setPickedTabs([])
+      setStatus({ type: 'ok', msg: 'Spreadsheet updated.' })
+    } catch(e) {
+      setStatus({ type: 'err', msg: e.message || 'Could not save' })
+    }
+    setSaving(false)
+  }
+
+  async function handleDelete() {
+    if (!deleteArmed) { setDeleteArmed(true); return }
+    setDeleting(true)
+    try {
+      await updateDoc(doc(db, 'clients', client.ID), { active: false })
+      onDeleted()
+    } catch(e) {
+      setStatus({ type: 'err', msg: e.message || 'Could not delete client' })
+      setDeleting(false)
+    }
+  }
+
+  return (
+    <div style={{ background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '22px 24px', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client Settings</div>
+        <button onClick={onClose} className="hoverable" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, borderRadius: 8 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tracking sheet</div>
+      <div style={{ padding: '8px 12px', background: 'var(--bg)', borderRadius: 8, marginBottom: 14, fontSize: 12, color: 'var(--text3)' }}>
+        Connected: <span style={{ fontFamily: 'monospace', color: 'var(--text)' }}>{(client['Outreach Sheet ID'] || '').slice(0, 24)}...</span>
+        {currentTabs.length > 0 && <span style={{ marginLeft: 8, color: 'var(--text4)' }}>Tabs: {currentTabs.join(', ')}</span>}
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Replace sheet</div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <input value={sheetInput} onChange={e => setSheetInput(e.target.value)} placeholder="https://docs.google.com/spreadsheets/d/..."
+          style={{ flex: 1, padding: '9px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
+        <button onClick={loadTabs} disabled={busy || !sheetInput.trim()} className="hoverable-fade" style={{ padding: '9px 14px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+          {busy ? 'Loading...' : 'Load tabs'}
+        </button>
+      </div>
+      {tabsAvail && (
+        <>
+          <TabPills tabs={tabsAvail} isSelected={t => pickedTabs.includes(t)} onPick={t => setPickedTabs(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])} />
+          {newSheetId && pickedTabs.length > 0 && (
+            <button onClick={saveSheet} disabled={saving} className="hoverable-fade" style={{ padding: '8px 14px', background: 'var(--text)', color: 'var(--bg)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}>
+              {saving ? 'Saving...' : 'Save spreadsheet'}
+            </button>
+          )}
+        </>
+      )}
+      {status && <div style={{ fontSize: 12, color: status.type === 'ok' ? '#10B981' : '#EF4444', marginTop: 8, fontWeight: 600 }}>{status.msg}</div>}
+
+      <div style={{ height: 1, background: 'var(--border)', margin: '20px 0' }} />
+
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#EF4444', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Danger zone</div>
+      <button onClick={handleDelete} disabled={deleting} className="hoverable-fade" style={{ padding: '9px 16px', background: deleteArmed ? '#EF4444' : 'transparent', color: deleteArmed ? '#fff' : '#EF4444', border: '1px solid #EF4444', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+        {deleting ? 'Deleting...' : deleteArmed ? 'Click again to confirm delete' : 'Delete client'}
+      </button>
+      {deleteArmed && !deleting && (
+        <div style={{ fontSize: 11.5, color: 'var(--text4)', marginTop: 8 }}>
+          This removes {client.Name} from your client list.
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isTablet, user, readOnly }) {
   if (!data) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
@@ -350,6 +476,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
   const [previewLoading, setPreviewLoading] = useState(true)
   const [showWizard, setShowWizard] = useState(false)
   const [selected, setSelected] = useState(null)
+  const [showClientSettings, setShowClientSettings] = useState(false)
 
   async function loadPreviewClients() {
     setPreviewLoading(true)
@@ -392,7 +519,7 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
 
   if (selected) return (
     <div>
-      <button onClick={() => setSelected(null)} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
+      <button onClick={() => { setSelected(null); setShowClientSettings(false) }} className="hoverable-fade" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, marginBottom: 24, fontSize: 14, fontWeight: 600 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
         All Clients
       </button>
@@ -401,7 +528,23 @@ export default function Clients({ user, isMobile, isTablet, filter, customFrom, 
           {selected.Name.charAt(0).toUpperCase()}
         </div>
         <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)' }}>{selected.Name}</div>
+        {!readOnly && (
+          <button onClick={() => setShowClientSettings(v => !v)} className="hoverable" style={{ marginLeft: 'auto', background: showClientSettings ? 'var(--bg)' : 'none', border: '1px solid var(--border)', borderRadius: 9, padding: 9, cursor: 'pointer', color: 'var(--text3)', display: 'flex' }} title="Client settings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        )}
       </div>
+      {!readOnly && showClientSettings && (
+        <ClientSettingsPanel
+          client={selected}
+          onClose={() => setShowClientSettings(false)}
+          onSaved={(newSheetId, newTabs) => {
+            setSelected(prev => prev ? { ...prev, 'Outreach Sheet ID': newSheetId, 'Sheet Tabs': newTabs } : prev)
+            reload()
+          }}
+          onDeleted={() => { setSelected(null); setShowClientSettings(false); reload() }}
+        />
+      )}
       <ClientStats key={selected.ID} client={selected} data={clientData[selected?.ID]} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} user={user} readOnly={readOnly} />
     </div>
   )

@@ -24,7 +24,8 @@ async function fetchCalendly(pat) {
   if (!pat) return { collection: [] }
   try {
     // Calendly fetch stále přes proxy (potřebuje server-side kvůli CORS)
-    const res = await fetch(`${PROXY}?calendly=1`)
+    const url = `${PROXY}?calendly=1&calendlyPat=${encodeURIComponent(pat)}`
+    const res = await fetch(url)
     return await res.json()
   } catch (e) {
     return { collection: [] }

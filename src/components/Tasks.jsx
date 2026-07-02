@@ -30,9 +30,29 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
   const pfuColor = pfuTask3Done ? (pfuTotal === 0 ? 'var(--text4)' : '#34D399') : '#EF4444'
   const NOT_TODAY = <span style={{ fontSize: 24, fontWeight: 500, color: 'var(--text4)', lineHeight: 1 }}>Not today</span>
 
-  const AVAILABLE_MONTHS = ['2026-03', '2026-04', '2026-05', '2026-06']
-  const showMonths = (filter === '30d') ? ['2026-05', '2026-06']
-    : (filter === '7d' || filter === '14d' || filter === 'today' || filter === 'yesterday') ? [todayStr.slice(0, 7)]
+  function addMonths(ym, n) {
+    const [y, m] = ym.split('-').map(Number)
+    const d = new Date(y, m - 1 + n, 1)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }
+
+  const dataKeys = [
+    ...Object.keys(dailyInitiated || {}),
+    ...Object.keys(dailyFollowupTotal || {}),
+    ...Object.keys(dailyPFUTotal || {}),
+  ]
+  const currentMonth = todayStr.slice(0, 7)
+  const earliestMonth = dataKeys.length
+    ? dataKeys.reduce((min, ds2) => (ds2.slice(0, 7) < min ? ds2.slice(0, 7) : min), currentMonth)
+    : currentMonth
+
+  const AVAILABLE_MONTHS = []
+  for (let ym = earliestMonth; ym <= currentMonth; ym = addMonths(ym, 1)) {
+    AVAILABLE_MONTHS.push(ym)
+  }
+
+  const showMonths = (filter === '30d') ? [addMonths(currentMonth, -1), currentMonth]
+    : (filter === '7d' || filter === '14d' || filter === 'today' || filter === 'yesterday') ? [currentMonth]
     : AVAILABLE_MONTHS
 
   const cellH = isMobile ? 64 : 90

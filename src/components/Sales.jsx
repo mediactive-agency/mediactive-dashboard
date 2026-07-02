@@ -230,7 +230,7 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
         const dt = new Date(ev.start_time)
         const calDate = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
         const calTime = dt.toLocaleTimeString('cs-CZ', { timeZone: 'Europe/Prague', hour: '2-digit', minute: '2-digit' })
-        return { name: ev.name || '', date: calDate, time: calTime, datetime: dt, meet: ev.meet || null, account: ev.event_type_name || null }
+        return { name: ev.name || '', date: calDate, time: calTime, datetime: dt, meet: ev.meet || null, account: ev.event_type_name || null, confirmed: !!ev.confirmed }
       })
       .sort((a, b) => a.datetime - b.datetime)
 
@@ -271,6 +271,11 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#111827' }}>{c.name}</div>
                   {accountLabel && <><span style={{ color: '#D1D5DB', fontSize: 16 }}>·</span><div style={{ fontSize: 14, fontWeight: 600, color: '#6B7280' }}>{accountLabel}</div></>}
+                  {c.confirmed && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#34D39918', color: '#34D399', borderRadius: 999, padding: '3px 8px', fontSize: 12, fontWeight: 700 }}>
+                      {ICO.check} Confirmed
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#6B7280', flexWrap: 'wrap' }}>
                   <span style={{ color: '#9CA3AF' }}>{ICO.calendar}</span>

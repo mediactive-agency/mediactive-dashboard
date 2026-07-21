@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { TODAY, toDateStr, toSalesDateStr, inRange, normName, pct, dateStr, ago, todayStr, outreachSheets } from '../utils/data'
+import PendingList from './PendingList'
 
 export function parseOutreachMonth(rows) {
   let summary = null
@@ -282,7 +283,7 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
     for (let i = ds; i < sheet.length; i++) { const r = sheet[i]; if (!r || !r[3]) continue; if (toDateStr(r[3]) === todStr) outToday++ }
   }
   const isWeekend = new Date(todStr + 'T12:00:00').getDay() === 0 || new Date(todStr + 'T12:00:00').getDay() === 6
-  const dd = dailyStats || { fuToday: 0, fuDoneToday: 0, pfuToday: 0, pfuDoneToday: 0, streak: 0 }
+  const dd = dailyStats || { fuToday: 0, fuDoneToday: 0, pfuToday: 0, pfuDoneToday: 0, streak: 0, pendingFU: [], pendingPFU: [] }
   const outColor = outToday >= 20 ? '#34D399' : outToday > 0 ? '#F59E0B' : '#EF4444'
   const fuColor = dd.fuToday === 0 ? '#34D399' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444'
   const pfuColor = dd.pfuToday === 0 ? '#555558' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B'
@@ -370,15 +371,17 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
             </div>
           ))
           : [
-            { label: 'Outreach',      value: `${outToday}/20`, color: outColor, sub: outToday >= 20 ? 'Goal reached' : 'Messages sent' },
-            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '-'}`, color: fuColor, sub: 'Due today' },
-            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '-'}`, color: pfuColor, sub: 'Active sequences' },
+            { label: 'Outreach',      value: `${outToday}/20`, color: outColor, sub: outToday >= 20 ? 'Goal reached' : 'Messages sent', pending: null },
+            { label: 'Followups',     value: `${dd.fuDoneToday}/${dd.fuToday || '-'}`, color: fuColor, sub: 'Due today', pending: dd.pendingFU },
+            { label: 'Pos. Followups',value: `${dd.pfuDoneToday}/${dd.pfuToday || '-'}`, color: pfuColor, sub: 'Active sequences', pending: dd.pendingPFU },
           ].map(k => (
-            <div key={k.label} style={s({})}>
-              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
-            </div>
+            <PendingList key={k.label} items={k.pending}>
+              <div style={s({})}>
+                <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
+              </div>
+            </PendingList>
           ))}
         <div style={s({})}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Streak</div>

@@ -74,6 +74,8 @@ export default function App() {
     pfuToday: taskStats.pfuTotal,
     pfuDoneToday: taskStats.pfuDone,
     streak: taskStats.streak,
+    pendingFU: taskStats.pendingFUToday,
+    pendingPFU: taskStats.pendingPFUToday,
   } : null
 
   function handleFilter(key) {

@@ -542,16 +542,18 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
           <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>Today's Tasks</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[
-              { label: 'Outreach',      val: outToday, total: 20,      color: outToday >= 20 ? '#34D399' : '#EF4444' },
-              { label: 'Followups',     val: dd.fuDoneToday,  total: dd.fuToday,  color: dd.fuToday === 0 ? 'var(--text4)' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444' },
-              { label: 'Pos. Followups',val: dd.pfuDoneToday, total: dd.pfuToday, color: dd.pfuToday === 0 ? 'var(--text4)' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B' },
+              { label: 'Outreach',      val: outToday, total: 20,      color: outToday >= 20 ? '#34D399' : '#EF4444', pending: null },
+              { label: 'Followups',     val: dd.fuDoneToday,  total: dd.fuToday,  color: dd.fuToday === 0 ? 'var(--text4)' : dd.fuDoneToday >= dd.fuToday ? '#34D399' : '#EF4444', pending: dd.pendingFU },
+              { label: 'Pos. Followups',val: dd.pfuDoneToday, total: dd.pfuToday, color: dd.pfuToday === 0 ? 'var(--text4)' : dd.pfuDoneToday >= dd.pfuToday ? '#34D399' : '#F59E0B', pending: dd.pendingPFU },
             ].map(t => (
-              <div key={t.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{t.label}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: t.color, lineHeight: 1 }}>
-                  {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'-'}</span>
+              <PendingList key={t.label} items={t.pending}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>{t.label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: t.color, lineHeight: 1 }}>
+                    {t.val}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text3)' }}>/{t.total||'-'}</span>
+                  </div>
                 </div>
-              </div>
+              </PendingList>
             ))}
           </div>
         </div>

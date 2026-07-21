@@ -14,7 +14,7 @@ export default function PendingList({ items, children }) {
             {items.map((p, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 12 }}>
                 <span style={{ color: 'var(--text)', fontWeight: 600 }}>{p.name || 'Unnamed'}</span>
-                {p.variable && <span style={{ color: 'var(--text3)', fontSize: 10, background: 'var(--border)', padding: '2px 6px', borderRadius: 5, flexShrink: 0 }}>{p.variable}</span>}
+                <span style={{ color: 'var(--text3)', fontSize: 10, background: 'var(--border)', padding: '2px 6px', borderRadius: 5, flexShrink: 0 }}>{p.variable}</span>
               </div>
             ))}
           </div>

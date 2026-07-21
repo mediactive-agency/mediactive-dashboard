@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { TODAY, toDateStr, dateStr } from '../utils/data'
+import PendingList from './PendingList'
 
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const WDAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
@@ -18,7 +19,7 @@ const ICO_FIRE  = <svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
 export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekendOutreach = false }) {
   if (!stats) return null
 
-  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today } = stats
+  const { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today, pendingFUToday, pendingPFUToday } = stats
 
   const checkDay = new Date(todayStr+'T12:00:00').getDay()
   const isCheckWeekend = !weekendOutreach && (checkDay === 0 || checkDay === 6)
@@ -151,8 +152,12 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
           <StreakCard />
           <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={dailyGoal} showBar={true} />
-          <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
-          <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
+          <PendingList items={pendingFUToday}>
+            <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
+          </PendingList>
+          <PendingList items={pendingPFUToday}>
+            <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
+          </PendingList>
         </div>
         {showMonths.map(ym => <MonthGrid key={ym} ym={ym} />)}
       </div>
@@ -167,8 +172,12 @@ export default function Tasks({ stats, filter, isMobile, dailyGoal = 20, weekend
       <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12, position: 'sticky', top: 24, alignSelf: 'flex-start' }}>
         <StreakCard />
         <TaskCard label="Outreach" color={task1Color} checkIcon={isCheckWeekend ? null : task1Done ? ICO_CHECK : ICO_X} value={outreachCount} total={dailyGoal} showBar={true} />
-        <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
-        <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
+        <PendingList items={pendingFUToday}>
+          <TaskCard label="Followups" color={task2Color} checkIcon={isCheckWeekend ? null : task2Done ? ICO_CHECK : (fuTotal === 0 ? null : ICO_X)} value={fuDone} total={fuTotal} showBar={false} />
+        </PendingList>
+        <PendingList items={pendingPFUToday}>
+          <TaskCard label="Pos. Followups" color={pfuColor} checkIcon={isCheckWeekend ? null : pfuTask3Done ? (pfuTotal === 0 ? null : ICO_CHECK) : ICO_X} value={pfuDone} total={pfuTotal} showBar={false} />
+        </PendingList>
       </div>
     </div>
   )

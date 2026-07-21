@@ -14,7 +14,7 @@ function nextBizDay(d) {
 // bookedDate: when booked (stops tracking)
 // calDays: array of business day strings
 // todayStr: today
-function trackPFUSeries(r, replyDate, slotStart, slotCount, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone) {
+function trackPFUSeries(r, replyDate, slotStart, slotCount, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone, pendingPFUToday, name, variable) {
   const slots = []
   for (let i = 0; i < slotCount; i++) {
     const v = String(r[slotStart+i]||'').trim()
@@ -52,9 +52,11 @@ function trackPFUSeries(r, replyDate, slotStart, slotCount, bookedDate, calDays,
       break
     }
     dailyPFUTotal[D] = (dailyPFUTotal[D]||0) + 1
+    let doneToday = false
     for (let i = 0; i < slotCount; i++) {
-      if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; break }
+      if (slots[i].date === D) { dailyPFUDone[D] = (dailyPFUDone[D]||0) + 1; doneToday = true; break }
     }
+    if (D === todayStr && !doneToday && pendingPFUToday) pendingPFUToday.push({ name, variable })
   }
 }
 
@@ -79,6 +81,7 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
   }
 
   const dailyInitiated = {}, dailyFUDone = {}, dailyFUTotal = {}, dailyPFUDone = {}, dailyPFUTotal = {}
+  const pendingFUToday = [], pendingPFUToday = []
   const calDays = []
   const start = new Date('2026-03-01T12:00:00'); const end = new Date(todayStr+'T12:00:00')
   for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
@@ -103,13 +106,17 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
       const dueDate = dateStr(nextBizDay(new Date(x.date+'T12:00:00')))
       if (bookedDate && bookedDate <= dueDate) return
       dailyFUTotal[dueDate] = (dailyFUTotal[dueDate]||0) + 1
-      if (fuDoneDate === dueDate) dailyFUDone[dueDate] = (dailyFUDone[dueDate]||0) + 1
+      if (fuDoneDate === dueDate) {
+        dailyFUDone[dueDate] = (dailyFUDone[dueDate]||0) + 1
+      } else if (dueDate === todayStr) {
+        pendingFUToday.push({ name: r[1], variable: r[4] })
+      }
     } else {
       const replyDate = toDateStr(r[14]); if (!replyDate) return
 
       if (!vslMode) {
         // Standard mode: one PFU series Q-W (idx 16-22), booked = AB (idx 27)
-        trackPFUSeries(r, replyDate, 16, 7, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone)
+        trackPFUSeries(r, replyDate, 16, 7, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone, pendingPFUToday, r[1], r[4])
       } else {
         // VSL mode: two PFU series
         const vsl2ndReply = toDateStr(r[27]) // AB = positive reply on VSL
@@ -117,12 +124,12 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
         if (vsl2ndReply) {
           // Person replied to VSL → skip 1st series Q-W entirely (no duplicates)
           // Track 2nd series AD-AJ (idx 29-35), booked = AO (idx 40)
-          trackPFUSeries(r, vsl2ndReply, 29, 7, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone)
+          trackPFUSeries(r, vsl2ndReply, 29, 7, bookedDate, calDays, todayStr, dailyPFUTotal, dailyPFUDone, pendingPFUToday, r[1], r[4])
         } else {
           // No VSL reply yet → track 1st series Q-W (idx 16-22)
           // Text in Q-W = not interested in VSL → end of queue
           // booked at this stage = not possible (VSL not replied), pass null
-          trackPFUSeries(r, replyDate, 16, 7, null, calDays, todayStr, dailyPFUTotal, dailyPFUDone)
+          trackPFUSeries(r, replyDate, 16, 7, null, calDays, todayStr, dailyPFUTotal, dailyPFUDone, pendingPFUToday, r[1], r[4])
         }
       }
     }
@@ -156,5 +163,5 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
     else break
   }
 
-  return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today }
+  return { dailyInitiated, dailyFUTotal, dailyFUDone, dailyPFUTotal, dailyPFUDone, dailyFollowupTotal, dailyFollowupDone, outreachCount, fuTotal, fuDone, pfuTotal, pfuDone, streak, todayStr, today, pendingFUToday, pendingPFUToday }
 }

@@ -152,6 +152,9 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
         weekendOutreach: weekendOutreach,
         calendlyPat: calendlyPat.trim() || null,
         logoUrl: logoPreview || logoUrl || null,
+        outreachSheets: outreachSheets,
+        salesSheetId: salesSheetId || null,
+        salesTab: salesTab || 'Sheet1',
       })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)

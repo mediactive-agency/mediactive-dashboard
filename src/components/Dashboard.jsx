@@ -12,8 +12,20 @@ export function parseOutreachMonth(rows) {
       break
     }
   }
+  // Find where the per-prospect rows start. Prefer the labeled header row
+  // (Name/Date), but that label can go missing if a tab's header row gets
+  // partially cleared (e.g. while duplicating the previous month's tab) —
+  // in that case fall back to the first row that structurally looks like a
+  // data row (a link in column C and a parseable date in column D), so one
+  // blank header cell doesn't silently drop the whole month.
   let ds = -1
   for (let i = 0; i < rows.length; i++) { if (rows[i] && rows[i][1] === 'Name' && rows[i][3] === 'Date') { ds = i+1; break } }
+  if (ds < 0) {
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]
+      if (r && r[2] && String(r[2]).includes('http') && r[3] && toDateStr(r[3])) { ds = i; break }
+    }
+  }
   const rawRows = []
   if (ds > 0) {
     for (let i = ds; i < rows.length; i++) {

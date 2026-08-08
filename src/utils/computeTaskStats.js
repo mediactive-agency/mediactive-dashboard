@@ -70,8 +70,17 @@ export function computeTaskStats(data, { vslMode = false, weekendOutreach = fals
 
   const allRows = []
   for (const sheet of outreachSheets(data)) {
+    // Same robust detection as Dashboard.jsx: prefer the labeled header row,
+    // fall back to the first row shaped like real data (link + valid date)
+    // if a tab's header cells got blanked out.
     let ds = -1
     for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
+    if (ds < 0) {
+      for (let i = 0; i < sheet.length; i++) {
+        const r = sheet[i]
+        if (r && r[2] && String(r[2]).includes('http') && r[3] && toDateStr(r[3])) { ds = i; break }
+      }
+    }
     if (ds < 0) continue
     for (let i = ds; i < sheet.length; i++) {
       const r = sheet[i]; if (!r || !r[3]) continue

@@ -4,7 +4,7 @@ import Dashboard from './Dashboard'
 import Outreach from './Outreach'
 import Campaigns from './Campaigns'
 import { parseOutreachMonth } from './Dashboard'
-import { outreachSheets } from '../utils/data'
+import { outreachSheets, toDateStr } from '../utils/data'
 import { db } from '../firebase'
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 
@@ -133,6 +133,12 @@ function calcStats(data, filter, customFrom, customTo) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) {
       if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
+    }
+    if (ds < 0) {
+      for (let i = 0; i < sheet.length; i++) {
+        const r = sheet[i]
+        if (r && r[2] && String(r[2]).includes('http') && r[3] && toDateStr(r[3])) { ds = i; break }
+      }
     }
     if (ds < 0) continue
     for (let i = ds; i < sheet.length; i++) {

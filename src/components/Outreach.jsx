@@ -12,6 +12,12 @@ const getColor = n => VAR_COLORS[n] || '#88888B'
 function parseRawVars(rows, filterFn) {
   let ds = -1
   for (let i = 0; i < rows.length; i++) { if (rows[i] && rows[i][1] === 'Name' && rows[i][3] === 'Date') { ds = i+1; break } }
+  if (ds < 0) {
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]
+      if (r && r[2] && String(r[2]).includes('http') && r[3] && toDateStr(r[3])) { ds = i; break }
+    }
+  }
   if (ds < 0) return {}
   const agg = {}
   for (let i = ds; i < rows.length; i++) {

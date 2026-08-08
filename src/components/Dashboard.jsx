@@ -291,6 +291,12 @@ export default function Dashboard({ data, filter, customFrom, customTo, vslMode 
   for (const sheet of outreachSheets(data)) {
     let ds = -1
     for (let i = 0; i < sheet.length; i++) { if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break } }
+    if (ds < 0) {
+      for (let i = 0; i < sheet.length; i++) {
+        const r = sheet[i]
+        if (r && r[2] && String(r[2]).includes('http') && r[3] && toDateStr(r[3])) { ds = i; break }
+      }
+    }
     if (ds < 0) continue
     for (let i = ds; i < sheet.length; i++) { const r = sheet[i]; if (!r || !r[3]) continue; if (toDateStr(r[3]) === todStr) outToday++ }
   }

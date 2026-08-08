@@ -195,10 +195,11 @@ export default function Sales({ data, filter, customFrom, customTo, isMobile, is
     // LinkedIn map from outreach
     const linkedinMap = {}
     const allOutreach = outreachSheets(data).flat()
-    let foundH = false
     for (const r of allOutreach) {
-      if (!foundH) { if (r && r[1] === 'Name' && r[3] === 'Date') { foundH = true } continue }
-      if (!r || !r[1]) continue
+      // Detect real prospect rows by shape (link + valid date) rather than a
+      // single header flag, so one tab's blanked-out header doesn't stop
+      // matching for every tab after it, and summary rows never leak in.
+      if (!r || !r[1] || !r[2] || !String(r[2]).includes('http') || !r[3] || !toDateStr(r[3])) continue
       const name = (r[1]||'').toString().trim().toLowerCase()
       if (name && !linkedinMap[name]) {
         const li = (r[2]||'').toString().trim()

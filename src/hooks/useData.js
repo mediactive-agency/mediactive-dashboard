@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets'
 const API_KEY = 'AIzaSyCp1H8a78aqz21-ztsOQ-yCRjZNyPxhZXM'
 const PROXY = "https://script.google.com/macros/s/AKfycbwhZJ3fb9is6_vU1Wh7RdHWM0-dCwNQ6xTkIc3N45v7L9dNnRmycZhEQZfM17nKW2Hy/exec"
+const MONTH_TAB_RE = /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i
 
 function extractSheetId(input) {
   if (!input) return ''
@@ -18,6 +19,17 @@ async function fetchRange(sheetId, range) {
   const json = await res.json()
   if (json.error) throw new Error(json.error.message)
   return json.values || []
+}
+
+// Live list of tab titles currently in the sheet (not the stale list saved in
+// config). Used so new month tabs (Aug, Sep, ...) are picked up automatically
+// as soon as they exist in the sheet, without the user having to reconnect.
+async function fetchSheetTabTitles(sheetId) {
+  const url = `${SHEETS_API}/${sheetId}?key=${API_KEY}&fields=sheets.properties.title`
+  const res = await fetch(url)
+  const json = await res.json()
+  if (json.error) throw new Error(json.error.message)
+  return (json.sheets || []).map(s => s.properties.title)
 }
 
 async function fetchCalendly(pat) {
@@ -58,7 +70,17 @@ async function fetchCoreData(cfg) {
       // Fetch všechny sheety, merguj taby, stejný tab z různých sheetů se sloučí
       const tabData = {}
       await Promise.all(outreachSheets.map(async sheet => {
-        const sheetTabs = sheet.tabs || []
+        // Discover tabs live from the sheet every load, so a new month tab
+        // shows up automatically without touching Settings. Falls back to
+        // the last saved tab list only if the live lookup fails.
+        let sheetTabs = sheet.tabs || []
+        try {
+          const liveTitles = await fetchSheetTabTitles(sheet.id)
+          const liveMonthTabs = liveTitles.filter(t => MONTH_TAB_RE.test(t))
+          if (liveMonthTabs.length > 0) sheetTabs = liveMonthTabs
+        } catch (e) {
+          // offline / permissions issue, keep whatever was saved in config
+        }
         const results = await Promise.all(
           sheetTabs.map(tab => fetchRange(sheet.id, `${tab}!A1:AZ700`).catch(() => []))
         )

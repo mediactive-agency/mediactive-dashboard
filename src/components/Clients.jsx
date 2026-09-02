@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { computeTaskStats } from '../utils/computeTaskStats'
+import PendingList from './PendingList'
 import Dashboard from './Dashboard'
 import Outreach from './Outreach'
 import Campaigns from './Campaigns'
@@ -394,39 +395,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   )
 
   const taskStats = computeTaskStats(data)
-  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0, dailyPFUTotal, todayStr } = taskStats || {}
-
-  // Build positive followup queue — who needs attention today
-  const pfuQueue = []
-  if (data && todayStr) {
-    const allSheets = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    for (const key of allSheets) {
-      const sheet = data[key] || []
-      let ds = -1
-      for (let i = 0; i < sheet.length; i++) {
-        if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
-      }
-      if (ds < 0) continue
-      for (let i = ds; i < sheet.length; i++) {
-        const r = sheet[i]; if (!r || !r[3]) continue
-        const replyDate = r[14] ? String(r[14]).trim() : ''
-        if (!replyDate) continue
-        const bookedDate = r[27] ? String(r[27]).trim() : ''
-        if (bookedDate) continue // already booked
-        // Check if any slot Q-W (idx 16-22) is due today or unfilled
-        let hasPendingToday = false
-        for (let s = 0; s < 7; s++) {
-          const v = String(r[16+s]||'').trim()
-          if (!v) { hasPendingToday = true; break } // unfilled slot
-        }
-        if (hasPendingToday) {
-          const name = String(r[1]||'').trim() || String(r[0]||'').trim()
-          const link = String(r[2]||'').trim()
-          if (name) pfuQueue.push({ name, link, replyDate })
-        }
-      }
-    }
-  }
+  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0, pendingPFUToday = [], pendingFUToday = [] } = taskStats || {}
 
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
 
@@ -505,42 +474,20 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
             { label: 'Followups',      value: `${fuDone}/${fuTotal||'-'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
             { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'-'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
           ].map(k => (
-            <div key={k.label} style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
-              <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
-              {isWeekend
-                ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
-                : <>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
-                </>}
-            </div>
+            <PendingList key={k.label} items={k.label === 'Pos. Followups' ? pendingPFUToday : k.label === 'Followups' ? pendingFUToday : []}>
+              <div style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
+                <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
+                {isWeekend
+                  ? <div style={{ fontSize: 28, fontWeight: 600, color: 'var(--text5)', lineHeight: 1 }}>Not today</div>
+                  : <>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: k.color, lineHeight: 1, marginBottom: 8 }}>{k.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>{k.sub}</div>
+                  </>}
+              </div>
+            </PendingList>
           ))}
         </div>
       </div>
-
-      {/* Positive followup queue */}
-      {pfuQueue.length > 0 && (
-        <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-            Positive followup queue ({pfuQueue.length})
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pfuQueue.map((p, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{p.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Replied {p.replyDate}</div>
-                </div>
-                {p.link && (
-                  <a href={p.link} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#60A5FA', textDecoration: 'none' }}>
-                    View profile
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* 3. Variable funnels */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="variables" />

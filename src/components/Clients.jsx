@@ -394,15 +394,50 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
   )
 
   const taskStats = computeTaskStats(data)
-  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0 } = taskStats || {}
+  const { outreachCount = 0, fuTotal = 0, fuDone = 0, pfuTotal = 0, pfuDone = 0, dailyPFUTotal, todayStr } = taskStats || {}
+
+  // Build positive followup queue — who needs attention today
+  const pfuQueue = []
+  if (data && todayStr) {
+    const allSheets = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+    for (const key of allSheets) {
+      const sheet = data[key] || []
+      let ds = -1
+      for (let i = 0; i < sheet.length; i++) {
+        if (sheet[i] && sheet[i][1] === 'Name' && sheet[i][3] === 'Date') { ds = i+1; break }
+      }
+      if (ds < 0) continue
+      for (let i = ds; i < sheet.length; i++) {
+        const r = sheet[i]; if (!r || !r[3]) continue
+        const replyDate = r[14] ? String(r[14]).trim() : ''
+        if (!replyDate) continue
+        const bookedDate = r[27] ? String(r[27]).trim() : ''
+        if (bookedDate) continue // already booked
+        // Check if any slot Q-W (idx 16-22) is due today or unfilled
+        let hasPendingToday = false
+        for (let s = 0; s < 7; s++) {
+          const v = String(r[16+s]||'').trim()
+          if (!v) { hasPendingToday = true; break } // unfilled slot
+        }
+        if (hasPendingToday) {
+          const name = String(r[1]||'').trim() || String(r[0]||'').trim()
+          const link = String(r[2]||'').trim()
+          if (name) pfuQueue.push({ name, link, replyDate })
+        }
+      }
+    }
+  }
 
   const isWeekend = new Date().getDay() === 0 || new Date().getDay() === 6
 
-  // Monthly performance
-  const ALL_MONTH_PAIRS = [['mar','Mar'],['apr','Apr'],['may','May'],['jun','Jun']]
-  const currentMonth = new Date().getMonth() // 0=Jan, 5=Jun
-  const MONTH_TO_IDX = { mar:2, apr:3, may:4, jun:5 }
-  const lastThreePairs = ALL_MONTH_PAIRS.filter(([k]) => MONTH_TO_IDX[k] <= currentMonth && data[k] && data[k].length > 1).slice(-3)
+  // Monthly performance — dynamic last 3 months
+  const MONTH_KEYS_ALL = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
+  const MONTH_LABELS_ALL = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const currentMonth = new Date().getMonth() // 0=Jan
+  const lastThreePairs = MONTH_KEYS_ALL
+    .map((k, i) => [k, MONTH_LABELS_ALL[i], i])
+    .filter(([k, , i]) => i <= currentMonth && data[k] && data[k].length > 1)
+    .slice(-3)
   const MONTH_KEYS = lastThreePairs.map(([k]) => k)
   const MONTH_LABELS = lastThreePairs.map(([,l]) => l)
   const monthlyRows = MONTH_KEYS.map((k, i) => {
@@ -482,6 +517,30 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
           ))}
         </div>
       </div>
+
+      {/* Positive followup queue */}
+      {pfuQueue.length > 0 && (
+        <div style={{ background: 'var(--card)', borderRadius: 12, border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)', padding: '20px 24px', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
+            Positive followup queue ({pfuQueue.length})
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {pfuQueue.map((p, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>Replied {p.replyDate}</div>
+                </div>
+                {p.link && (
+                  <a href={p.link} target="_blank" rel="noreferrer" style={{ fontSize: 12, fontWeight: 600, color: '#60A5FA', textDecoration: 'none' }}>
+                    View profile
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3. Variable funnels */}
       <Outreach data={data} filter={filter} customFrom={customFrom} customTo={customTo} isMobile={isMobile} isTablet={isTablet} mode="variables" />

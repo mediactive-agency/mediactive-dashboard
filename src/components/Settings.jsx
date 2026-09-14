@@ -316,7 +316,10 @@ export default function Settings({ user, config, workspaceId, workspace, isOwner
     return (
       <Section title="Preview link">
         <div style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 16, lineHeight: 1.6 }}>
-          Share a read view of this dashboard with someone who doesn't need an account. No sign in required, no Settings, no AGP Members, no sign out. Set how long the link should stay active.
+          Share a read view of this dashboard with someone who doesn't need an account. No sign in required, no Settings
+          <div style={{ fontSize: 12, color: 'var(--text4)', marginTop: 6, lineHeight: 1.5 }}>
+            The preview link takes a snapshot of your clients at the time of creation. If you add or update clients, create a new link to reflect the changes.
+          </div>, no AGP Members, no sign out. Set how long the link should stay active.
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <input type="number" min="1" value={previewDurationValue} onChange={e => setPreviewDurationValue(Math.max(1, Number(e.target.value) || 1))}

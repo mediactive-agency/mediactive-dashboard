@@ -474,7 +474,7 @@ function ClientStats({ client, data, filter, customFrom, customTo, isMobile, isT
             { label: 'Followups',      value: `${fuDone}/${fuTotal||'-'}`,   color: fuTotal === 0 ? 'var(--text4)' : fuDone >= fuTotal ? '#34D399' : '#EF4444',                    sub: 'Due today' },
             { label: 'Pos. Followups', value: `${pfuDone}/${pfuTotal||'-'}`, color: pfuTotal === 0 ? 'var(--text4)' : pfuDone >= pfuTotal ? '#34D399' : '#F59E0B',                 sub: 'Active sequences' },
           ].map(k => (
-            <PendingList key={k.label} items={k.label === 'Pos. Followups' ? pendingPFUToday : k.label === 'Followups' ? pendingFUToday : []}>
+            <PendingList key={k.label} items={readOnly ? [] : (k.label === 'Pos. Followups' ? pendingPFUToday : k.label === 'Followups' ? pendingFUToday : [])}>
               <div style={{ background: 'var(--card)', borderRadius: 12, padding: '20px 22px', boxShadow: 'var(--card-shadow)', flex: 1 }}>
                 <div style={{ fontSize: 10, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{k.label}</div>
                 {isWeekend

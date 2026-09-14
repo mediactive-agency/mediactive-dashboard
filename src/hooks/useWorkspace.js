@@ -166,6 +166,7 @@ export function useWorkspace(user) {
         outreachSheets: d.data().outreachSheets || null,
         calendlyPat: d.data().calendlyPat || '',
         calendlyUserUri: d.data().calendlyUserUri || '',
+        campaignMessages: d.data().campaignMessages || {},
       }))
     } catch { /* best effort, preview still works without the client snapshot */ }
 

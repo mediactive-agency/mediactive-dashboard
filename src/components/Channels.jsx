@@ -33,28 +33,36 @@ function IconAccount({ s = 16, c = 'currentColor' }) {
 function IconOther({ s = 16, c = 'currentColor' }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill={c}><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
 }
-// Pickable glyphs for an Account or Other box, inline so no icon dependency
-// gets pulled in just for this.
-const G = (d, fill) => ({ s = 16, c = 'currentColor' }) =>
-  <svg width={s} height={s} viewBox="0 0 24 24" fill={fill ? c : 'none'} stroke={fill ? 'none' : c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>
+// Account and Other boxes can wear any icon from the library. These are just
+// the ones shown before you type a search.
+const SUGGESTED_ICONS = [
+  'User', 'Users', 'UserPlus', 'Contact', 'Building2', 'Briefcase',
+  'Mail', 'Send', 'MessageCircle', 'Phone', 'PhoneCall', 'Megaphone',
+  'Globe', 'Link', 'Share2', 'Rss', 'Podcast', 'Video',
+  'Target', 'Crosshair', 'TrendingUp', 'BarChart3', 'Zap', 'Flame',
+  'Star', 'Heart', 'ThumbsUp', 'Award', 'Trophy', 'Rocket',
+  'Calendar', 'CalendarCheck', 'Clock', 'MapPin', 'Tag', 'Bookmark',
+  'Search', 'Filter', 'Inbox', 'FileText', 'Handshake', 'Newspaper',
+]
+// The whole library is ~190kB gzipped, so it loads as its own chunk when this
+// tab mounts rather than riding along in the main bundle for every other tab.
+let LU = null
+let LUCIDE_NAMES = []
+let LU_PROMISE = null
+function loadLucide() {
+  if (!LU_PROMISE) {
+    LU_PROMISE = import('lucide-react').then(m => {
+      LU = m
+      LUCIDE_NAMES = Object.keys(m).filter(k => /^[A-Z]/.test(k) && !['createLucideIcon', 'Icon', 'icons'].includes(k))
+      return m
+    })
+  }
+  return LU_PROMISE
+}
 
-export const GLYPHS = {
-  megaphone: G('M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM16 8.5a4 4 0 010 7'),
-  mail:      G('M3 6h18v12H3zM3 7l9 6 9-6'),
-  phone:     G('M6 3h4l2 5-2.5 1.5a12 12 0 005 5L16 12l5 2v4a2 2 0 01-2 2A16 16 0 014 5a2 2 0 012-2z'),
-  users:     G('M16 20v-1.5a4 4 0 00-4-4H7a4 4 0 00-4 4V20M9.5 7.5a3 3 0 100 5 3 3 0 000-5M17 5.2a3 3 0 010 5.6M21 20v-1.5a4 4 0 00-3-3.8'),
-  target:    G('M12 3a9 9 0 100 18 9 9 0 000-18zM12 8a4 4 0 100 8 4 4 0 000-8zM12 11.5a.5.5 0 100 1 .5.5 0 000-1'),
-  star:      G('M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9L3.5 9.7l5.9-.8z'),
-  rocket:    G('M12 3c3.5 2 5.5 5.5 5.5 9.5L14 16h-4l-3.5-3.5C6.5 8.5 8.5 5 12 3zM10 16l-2 5 4-2 4 2-2-5'),
-  briefcase: G('M3 8h18v11H3zM9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8'),
-  calendar:  G('M4 6h16v14H4zM8 3v4M16 3v4M4 11h16'),
-  chat:      G('M20 5H4v11h4v4l4-4h8z'),
-  globe:     G('M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 20.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z'),
-  pin:       G('M12 21s6.5-6 6.5-10.5a6.5 6.5 0 10-13 0C5.5 15 12 21 12 21zM12 8a2.5 2.5 0 100 5 2.5 2.5 0 000-5'),
-  tag:       G('M3 12.5V4h8.5L21 13.5 13.5 21zM7.5 7.5v.01'),
-  bolt:      G('M13 3L5 14h6l-1 7 8-11h-6z'),
-  search:    G('M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4'),
-  video:     G('M3 6h12v12H3zM15 10l6-3v10l-6-3'),
+function LucideIcon({ name, s = 16 }) {
+  const C = name && LU?.[name]
+  return C ? <C size={s} /> : null
 }
 
 function IconPlus({ s = 14, c = 'currentColor', w = 2.4 }) {
@@ -78,7 +86,8 @@ export const CHANNEL_PRESETS = [
 const PRESET_BY_KEY = Object.fromEntries(CHANNEL_PRESETS.map(p => [p.key, p]))
 const isFree = key => !!PRESET_BY_KEY[key]?.free
 // A free box can override its glyph, a real platform always shows its own
-const iconFor = ch => (isFree(ch.preset) && GLYPHS[ch.icon]) || (PRESET_BY_KEY[ch.preset] || PRESET_BY_KEY.other).Icon
+const customIcon = ch => (isFree(ch.preset) && ch.icon && LU?.[ch.icon]) ? ch.icon : null
+const iconFor = ch => (PRESET_BY_KEY[ch.preset] || PRESET_BY_KEY.other).Icon
 const labelsFor = ch => (PRESET_BY_KEY[ch.preset] || {}).labels || {}
 
 const SWATCHES = ['#0A66C2', '#E1306C', '#1877F2', '#F5B301', '#FF0000', '#94A3B8', '#22D3EE', '#9CA3AF', '#34D399', '#A78BFA', '#FB923C', '#F472B6']
@@ -137,6 +146,9 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   const [selectedId, setSelectedId] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
   const [hoverConn, setHoverConn] = useState(null)
+  const [iconOpen, setIconOpen] = useState(false)
+  const [iconQuery, setIconQuery] = useState('')
+  const [, setLuReady] = useState(!!LU)
   const [linking, setLinking] = useState(null)
   const [nodeDrag, setNodeDrag] = useState(null)
   const [view, setView] = useState({ tx: 0, ty: 0, s: 1 })
@@ -275,6 +287,8 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     setView({ s, tx: (rect.width - layout.width * s) / 2, ty: Math.max(20, (rect.height - layout.height * s) / 2) })
   }
 
+  useEffect(() => { if (!LU) loadLucide().then(() => setLuReady(true)) }, [])
+
   useEffect(() => {
     if (!fittedRef.current) { fittedRef.current = true; fitView() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -317,6 +331,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   function startNodeDrag(e, id) {
     if (readOnly) return
     e.stopPropagation()
+    e.preventDefault()
     e.currentTarget.setPointerCapture?.(e.pointerId)
     const ox = layout.pos[id].x
     setNodeDrag({ id, startClientX: e.clientX, startClientY: e.clientY, origX: ox, curX: ox, moved: false })
@@ -365,6 +380,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   function startLink(e, fromKey) {
     if (readOnly) return
     e.stopPropagation()
+    e.preventDefault()
     setLinking({ from: fromKey, cur: toCanvas(e.clientX, e.clientY) })
   }
 
@@ -398,6 +414,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
   function startPan(e) {
     if (e.target !== e.currentTarget) return
+    e.preventDefault()
     panRef.current = { startX: e.clientX, startY: e.clientY, tx0: view.tx, ty0: view.ty }
     e.currentTarget.setPointerCapture?.(e.pointerId)
     setSelectedId(null)
@@ -436,11 +453,19 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
         const shifted = prev.channels.map(c => ({ ...c, row: (c.row ?? 0) + 1 }))
         return { channels: normalizeRows([fresh, ...shifted]), connections: [...prev.connections, link] }
       }
+      // Land in the upper row at the same slot the child occupies in its own
+      // row, so the feeder sits directly over it instead of between two cards
+      // that belong to something else.
       const posInRow = prev.channels.filter(c => (c.row ?? 0) === at).findIndex(c => c.id === ch.id)
       const upper = prev.channels.filter(c => (c.row ?? 0) === at - 1)
-      const anchor = upper[Math.min(posInRow, upper.length - 1)]
       const list = [...prev.channels]
-      list.splice(anchor ? list.findIndex(c => c.id === anchor.id) + 1 : list.length, 0, fresh)
+      const before = upper[posInRow]
+      list.splice(
+        before
+          ? list.findIndex(c => c.id === before.id)
+          : upper.length ? list.findIndex(c => c.id === upper[upper.length - 1].id) + 1 : list.length,
+        0, fresh,
+      )
       return { channels: normalizeRows(list), connections: [...prev.connections, link] }
     })
     setSelectedId(fresh.id)
@@ -495,6 +520,9 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
   const selected = board.channels.find(c => c.id === selectedId) || null
   const locked = selected ? !isFree(selected.preset) : false
+  const iconResults = iconQuery.trim()
+    ? LUCIDE_NAMES.filter(n => n.toLowerCase().includes(iconQuery.trim().toLowerCase())).slice(0, 96)
+    : SUGGESTED_ICONS
   const hasChannels = board.channels.length > 0
 
   const btn = { padding: '7px 13px', background: 'var(--card)', color: 'var(--text2)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }
@@ -543,6 +571,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
             position: 'relative', height: isMobile ? '62vh' : '72vh',
             background: 'var(--card)', borderRadius: 18, border: '1px solid var(--border)',
             boxShadow: 'var(--card-shadow)', overflow: 'hidden', touchAction: 'none',
+            userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none',
             cursor: linking ? 'crosshair' : 'grab',
             backgroundImage: 'radial-gradient(var(--border2) 1px, transparent 1px)',
             backgroundSize: `${24 * view.s}px ${24 * view.s}px`,
@@ -643,7 +672,9 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                   >
                     <div style={{ padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--border)' }}>
                       {st.active && <span title="Active in the last 7 days" style={{ width: 8, height: 8, borderRadius: '50%', background: '#34D399', flexShrink: 0, boxShadow: '0 0 0 3px rgba(52,211,153,0.18)' }} />}
-                      <span style={{ color: ch.color, display: 'flex', flexShrink: 0 }}><Icon s={15} /></span>
+                      <span style={{ color: ch.color, display: 'flex', flexShrink: 0 }}>
+                        {customIcon(ch) ? <LucideIcon name={ch.icon} s={15} /> : <Icon s={15} />}
+                      </span>
                       <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ch.name}</span>
                       <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: 'var(--text4)', flexShrink: 0 }}>{(ch.variables || []).length}v</span>
                     </div>
@@ -729,19 +760,88 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
               </div>
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Name</label>
-              <input
-                value={selected.name}
-                disabled={locked}
-                onChange={e => updateChannel(selected.id, { name: e.target.value })}
-                placeholder="Channel name"
-                style={{
-                  width: '100%', marginTop: 6, marginBottom: locked ? 8 : 16, padding: '9px 11px',
-                  background: locked ? 'var(--hover-bg)' : 'var(--bg2)',
-                  border: '1px solid var(--border)', borderRadius: 8,
-                  color: locked ? 'var(--text3)' : 'var(--text)', fontSize: 13, fontWeight: 600,
-                  outline: 'none', boxSizing: 'border-box', cursor: locked ? 'not-allowed' : 'text',
-                }}
-              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 6, marginBottom: locked ? 8 : (iconOpen ? 8 : 16) }}>
+                {!locked && (
+                  <button
+                    onClick={() => { setIconOpen(o => !o); setIconQuery('') }}
+                    title="Choose an icon"
+                    style={{
+                      width: 38, height: 38, flexShrink: 0, borderRadius: 8, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                      background: iconOpen ? hexToRgba(selected.color, 0.16) : 'var(--bg2)',
+                      border: `1px solid ${iconOpen ? selected.color : 'var(--border)'}`,
+                      color: selected.color,
+                    }}
+                  >
+                    {customIcon(selected)
+                      ? <LucideIcon name={selected.icon} s={18} />
+                      : (() => { const D = iconFor(selected); return <D s={18} /> })()}
+                  </button>
+                )}
+                <input
+                  value={selected.name}
+                  disabled={locked}
+                  onChange={e => updateChannel(selected.id, { name: e.target.value })}
+                  placeholder="Channel name"
+                  style={{
+                    flex: 1, minWidth: 0, padding: '9px 11px',
+                    background: locked ? 'var(--hover-bg)' : 'var(--bg2)',
+                    border: '1px solid var(--border)', borderRadius: 8,
+                    color: locked ? 'var(--text3)' : 'var(--text)', fontSize: 13, fontWeight: 600,
+                    outline: 'none', boxSizing: 'border-box', cursor: locked ? 'not-allowed' : 'text',
+                  }}
+                />
+              </div>
+
+              {!locked && iconOpen && (
+                <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: 10, marginBottom: 16 }}>
+                  <input
+                    value={iconQuery}
+                    onChange={e => setIconQuery(e.target.value)}
+                    placeholder="Search all icons"
+                    autoFocus
+                    style={{
+                      width: '100%', padding: '7px 9px', marginBottom: 8, boxSizing: 'border-box',
+                      background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 7,
+                      color: 'var(--text)', fontSize: 12, outline: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, maxHeight: 190, overflowY: 'auto' }}>
+                    <button
+                      onClick={() => { updateChannel(selected.id, { icon: null }); setIconOpen(false) }}
+                      title="Default"
+                      style={{
+                        aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        borderRadius: 6, cursor: 'pointer',
+                        background: !selected.icon ? hexToRgba(selected.color, 0.16) : 'var(--card)',
+                        border: !selected.icon ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
+                        color: !selected.icon ? selected.color : 'var(--text3)',
+                      }}
+                    >{(() => { const D = iconFor(selected); return <D s={15} /> })()}</button>
+                    {iconResults.map(name => {
+                      const on = selected.icon === name
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => { updateChannel(selected.id, { icon: name }); setIconOpen(false) }}
+                          title={name}
+                          style={{
+                            aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                            borderRadius: 6, cursor: 'pointer',
+                            background: on ? hexToRgba(selected.color, 0.16) : 'var(--card)',
+                            border: on ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
+                            color: on ? selected.color : 'var(--text3)',
+                          }}
+                        ><LucideIcon name={name} s={15} /></button>
+                      )
+                    })}
+                  </div>
+                  {iconQuery.trim() && iconResults.length === 0 && (
+                    <div style={{ fontSize: 11, color: 'var(--text4)', padding: '8px 2px 2px' }}>No icon matches that.</div>
+                  )}
+                </div>
+              )}
+
               {locked && (
                 <div style={{ fontSize: 10.5, color: 'var(--text4)', marginBottom: 16, lineHeight: 1.5 }}>
                   Name and colour are fixed for a real platform. Switch to Account or Other to set your own.
@@ -769,42 +869,6 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                   )
                 })}
               </div>
-
-              {!locked && (
-                <>
-                  <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Icon</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 5, marginTop: 8, marginBottom: 16 }}>
-                    <button
-                      onClick={() => updateChannel(selected.id, { icon: null })}
-                      title="Default"
-                      style={{
-                        aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                        borderRadius: 7, cursor: 'pointer',
-                        background: !selected.icon ? hexToRgba(selected.color, 0.16) : 'var(--hover-bg)',
-                        border: !selected.icon ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
-                        color: !selected.icon ? selected.color : 'var(--text3)',
-                      }}
-                    >{(() => { const D = (PRESET_BY_KEY[selected.preset] || PRESET_BY_KEY.other).Icon; return <D s={15} /> })()}</button>
-                    {Object.entries(GLYPHS).map(([key, Glyph]) => {
-                      const on = selected.icon === key
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => updateChannel(selected.id, { icon: key })}
-                          title={key}
-                          style={{
-                            aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                            borderRadius: 7, cursor: 'pointer',
-                            background: on ? hexToRgba(selected.color, 0.16) : 'var(--hover-bg)',
-                            border: on ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
-                            color: on ? selected.color : 'var(--text3)',
-                          }}
-                        ><Glyph s={15} /></button>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Colour</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 16, alignItems: 'center', opacity: locked ? 0.4 : 1, pointerEvents: locked ? 'none' : 'auto' }}>

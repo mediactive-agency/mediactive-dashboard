@@ -908,6 +908,7 @@ const DROP = '#EF4444'
 const KEEP = '#34D399'
 const BAR_W = 13
 const V_GAP = 18
+const MAX_GAP = 96
 const LABEL_PAD = 11
 
 // Minimal layered sankey. One scale across every column so ribbon thickness is
@@ -924,14 +925,20 @@ function layoutSankey(nodes, links, W, H) {
 
   cols.forEach((c, ci) => {
     const list = byCol[c]
-    const total = list.reduce((s, n) => s + n.value, 0)
-    const gaps = (list.length - 1) * V_GAP
-    let y = 10 + (usable - (total * scale + gaps)) / 2
+    const barsH = list.reduce((s, n) => s + Math.max(3, n.value * scale), 0)
+    // A late column holding a handful of small stages has most of the height
+    // going spare, so its gap grows to use it instead of stacking everything in
+    // a cramped band. Dense columns keep the tight gap.
+    const free = Math.max(0, usable - barsH)
+    const gap = list.length > 1
+      ? Math.min(MAX_GAP, Math.max(V_GAP, free / (list.length + 1)))
+      : 0
+    let y = 10 + (usable - (barsH + gap * (list.length - 1))) / 2
     list.forEach(n => {
       n.h = Math.max(3, n.value * scale)
       n.y = y
       n.x = ci * step
-      y += n.h + V_GAP
+      y += n.h + gap
     })
   })
 

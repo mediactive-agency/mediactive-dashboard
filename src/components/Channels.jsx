@@ -133,6 +133,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   const [hoverConn, setHoverConn] = useState(null)
   const [linking, setLinking] = useState(null)
   const [nodeDrag, setNodeDrag] = useState(null)
+  const [history, setHistory] = useState([])
   const [iconOpen, setIconOpen] = useState(false)
   const [iconQuery, setIconQuery] = useState('')
   const [, setLuReady] = useState(!!LU)
@@ -144,6 +145,19 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   const orderRef = useRef(null)
 
   useEffect(() => { if (!LU) loadLucide().then(() => setLuReady(true)) }, [])
+
+  useEffect(() => {
+    const onKey = e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        const tag = document.activeElement?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return
+        e.preventDefault()
+        undo()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   useEffect(() => {
     if (!initialized.current && saved?.channels) {
@@ -161,12 +175,24 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     if (!user) return
     saveUserConfig(user.uid, { channels: next }).catch(() => {})
   }
+  // Every structural change stacks the board as it was, so a misplaced card or
+  // a line deleted by accident is one click away from coming back.
+  function pushHistory(snapshot) {
+    setHistory(h => [...h.slice(-29), snapshot])
+  }
   function commit(updater) {
-    setBoard(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      persist(next)
-      return next
-    })
+    const next = typeof updater === 'function' ? updater(board) : updater
+    pushHistory(board)
+    setBoard(next)
+    persist(next)
+  }
+  function undo() {
+    if (!history.length) return
+    const prev = history[history.length - 1]
+    setHistory(h => h.slice(0, -1))
+    setBoard(prev)
+    persist(prev)
+    setSelectedId(null)
   }
 
   const sourcesOf = id => board.connections.filter(c => c.to === id).map(c => c.from)
@@ -342,7 +368,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     e.stopPropagation(); e.preventDefault()
     e.currentTarget.setPointerCapture?.(e.pointerId)
     const ox = layout.pos[id].x
-    setNodeDrag({ id, startClientX: e.clientX, startClientY: e.clientY, origX: ox, curX: ox, moved: false })
+    setNodeDrag({ id, startClientX: e.clientX, startClientY: e.clientY, origX: ox, curX: ox, moved: false, boardAtStart: board })
     orderRef.current = null
   }
 
@@ -375,8 +401,10 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     setNodeDrag(null)
     orderRef.current = null
     if (!nd) return
-    if (nd.moved) setBoard(prev => { persist(prev); return prev })
-    else setSelectedId(prev => prev === id ? null : id)
+    if (nd.moved) {
+      pushHistory(nd.boardAtStart)
+      setBoard(prev => { persist(prev); return prev })
+    } else setSelectedId(prev => prev === id ? null : id)
   }
 
   /* ------------------------------------------------------------- linking */
@@ -544,6 +572,23 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
           <button onClick={() => setMode('flow')} style={tab(mode === 'flow')}>Flow</button>
           <button onClick={() => setMode('sankey')} style={tab(mode === 'sankey')}>Sankey</button>
         </div>
+        {!readOnly && (
+          <button
+            onClick={undo}
+            disabled={!history.length}
+            title="Undo (Ctrl+Z)"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px',
+              background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8,
+              color: history.length ? 'var(--text2)' : 'var(--text5)',
+              cursor: history.length ? 'pointer' : 'not-allowed', fontSize: 12, fontWeight: 600,
+              opacity: history.length ? 1 : 0.55,
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg>
+            Undo
+          </button>
+        )}
         {hasChannels && unassigned.length > 0 && (
           <div style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 'auto' }}>
             {unassigned.length} variable{unassigned.length === 1 ? '' : 's'} not linked
@@ -552,7 +597,8 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
       </div>
 
       {mode === 'sankey' ? (
-        <SankeyView board={board} stats={channelStats} funnel={funnel} isMobile={isMobile} />
+        <SankeyView board={board} stats={channelStats} funnel={funnel} isMobile={isMobile}
+          selectedId={selectedId} onSelect={id => setSelectedId(prev => prev === id ? null : id)} />
       ) : (
         <div
           ref={vpRef}
@@ -705,7 +751,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
       )}
 
       {/* ----------------- inspector, floats over the canvas when open ----- */}
-      {!readOnly && selected && mode === 'flow' && (
+      {!readOnly && selected && (
         <div style={{
           position: 'absolute', zIndex: 30, top: isMobile ? 'auto' : 60, bottom: 14,
           right: isMobile ? 8 : 14, left: isMobile ? 8 : 'auto',
@@ -849,6 +895,9 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
 const DROP = '#EF4444'
 const KEEP = '#34D399'
+const BAR_W = 13
+const V_GAP = 18
+const LABEL_PAD = 11
 
 // Minimal layered sankey. One scale across every column so ribbon thickness is
 // comparable left to right, which is the whole point of reading it this way.
@@ -856,27 +905,25 @@ function layoutSankey(nodes, links, W, H) {
   const byCol = {}
   nodes.forEach(n => { (byCol[n.col] ||= []).push(n) })
   const cols = Object.keys(byCol).map(Number).sort((a, b) => a - b)
-  const NW = 13, GAP = 16, TOP = 26
-  const usable = H - TOP * 2
-  const colTotals = cols.map(c => byCol[c].reduce((s, n) => s + n.value, 0))
-  const maxTotal = Math.max(1, ...colTotals)
-  const maxGaps = Math.max(...cols.map(c => (byCol[c].length - 1) * GAP))
+  const usable = H - 20
+  const maxTotal = Math.max(1, ...cols.map(c => byCol[c].reduce((s, n) => s + n.value, 0)))
+  const maxGaps = Math.max(0, ...cols.map(c => (byCol[c].length - 1) * V_GAP))
   const scale = Math.max((usable - maxGaps) / maxTotal, 0.0001)
-  const step = cols.length > 1 ? (W - NW) / (cols.length - 1) : 0
+  const step = cols.length > 1 ? (W - BAR_W) / (cols.length - 1) : 0
 
   cols.forEach((c, ci) => {
     const list = byCol[c]
     const total = list.reduce((s, n) => s + n.value, 0)
-    const gaps = (list.length - 1) * GAP
-    let y = TOP + (usable - (total * scale + gaps)) / 2
+    const gaps = (list.length - 1) * V_GAP
+    let y = 10 + (usable - (total * scale + gaps)) / 2
     list.forEach(n => {
-      n.h = Math.max(2, n.value * scale)
+      n.h = Math.max(3, n.value * scale)
       n.y = y
       n.x = ci * step
-      n.w = NW
       n.inOff = 0
       n.outOff = 0
-      y += n.h + GAP
+      n.lastCol = ci === cols.length - 1
+      y += n.h + V_GAP
     })
   })
 
@@ -888,86 +935,175 @@ function layoutSankey(nodes, links, W, H) {
     const sy = a.y + a.outOff, ty = b.y + b.inOff
     a.outOff += h
     b.inOff += h
-    const mx = (a.x + a.w + b.x) / 2
+    const mx = (a.x + BAR_W + b.x) / 2
     return {
       key: l.from + '>' + l.to,
-      color: l.color,
-      d: `M ${a.x + a.w} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${b.x} ${ty}`
-        + ` L ${b.x} ${ty + h} C ${mx} ${ty + h}, ${mx} ${sy + h}, ${a.x + a.w} ${sy + h} Z`,
+      from: l.from, to: l.to, color: l.color,
+      d: `M ${a.x + BAR_W} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${b.x} ${ty}`
+        + ` L ${b.x} ${ty + h} C ${mx} ${ty + h}, ${mx} ${sy + h}, ${a.x + BAR_W} ${sy + h} Z`,
     }
   }).filter(Boolean)
 
   return { nodes, ribbons }
 }
 
-function SankeyView({ board, stats, funnel, isMobile }) {
-  const roots = board.channels.filter(ch => !board.connections.some(c => c.to === ch.id))
-  const W = isMobile ? 320 : 820
-  const H = isMobile ? 420 : 460
+function SankeyView({ board, stats, funnel, isMobile, selectedId, onSelect }) {
+  const wrapRef = useRef(null)
+  const [size, setSize] = useState({ w: 900, h: 520 })
+  const [hover, setHover] = useState(null)
+
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      const r = entry.contentRect
+      setSize({ w: Math.max(380, r.width), h: Math.max(320, r.height) })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Labels sit to the right of every bar, so the chart area stops short of the
+  // container and leaves the last column room to write into.
+  const LABEL_W = isMobile ? 104 : 150
+  const chartW = Math.max(120, size.w - LABEL_W - 16)
+  const chartH = size.h - 16
 
   const model = useMemo(() => {
-    const init = roots.reduce((s, ch) => s + (stats[ch.id]?.initiated || 0), 0)
-    const booked = funnel?.booked || 0
+    const rows = []
+    board.channels.forEach(ch => {
+      const r = ch.row ?? 0
+      if (!rows[r]) rows[r] = []
+      rows[r].push(ch)
+    })
+    const filled = rows.filter(Boolean)
+    const nRows = filled.length
+    if (!nRows) return { nodes: [], ribbons: [] }
+
+    const lastRow = filled[nRows - 1]
+    const booked = lastRow.reduce((s, ch) => s + (stats[ch.id]?.booked || 0), 0)
+    const initiated = lastRow.reduce((s, ch) => s + (stats[ch.id]?.initiated || 0), 0)
     // The sales sheet is not per channel, so held can outrun what the board
-    // says was booked. Clamp so the ribbons stay conservative.
+    // says was booked. Clamp so the ribbons stay honest.
     const held = Math.min(funnel?.held || 0, booked)
     const closed = Math.min(funnel?.closed || 0, held)
 
-    const nodes = [
-      ...roots.map(ch => ({ id: ch.id, label: ch.name, value: stats[ch.id]?.initiated || 0, col: 0, color: ch.color })),
-      { id: 'reach', label: 'Total outreach', value: init, col: 1, color: '#60A5FA' },
-      { id: 'booked', label: 'Booked', value: booked, col: 2, color: '#A855F7' },
-      { id: 'noreply', label: 'No booking', value: Math.max(0, init - booked), col: 2, color: DROP },
-      { id: 'held', label: 'Held', value: held, col: 3, color: '#FBBF24' },
-      { id: 'noshow', label: 'No show', value: Math.max(0, booked - held), col: 3, color: DROP },
-      { id: 'closed', label: 'Closed', value: closed, col: 4, color: KEEP },
-      { id: 'lost', label: 'Lost', value: Math.max(0, held - closed), col: 4, color: DROP },
-    ].filter(n => n.value > 0)
+    const nodes = []
+    filled.forEach((list, r) => {
+      list.forEach(ch => nodes.push({
+        id: ch.id, label: ch.name, value: stats[ch.id]?.initiated || 0,
+        col: r, color: ch.color, channel: ch, active: stats[ch.id]?.active,
+      }))
+    })
+    nodes.push(
+      { id: '__booked', label: 'Booked', value: booked, col: nRows, color: '#A855F7' },
+      { id: '__nobook', label: 'No booking', value: Math.max(0, initiated - booked), col: nRows, color: DROP },
+      { id: '__held', label: 'Held', value: held, col: nRows + 1, color: '#FBBF24' },
+      { id: '__noshow', label: 'No show', value: Math.max(0, booked - held), col: nRows + 1, color: DROP },
+      { id: '__closed', label: 'Closed', value: closed, col: nRows + 2, color: KEEP },
+      { id: '__lost', label: 'Lost', value: Math.max(0, held - closed), col: nRows + 2, color: DROP },
+    )
 
-    const links = [
-      ...roots.map(ch => ({ from: ch.id, to: 'reach', value: stats[ch.id]?.initiated || 0, color: hexToRgba(ch.color, 0.34) })),
-      { from: 'reach', to: 'booked', value: booked, color: hexToRgba('#A855F7', 0.3) },
-      { from: 'reach', to: 'noreply', value: Math.max(0, init - booked), color: hexToRgba(DROP, 0.22) },
-      { from: 'booked', to: 'held', value: held, color: hexToRgba('#FBBF24', 0.3) },
-      { from: 'booked', to: 'noshow', value: Math.max(0, booked - held), color: hexToRgba(DROP, 0.22) },
-      { from: 'held', to: 'closed', value: closed, color: hexToRgba(KEEP, 0.32) },
-      { from: 'held', to: 'lost', value: Math.max(0, held - closed), color: hexToRgba(DROP, 0.22) },
-    ]
-    return layoutSankey(nodes, links, W, H)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [board.channels, board.connections, stats, funnel, W, H])
+    const links = []
+    // channel to channel, following the wiring on the board
+    board.connections.forEach(cn => {
+      const src = board.channels.find(c => c.id === cn.from)
+      const dst = board.channels.find(c => c.id === cn.to)
+      if (!src || !dst) return
+      links.push({ from: src.id, to: dst.id, value: stats[src.id]?.initiated || 0, color: hexToRgba(src.color, 0.3) })
+    })
+    // last channel row splits into booked and the miss, per channel, so you can
+    // see which one actually carried the bookings
+    lastRow.forEach(ch => {
+      const st = stats[ch.id] || { initiated: 0, booked: 0 }
+      links.push({ from: ch.id, to: '__booked', value: st.booked, color: hexToRgba(ch.color, 0.34) })
+      links.push({ from: ch.id, to: '__nobook', value: Math.max(0, st.initiated - st.booked), color: hexToRgba(DROP, 0.16) })
+    })
+    links.push(
+      { from: '__booked', to: '__held', value: held, color: hexToRgba('#FBBF24', 0.3) },
+      { from: '__booked', to: '__noshow', value: Math.max(0, booked - held), color: hexToRgba(DROP, 0.16) },
+      { from: '__held', to: '__closed', value: closed, color: hexToRgba(KEEP, 0.32) },
+      { from: '__held', to: '__lost', value: Math.max(0, held - closed), color: hexToRgba(DROP, 0.16) },
+    )
 
-  const anything = model.nodes.some(n => n.value > 0)
+    return layoutSankey(nodes.filter(n => n.value > 0), links, chartW, chartH)
+  }, [board.channels, board.connections, stats, funnel, chartW, chartH])
+
+  const dim = id => hover && hover !== id
+  const touching = r => !hover || r.from === hover || r.to === hover
 
   return (
     <div style={{
       background: 'var(--card)', borderRadius: 18, border: '1px solid var(--border)',
-      boxShadow: 'var(--card-shadow)', padding: isMobile ? 12 : 20,
-      height: isMobile ? '62vh' : '74vh', overflow: 'auto',
+      boxShadow: 'var(--card-shadow)', padding: isMobile ? 12 : 18,
+      height: isMobile ? '62vh' : '74vh', boxSizing: 'border-box',
     }}>
-      {!anything ? (
-        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 12.5 }}>
-          Nothing to chart yet. Add channels on the Flow view and link variables to them.
-        </div>
-      ) : (
-        <svg viewBox={`-10 0 ${W + 150} ${H}`} width="100%" style={{ maxHeight: '100%', overflow: 'visible' }}>
-          {model.ribbons.map(r => <path key={r.key} d={r.d} fill={r.color} />)}
-          {model.nodes.map(n => (
-            <g key={n.id}>
-              <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="2" fill={n.color} />
-              <text
-                x={n.col === 4 ? n.x + n.w + 8 : n.x + n.w + 8}
-                y={n.y + n.h / 2}
-                dominantBaseline="middle"
-                style={{ fontSize: 11.5, fontWeight: 700, fill: 'var(--text)' }}
-              >
-                {n.label}
-                <tspan style={{ fontWeight: 600, fill: 'var(--text3)' }}> {n.value}</tspan>
-              </text>
-            </g>
-          ))}
-        </svg>
-      )}
+      <div ref={wrapRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {!model.nodes.length ? (
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 12.5 }}>
+            Nothing to chart yet. Add channels on the Flow view and link variables to them.
+          </div>
+        ) : (
+          <>
+            <svg width={chartW + LABEL_W} height={chartH} style={{ position: 'absolute', left: 0, top: 8, overflow: 'visible' }}>
+              {model.ribbons.map(r => (
+                <path key={r.key} d={r.d} fill={r.color}
+                  style={{ opacity: touching(r) ? 1 : 0.22, transition: 'opacity 0.14s' }} />
+              ))}
+              {model.nodes.map(n => (
+                <rect key={n.id} x={n.x} y={n.y} width={BAR_W} height={n.h} rx="3" fill={n.color}
+                  style={{
+                    opacity: dim(n.id) ? 0.3 : 1,
+                    cursor: n.channel ? 'pointer' : 'default',
+                    transition: 'opacity 0.14s',
+                  }}
+                  onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)}
+                  onClick={() => n.channel && onSelect(n.id)} />
+              ))}
+            </svg>
+
+            {/* labels live in HTML so they get the same type and icons as the board */}
+            {model.nodes.map(n => {
+              const Icon = n.channel ? iconFor(n.channel) : null
+              const sel = selectedId === n.id
+              return (
+                <div key={n.id}
+                  onMouseEnter={() => setHover(n.id)} onMouseLeave={() => setHover(null)}
+                  onClick={() => n.channel && onSelect(n.id)}
+                  style={{
+                    position: 'absolute',
+                    left: n.x + BAR_W + LABEL_PAD,
+                    top: 8 + n.y + n.h / 2,
+                    transform: 'translateY(-50%)',
+                    maxWidth: LABEL_W - LABEL_PAD,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    cursor: n.channel ? 'pointer' : 'default',
+                    opacity: dim(n.id) ? 0.4 : 1,
+                    transition: 'opacity 0.14s',
+                    pointerEvents: 'auto',
+                  }}>
+                  {n.active && <span style={{ width: 6, height: 6, borderRadius: '50%', background: KEEP, flexShrink: 0 }} />}
+                  {Icon && (
+                    <span style={{ color: n.color, display: 'flex', flexShrink: 0 }}>
+                      {customIcon(n.channel) ? <LucideIcon name={n.channel.icon} s={13} /> : <Icon s={13} />}
+                    </span>
+                  )}
+                  <span style={{
+                    fontSize: 11.5, fontWeight: sel ? 800 : 700,
+                    color: sel ? n.color : 'var(--text)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    textShadow: '0 1px 3px var(--card), 0 0 6px var(--card)',
+                  }}>{n.label}</span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, color: 'var(--text3)', flexShrink: 0,
+                    textShadow: '0 1px 3px var(--card), 0 0 6px var(--card)',
+                  }}>{n.value}</span>
+                </div>
+              )
+            })}
+          </>
+        )}
+      </div>
     </div>
   )
 }

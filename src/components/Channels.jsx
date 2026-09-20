@@ -27,6 +27,9 @@ function IconYouTube({ s = 16, c = 'currentColor' }) {
 function IconWebsite({ s = 16, c = 'currentColor' }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg>
 }
+function IconAccount({ s = 16, c = 'currentColor' }) {
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>
+}
 function IconOther({ s = 16, c = 'currentColor' }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill={c}><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
 }
@@ -36,7 +39,8 @@ function IconPlus({ s = 14, c = 'currentColor', w = 2.4 }) {
 
 // `accent` is the identity colour of the box. LinkedIn and Facebook are both
 // blue but use their own brand blues so two boxes side by side are still
-// tellable apart.
+// tellable apart. `free` marks the ones whose name and colour you own: the real
+// platforms carry fixed branding, an Account or an Other box does not.
 export const CHANNEL_PRESETS = [
   { key: 'linkedin',  label: 'LinkedIn',  accent: '#0A66C2', Icon: IconLinkedIn },
   { key: 'instagram', label: 'Instagram', accent: '#E1306C', Icon: IconInstagram },
@@ -44,27 +48,27 @@ export const CHANNEL_PRESETS = [
   { key: 'skool',     label: 'Skool',     accent: '#F5B301', Icon: IconSkool },
   { key: 'youtube',   label: 'YouTube',   accent: '#FF0000', Icon: IconYouTube },
   { key: 'website',   label: 'Website',   accent: '#94A3B8', Icon: IconWebsite },
-  { key: 'other',     label: 'Other',     accent: '#9CA3AF', Icon: IconOther },
+  { key: 'account',   label: 'Account',   accent: '#22D3EE', Icon: IconAccount, free: true },
+  { key: 'other',     label: 'Other',     accent: '#9CA3AF', Icon: IconOther,   free: true },
 ]
 const PRESET_BY_KEY = Object.fromEntries(CHANNEL_PRESETS.map(p => [p.key, p]))
+const isFree = key => !!PRESET_BY_KEY[key]?.free
 
-const SWATCHES = ['#0A66C2', '#E1306C', '#1877F2', '#F5B301', '#FF0000', '#94A3B8', '#9CA3AF', '#34D399', '#A78BFA', '#FB923C', '#22D3EE', '#F472B6']
+const SWATCHES = ['#0A66C2', '#E1306C', '#1877F2', '#F5B301', '#FF0000', '#94A3B8', '#22D3EE', '#9CA3AF', '#34D399', '#A78BFA', '#FB923C', '#F472B6']
 
 const NODE_W = 236
 const NODE_H = 138
 const BOOKED_W = 300
 const BOOKED_H = 158
-const HANDLE = 22   // hover gutter each side of a channel, holds the + handles
 
-// Layout constants. Positions are computed from row + order, never stored, so
-// the board can't drift into overlapping boxes the way free dragging allowed.
-const PAD = 44
+// Layout constants. Positions come from row plus order, never stored, so the
+// board can't drift into overlapping boxes the way free dragging allowed.
+const PAD = 52
 const COL_GAP = 56
-const LAYER_GAP = 118
-const EMPTY_TOP = 86 // room above Booked for the add button on a fresh board
-
-const MIN_ZOOM = 0.45
-const MAX_ZOOM = 1.6
+const LAYER_GAP = 124
+const EMPTY_TOP = 96      // room above Booked for the add button on a fresh board
+const SIDE_GUTTER = 42    // clearance each side of a card for the + handles
+const TOP_GUTTER = 44     // clearance above a card for its + handle
 
 function makeId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
@@ -89,30 +93,36 @@ function release(e) {
   try { if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* nothing to release */ }
 }
 
+// Rows can go empty after a delete, so squash them back to 0..n-1 before drawing
+function normalizeRows(channels) {
+  const used = Array.from(new Set(channels.map(c => c.row ?? 0))).sort((a, b) => a - b)
+  const map = Object.fromEntries(used.map((r, i) => [r, i]))
+  return channels.map(c => ({ ...c, row: map[c.row ?? 0] ?? 0 }))
+}
+
 export default function Channels({ data, filter, customFrom, customTo, user, config, isMobile, readOnly, clientId }) {
   const saved = config?.channels
   const [board, setBoard] = useState(() => ({
-    // x/y from older saved boards are dropped on purpose, order is the layout now
-    channels: (saved?.channels || []).map(({ x, y, ...c }) => c),
-    connections: saved?.connections
-      || (saved?.channels || []).map(c => ({ id: makeId(), from: c.id, to: 'booked' })),
+    // x/y from older saved boards are dropped on purpose, row plus order is the layout now
+    channels: normalizeRows((saved?.channels || []).map(({ x, y, ...c }) => ({ row: 0, ...c }))),
+    connections: saved?.connections || (saved?.channels || []).map(c => ({ id: makeId(), from: c.id, to: 'booked' })),
   }))
   const [selectedId, setSelectedId] = useState(null)
   const [hoveredId, setHoveredId] = useState(null)
   const [hoverConn, setHoverConn] = useState(null)
   const [linking, setLinking] = useState(null)
   const [nodeDrag, setNodeDrag] = useState(null)
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [view, setView] = useState({ tx: 0, ty: 0, s: 1 })
   const initialized = useRef(false)
-  const wrapRef = useRef(null)
+  const fittedRef = useRef(false)
+  const vpRef = useRef(null)
   const panRef = useRef(null)
   const orderRef = useRef(null)
 
   useEffect(() => {
     if (!initialized.current && saved?.channels) {
       setBoard({
-        channels: saved.channels.map(({ x, y, ...c }) => c),
+        channels: normalizeRows(saved.channels.map(({ x, y, ...c }) => ({ row: 0, ...c }))),
         connections: saved.connections || saved.channels.map(c => ({ id: makeId(), from: c.id, to: 'booked' })),
       })
       initialized.current = true
@@ -140,10 +150,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     if (!data) return { channelStats: {}, bookedStats: null, allVariables: [], assignedVars: new Set(), activeVars: new Set() }
 
     const monthKeys = Object.keys(data).filter(k => k !== 'sales' && k !== 'calendly')
-    const allRaw = monthKeys
-      .flatMap(k => parseOutreachMonth(data[k]).rawRows)
-      .filter(r => r.varName && r.date)
-
+    const allRaw = monthKeys.flatMap(k => parseOutreachMonth(data[k]).rawRows).filter(r => r.varName && r.date)
     const variables = Array.from(new Set(allRaw.map(r => r.varName))).sort()
 
     // A variable counts as active when its most recent send is inside the same
@@ -168,8 +175,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
     // The sales sheet has no channel column, so show up / close is measured
     // across every held call in the window rather than split per channel.
-    const salesRows = (data.sales || []).slice(1)
-      .filter(r => r && r[0])
+    const salesRows = (data.sales || []).slice(1).filter(r => r && r[0])
       .filter(r => inRange(toSalesDateStr(r[1]), filter, customFrom, customTo))
     const held = salesRows.length
     const closed = salesRows.filter(r => String(r[5] || '').toLowerCase() === 'yes').length
@@ -180,9 +186,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     return {
       channelStats: stats,
       bookedStats: { booked: bookedTotal, held, closed, showUp: pct(held, bookedTotal), closeRate: pct(closed, held) },
-      allVariables: variables,
-      assignedVars: assigned,
-      activeVars: active,
+      allVariables: variables, assignedVars: assigned, activeVars: active,
     }
   }, [data, filter, customFrom, customTo, board.channels, board.connections])
 
@@ -191,18 +195,26 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   /* ------------------------------------------------------------- layout */
 
   const layout = useMemo(() => {
-    const n = board.channels.length
-    const rowW = n ? n * NODE_W + (n - 1) * COL_GAP : 0
-    const width = Math.max(rowW + PAD * 2, BOOKED_W + PAD * 2, 860)
+    const rows = []
+    board.channels.forEach(ch => {
+      const r = ch.row ?? 0
+      if (!rows[r]) rows[r] = []
+      rows[r].push(ch)
+    })
+    const filled = rows.filter(Boolean)
+    const rowWidths = filled.map(ids => ids.length * NODE_W + (ids.length - 1) * COL_GAP)
+    const width = Math.max(BOOKED_W + PAD * 2, 860, ...rowWidths.map(w => w + PAD * 2))
+
     const pos = {}
-    let x = (width - rowW) / 2
-    board.channels.forEach(ch => { pos[ch.id] = { x, y: PAD }; x += NODE_W + COL_GAP })
-    const booked = { x: (width - BOOKED_W) / 2, y: PAD + (n ? NODE_H + LAYER_GAP : EMPTY_TOP) }
-    return { pos, booked, width, height: booked.y + BOOKED_H + PAD }
+    filled.forEach((list, r) => {
+      let x = (width - rowWidths[r]) / 2
+      list.forEach(ch => { pos[ch.id] = { x, y: PAD + r * (NODE_H + LAYER_GAP), row: r }; x += NODE_W + COL_GAP })
+    })
+    const nRows = filled.length
+    const booked = { x: (width - BOOKED_W) / 2, y: PAD + (nRows ? nRows * (NODE_H + LAYER_GAP) : EMPTY_TOP) }
+    return { pos, booked, rows: filled, width, height: booked.y + BOOKED_H + PAD }
   }, [board.channels])
 
-  // While a card is being dragged it follows the pointer horizontally, every
-  // other card stays on its computed slot.
   function slotX(id) {
     if (nodeDrag && nodeDrag.id === id) return nodeDrag.curX
     return layout.pos[id]?.x ?? 0
@@ -218,19 +230,60 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     return `M ${s.x} ${s.y} C ${s.x} ${mid}, ${t.x} ${mid}, ${t.x} ${t.y}`
   }
 
-  function toCanvas(clientX, clientY) {
-    const r = wrapRef.current?.getBoundingClientRect()
-    if (!r) return { x: 0, y: 0 }
-    return { x: (clientX - r.left - pan.x) / zoom, y: (clientY - r.top - pan.y) / zoom }
+  /* ---------------------------------------------------------------- view */
+
+  const toCanvas = (clientX, clientY) => {
+    const rect = vpRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 0, y: 0 }
+    return { x: (clientX - rect.left - view.tx) / view.s, y: (clientY - rect.top - view.ty) / view.s }
   }
 
-  function hitNode(pt) {
-    for (const k of [...board.channels.map(c => c.id), 'booked']) {
-      const b = nodeBox(k)
-      if (b && pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) return k
-    }
-    return null
+  // Scales the whole board to fit the viewport and centres it, rather than the
+  // old reset which only zeroed the offset and left content off screen.
+  function fitView() {
+    const vp = vpRef.current
+    if (!vp) return
+    const rect = vp.getBoundingClientRect()
+    const s = Math.max(Math.min((rect.width - 80) / layout.width, (rect.height - 80) / layout.height, 1), 0.25)
+    setView({ s, tx: (rect.width - layout.width * s) / 2, ty: Math.max(20, (rect.height - layout.height * s) / 2) })
   }
+
+  useEffect(() => {
+    if (!fittedRef.current) { fittedRef.current = true; fitView() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Zoom around a screen point so the spot under the cursor stays put, which is
+  // what made the old corner-anchored zoom feel broken.
+  function zoomAt(clientX, clientY, factor) {
+    const rect = vpRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const px = clientX - rect.left
+    const py = clientY - rect.top
+    setView(v => {
+      const s = Math.min(Math.max(v.s * factor, 0.25), 2.2)
+      const k = s / v.s
+      return { s, tx: px - (px - v.tx) * k, ty: py - (py - v.ty) * k }
+    })
+  }
+  function zoomCenter(factor) {
+    const rect = vpRef.current?.getBoundingClientRect()
+    if (rect) zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, factor)
+  }
+
+  // Non-passive so preventDefault sticks: pinch or ctrl wheel zooms, plain wheel pans
+  useEffect(() => {
+    const vp = vpRef.current
+    if (!vp) return
+    const onWheel = e => {
+      e.preventDefault()
+      if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01))
+      else setView(v => ({ ...v, tx: v.tx - e.deltaX, ty: v.ty - e.deltaY }))
+    }
+    vp.addEventListener('wheel', onWheel, { passive: false })
+    return () => vp.removeEventListener('wheel', onWheel)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view.s])
 
   /* --------------------------------------------------- reorder dragging */
 
@@ -240,26 +293,33 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     e.currentTarget.setPointerCapture?.(e.pointerId)
     const ox = layout.pos[id].x
     setNodeDrag({ id, startClientX: e.clientX, startClientY: e.clientY, origX: ox, curX: ox, moved: false })
-    orderRef.current = board.channels.map(c => c.id)
+    orderRef.current = null
   }
 
-  // Cards only travel sideways and only swap places with their neighbours, the
-  // swap commits as soon as the dragged card crosses one rather than on release.
+  // Cards travel sideways only and swap with siblings on their own row, the swap
+  // commits as soon as the dragged card crosses one rather than on release.
   function onNodeDragMove(e) {
     const nd = nodeDrag
     if (!nd) return
     const dx = e.clientX - nd.startClientX
     const moved = nd.moved || Math.hypot(dx, e.clientY - nd.startClientY) > 4
-    const curX = nd.origX + dx / zoom
+    const curX = nd.origX + dx / view.s
     setNodeDrag(prev => prev && { ...prev, curX, moved })
     if (!moved) return
 
-    const withPos = board.channels.map(c => ({ id: c.id, x: c.id === nd.id ? curX : layout.pos[c.id].x }))
+    const row = layout.pos[nd.id]?.row ?? 0
+    const sibs = board.channels.filter(c => (c.row ?? 0) === row)
+    const withPos = sibs.map(c => ({ id: c.id, x: c.id === nd.id ? curX : layout.pos[c.id].x }))
     withPos.sort((a, b) => a.x - b.x)
-    const newOrder = withPos.map(p => p.id)
-    if (newOrder.join(',') !== orderRef.current.join(',')) {
-      orderRef.current = newOrder
-      setBoard(prev => ({ ...prev, channels: newOrder.map(id => prev.channels.find(c => c.id === id)).filter(Boolean) }))
+    const newRowOrder = withPos.map(p => p.id)
+    const key = row + ':' + newRowOrder.join(',')
+    if (key !== orderRef.current) {
+      orderRef.current = key
+      setBoard(prev => {
+        const byId = Object.fromEntries(prev.channels.map(c => [c.id, c]))
+        let i = 0
+        return { ...prev, channels: prev.channels.map(c => (c.row ?? 0) === row ? byId[newRowOrder[i++]] : c) }
+      })
     }
   }
 
@@ -281,10 +341,18 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     setLinking({ from: fromKey, cur: toCanvas(e.clientX, e.clientY) })
   }
 
+  function hitNode(pt) {
+    for (const k of [...board.channels.map(c => c.id), 'booked']) {
+      const b = nodeBox(k)
+      if (b && pt.x >= b.x && pt.x <= b.x + b.w && pt.y >= b.y && pt.y <= b.y + b.h) return k
+    }
+    return null
+  }
+
   function onCanvasMove(e) {
     if (linking) { setLinking(l => l && { ...l, cur: toCanvas(e.clientX, e.clientY) }); return }
     const p = panRef.current
-    if (p) setPan({ x: p.originX + (e.clientX - p.startX), y: p.originY + (e.clientY - p.startY) })
+    if (p) setView(v => ({ ...v, tx: p.tx0 + (e.clientX - p.startX), ty: p.ty0 + (e.clientY - p.startY) }))
   }
 
   function onCanvasUp(e) {
@@ -303,27 +371,56 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
   function startPan(e) {
     if (e.target !== e.currentTarget) return
-    panRef.current = { startX: e.clientX, startY: e.clientY, originX: pan.x, originY: pan.y }
+    panRef.current = { startX: e.clientX, startY: e.clientY, tx0: view.tx, ty0: view.ty }
     e.currentTarget.setPointerCapture?.(e.pointerId)
     setSelectedId(null)
   }
 
   /* ------------------------------------------------------------- actions */
 
-  function newChannel() {
+  function newChannel(row) {
     const p = PRESET_BY_KEY.other
-    return { id: makeId(), name: 'New channel', preset: p.key, color: p.accent, variables: [] }
+    return { id: makeId(), name: 'New channel', preset: p.key, color: p.accent, variables: [], row }
   }
 
-  // index is where in the top row the new card lands, defaults to the end
-  function addChannel(index) {
-    const ch = newChannel()
+  // Sits beside an existing card on the same row and inherits where that card points
+  function addBeside(ch, side) {
+    const fresh = newChannel(ch.row ?? 0)
     commit(prev => {
+      const idx = prev.channels.findIndex(c => c.id === ch.id)
       const list = [...prev.channels]
-      list.splice(index ?? list.length, 0, ch)
-      return { ...prev, channels: list, connections: [...prev.connections, { id: makeId(), from: ch.id, to: 'booked' }] }
+      list.splice(side === 'left' ? idx : idx + 1, 0, fresh)
+      const targets = prev.connections.filter(c => c.from === ch.id).map(c => c.to)
+      const links = (targets.length ? targets : ['booked']).map(t => ({ id: makeId(), from: fresh.id, to: t }))
+      return { channels: normalizeRows(list), connections: [...prev.connections, ...links] }
     })
-    setSelectedId(ch.id)
+    setSelectedId(fresh.id)
+  }
+
+  // Opens a brand new row above this card and feeds into it, which is how an
+  // Account row ends up sitting on top of a platform row.
+  function addAbove(ch) {
+    const at = ch.row ?? 0
+    const fresh = newChannel(at)
+    commit(prev => {
+      const shifted = prev.channels.map(c => ((c.row ?? 0) >= at ? { ...c, row: (c.row ?? 0) + 1 } : c))
+      return {
+        channels: normalizeRows([fresh, ...shifted]),
+        connections: [...prev.connections, { id: makeId(), from: fresh.id, to: ch.id }],
+      }
+    })
+    setSelectedId(fresh.id)
+  }
+
+  // Bottom row of channels, used by the toolbar button and the fresh board plus
+  function addToBottomRow() {
+    const lastRow = board.channels.length ? Math.max(...board.channels.map(c => c.row ?? 0)) : 0
+    const fresh = newChannel(lastRow)
+    commit(prev => ({
+      channels: normalizeRows([...prev.channels, fresh]),
+      connections: [...prev.connections, { id: makeId(), from: fresh.id, to: 'booked' }],
+    }))
+    setSelectedId(fresh.id)
   }
 
   function updateChannel(id, patch) {
@@ -332,8 +429,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
   function removeChannel(id) {
     commit(prev => ({
-      ...prev,
-      channels: prev.channels.filter(c => c.id !== id),
+      channels: normalizeRows(prev.channels.filter(c => c.id !== id)),
       connections: prev.connections.filter(c => c.from !== id && c.to !== id),
     }))
     setSelectedId(null)
@@ -343,12 +439,15 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     commit(prev => ({ ...prev, connections: prev.connections.filter(c => c.id !== id) }))
   }
 
-  // Picking a platform sets the colour and icon. It only fills in the name
-  // while the channel is still called the default, so a name you typed is never
-  // overwritten by clicking a platform afterwards.
+  // A real platform carries its own branding, so picking one sets the name and
+  // colour and locks both. Account and Other leave them yours to edit.
   function applyPreset(ch, p) {
-    const untouched = !ch.name || ch.name.trim() === '' || ch.name === 'New channel'
-    updateChannel(ch.id, { preset: p.key, color: p.accent, ...(untouched ? { name: p.label } : {}) })
+    if (p.free) {
+      const wasLocked = !isFree(ch.preset)
+      updateChannel(ch.id, { preset: p.key, ...(wasLocked ? { name: p.key === 'account' ? 'Account' : 'New channel', color: p.accent } : {}) })
+    } else {
+      updateChannel(ch.id, { preset: p.key, color: p.accent, name: p.label })
+    }
   }
 
   function toggleVariable(id, v) {
@@ -361,6 +460,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   if (!data) return null
 
   const selected = board.channels.find(c => c.id === selectedId) || null
+  const locked = selected ? !isFree(selected.preset) : false
   const hasChannels = board.channels.length > 0
 
   const btn = { padding: '7px 13px', background: 'var(--card)', color: 'var(--text2)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }
@@ -380,17 +480,18 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
   return (
     <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
+      <style>{`@keyframes chFlow { to { stroke-dashoffset: -28 } }`}</style>
+
       <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           {!readOnly && hasChannels && (
-            <button onClick={() => addChannel()} style={{ ...btn, background: 'var(--text)', color: 'var(--bg)', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={addToBottomRow} style={{ ...btn, background: 'var(--text)', color: 'var(--bg)', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
               <IconPlus s={13} /> Add channel
             </button>
           )}
-          <button onClick={() => setZoom(z => Math.max(MIN_ZOOM, +(z - 0.15).toFixed(2)))} style={btn}>-</button>
-          <div style={{ fontSize: 11, color: 'var(--text3)', minWidth: 42, textAlign: 'center', fontWeight: 600 }}>{Math.round(zoom * 100)}%</div>
-          <button onClick={() => setZoom(z => Math.min(MAX_ZOOM, +(z + 0.15).toFixed(2)))} style={btn}>+</button>
-          {!readOnly && <button onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1) }} style={btn}>Recentre</button>}
+          <button onClick={() => zoomCenter(1 / 1.25)} title="Zoom out" style={btn}>-</button>
+          <button onClick={fitView} title="Fit board to view" style={{ ...btn, minWidth: 54 }}>{Math.round(view.s * 100)}%</button>
+          <button onClick={() => zoomCenter(1.25)} title="Zoom in" style={btn}>+</button>
           {hasChannels && unassigned.length > 0 && (
             <div style={{ fontSize: 11, color: 'var(--text3)', marginLeft: 'auto' }}>
               {unassigned.length} variable{unassigned.length === 1 ? '' : 's'} not linked to a channel
@@ -399,7 +500,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
         </div>
 
         <div
-          ref={wrapRef}
+          ref={vpRef}
           onPointerDown={startPan}
           onPointerMove={onCanvasMove}
           onPointerUp={onCanvasUp}
@@ -410,11 +511,11 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
             boxShadow: 'var(--card-shadow)', overflow: 'hidden', touchAction: 'none',
             cursor: linking ? 'crosshair' : 'grab',
             backgroundImage: 'radial-gradient(var(--border2) 1px, transparent 1px)',
-            backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
+            backgroundSize: `${24 * view.s}px ${24 * view.s}px`,
+            backgroundPosition: `${view.tx}px ${view.ty}px`,
           }}
         >
-          <div style={{ position: 'absolute', left: 0, top: 0, width: layout.width, height: layout.height, transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}>
+          <div style={{ position: 'absolute', left: 0, top: 0, width: layout.width, height: layout.height, transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.s})`, transformOrigin: '0 0' }}>
             {/* connectors */}
             <svg width={layout.width} height={layout.height} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
               {board.connections.map(cn => {
@@ -424,7 +525,12 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                 const hot = hoverConn === cn.id
                 return (
                   <g key={cn.id}>
-                    <path d={curve(s, t)} fill="none" stroke={hot ? '#EF4444' : hexToRgba(ch?.color || '#9CA3AF', 0.55)} strokeWidth="2" strokeDasharray="7 7" strokeLinecap="round" />
+                    <path
+                      d={curve(s, t)} fill="none"
+                      stroke={hot ? '#EF4444' : hexToRgba(ch?.color || '#9CA3AF', 0.7)}
+                      strokeWidth="2" strokeDasharray="7 7" strokeLinecap="round"
+                      style={{ animation: nodeDrag ? 'none' : 'chFlow 1.1s linear infinite' }}
+                    />
                     {!readOnly && (
                       <path d={curve(s, t)} fill="none" stroke="transparent" strokeWidth="16"
                         style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
@@ -440,41 +546,49 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                 const s = outPort(linking.from)
                 return s ? <path d={curve(s, linking.cur)} fill="none" stroke="var(--text3)" strokeWidth="2" strokeDasharray="5 6" strokeLinecap="round" /> : null
               })()}
-              {/* stub from the add button down to Booked on a fresh board */}
               {!hasChannels && (
-                <path d={`M ${layout.booked.x + BOOKED_W / 2} ${layout.booked.y - 40} L ${layout.booked.x + BOOKED_W / 2} ${layout.booked.y}`}
+                <path d={`M ${layout.booked.x + BOOKED_W / 2} ${layout.booked.y - 44} L ${layout.booked.x + BOOKED_W / 2} ${layout.booked.y}`}
                   stroke="var(--border2)" strokeWidth="2" strokeDasharray="6 6" strokeLinecap="round" fill="none" />
               )}
             </svg>
 
             {/* channel boxes */}
-            {board.channels.map((ch, i) => {
+            {board.channels.map(ch => {
               const st = channelStats[ch.id] || { initiated: 0, booked: 0, abr: 0, active: false }
               const Icon = (PRESET_BY_KEY[ch.preset] || PRESET_BY_KEY.other).Icon
               const isSel = selectedId === ch.id
               const isHov = hoveredId === ch.id
               const isDragging = nodeDrag?.id === ch.id && nodeDrag.moved
               const x = slotX(ch.id)
+              const showHandles = !readOnly && isHov && !nodeDrag
               return (
                 <div
                   key={ch.id}
                   onMouseEnter={() => setHoveredId(ch.id)}
                   onMouseLeave={() => setHoveredId(null)}
                   style={{
-                    position: 'absolute', left: x - HANDLE, top: layout.pos[ch.id].y,
-                    width: NODE_W + HANDLE * 2, height: NODE_H,
-                    zIndex: isDragging ? 6 : 1,
+                    position: 'absolute', left: x - SIDE_GUTTER, top: layout.pos[ch.id].y - TOP_GUTTER,
+                    width: NODE_W + SIDE_GUTTER * 2, height: NODE_H + TOP_GUTTER,
+                    zIndex: isDragging ? 6 : isHov ? 2 : 1,
                     transition: nodeDrag ? 'none' : 'left 0.16s ease',
                   }}
                 >
-                  {!readOnly && isHov && !nodeDrag && ['left', 'right'].map(side => (
+                  {showHandles && (
+                    <button
+                      onPointerDown={e => e.stopPropagation()}
+                      onClick={e => { e.stopPropagation(); addAbove(ch) }}
+                      title="Add a row above this one"
+                      style={{ ...addBtn, position: 'absolute', top: 0, left: '50%', marginLeft: -14, width: 28, height: 28 }}
+                    ><IconPlus s={14} /></button>
+                  )}
+                  {showHandles && ['left', 'right'].map(side => (
                     <button
                       key={side}
                       onPointerDown={e => e.stopPropagation()}
-                      onClick={e => { e.stopPropagation(); addChannel(side === 'left' ? i : i + 1) }}
+                      onClick={e => { e.stopPropagation(); addBeside(ch, side) }}
                       title={`Add a channel to the ${side}`}
-                      style={{ ...addBtn, position: 'absolute', top: NODE_H / 2 - 13, [side]: 0, width: 26, height: 26 }}
-                    ><IconPlus s={13} /></button>
+                      style={{ ...addBtn, position: 'absolute', top: TOP_GUTTER + NODE_H / 2 - 14, [side]: 2, width: 28, height: 28 }}
+                    ><IconPlus s={14} /></button>
                   ))}
 
                   <div
@@ -483,10 +597,10 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                     onPointerUp={e => endNodeDrag(e, ch.id)}
                     onPointerCancel={e => endNodeDrag(e, ch.id)}
                     style={{
-                      position: 'absolute', left: HANDLE, top: 0, width: NODE_W, height: NODE_H,
+                      position: 'absolute', left: SIDE_GUTTER, top: TOP_GUTTER, width: NODE_W, height: NODE_H,
                       background: 'var(--card)',
-                      border: `1.5px solid ${hexToRgba(ch.color, isSel ? 0.7 : 0.4)}`,
-                      boxShadow: isDragging ? '0 10px 26px rgba(0,0,0,0.26)' : isSel ? `0 0 0 3px ${hexToRgba(ch.color, 0.16)}` : 'var(--card-shadow)',
+                      border: `${isSel ? 2 : 1.5}px solid ${isSel ? ch.color : hexToRgba(ch.color, 0.55)}`,
+                      boxShadow: isDragging ? '0 10px 26px rgba(0,0,0,0.26)' : 'var(--card-shadow)',
                       borderRadius: 14, overflow: 'hidden',
                       cursor: readOnly ? 'default' : isDragging ? 'grabbing' : 'grab',
                       touchAction: 'none', userSelect: 'none',
@@ -494,7 +608,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                   >
                     <div style={{ padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--border)' }}>
                       {st.active && <span title="Active in the last 7 days" style={{ width: 8, height: 8, borderRadius: '50%', background: '#34D399', flexShrink: 0, boxShadow: '0 0 0 3px rgba(52,211,153,0.18)' }} />}
-                      <span style={{ color: hexToRgba(ch.color, 0.9), display: 'flex', flexShrink: 0 }}><Icon s={15} /></span>
+                      <span style={{ color: ch.color, display: 'flex', flexShrink: 0 }}><Icon s={15} /></span>
                       <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ch.name}</span>
                       <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: 'var(--text4)', flexShrink: 0 }}>{(ch.variables || []).length}v</span>
                     </div>
@@ -523,8 +637,8 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
             {/* add button above Booked on a fresh board */}
             {!readOnly && !hasChannels && (
-              <div style={{ position: 'absolute', left: layout.booked.x + BOOKED_W / 2 - 60, top: layout.booked.y - 40 - 56, width: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9 }}>
-                <button onClick={() => addChannel()} title="Add your first channel" style={{ ...addBtn, width: 52, height: 52, borderStyle: 'dashed' }}>
+              <div style={{ position: 'absolute', left: layout.booked.x + BOOKED_W / 2 - 60, top: layout.booked.y - 44 - 58, width: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9 }}>
+                <button onClick={addToBottomRow} title="Add your first channel" style={{ ...addBtn, width: 52, height: 52, borderStyle: 'dashed' }}>
                   <IconPlus s={22} w={2} />
                 </button>
                 <div style={{ color: 'var(--text3)', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>Add a channel</div>
@@ -534,7 +648,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
             {/* booked */}
             <div style={{
               position: 'absolute', left: layout.booked.x, top: layout.booked.y, width: BOOKED_W, height: BOOKED_H,
-              background: 'var(--card)', border: `1.5px solid ${hexToRgba('#A855F7', 0.4)}`, borderRadius: 16,
+              background: 'var(--card)', border: `1.5px solid ${hexToRgba('#A855F7', 0.55)}`, borderRadius: 16,
               boxShadow: 'var(--card-shadow)', overflow: 'hidden', userSelect: 'none',
             }}>
               <div style={{ padding: '11px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
@@ -571,7 +685,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
             <div style={{ color: 'var(--text3)', fontSize: 12, lineHeight: 1.7 }}>
               <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 13, marginBottom: 8 }}>Nothing selected</div>
               {hasChannels
-                ? <>Click a box to rename it, change its colour, and pick the variables that feed it. Drag a box sideways to reorder the row, drag the dot underneath onto Booked to connect, click a line to remove it.</>
+                ? <>Click a box to edit it. Drag a box sideways to reorder its row, use the plus above a box to open a new row on top of it, drag the dot underneath onto another box to connect, click a line to remove it.</>
                 : <>Hit the plus above Booked Calls to add your first channel.</>}
               {hasChannels && unassigned.length > 0 && (
                 <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
@@ -592,10 +706,22 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Name</label>
               <input
                 value={selected.name}
+                disabled={locked}
                 onChange={e => updateChannel(selected.id, { name: e.target.value })}
                 placeholder="Channel name"
-                style={{ width: '100%', marginTop: 6, marginBottom: 16, padding: '9px 11px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text)', fontSize: 13, fontWeight: 600, outline: 'none', boxSizing: 'border-box' }}
+                style={{
+                  width: '100%', marginTop: 6, marginBottom: locked ? 8 : 16, padding: '9px 11px',
+                  background: locked ? 'var(--hover-bg)' : 'var(--bg2)',
+                  border: '1px solid var(--border)', borderRadius: 8,
+                  color: locked ? 'var(--text3)' : 'var(--text)', fontSize: 13, fontWeight: 600,
+                  outline: 'none', boxSizing: 'border-box', cursor: locked ? 'not-allowed' : 'text',
+                }}
               />
+              {locked && (
+                <div style={{ fontSize: 10.5, color: 'var(--text4)', marginBottom: 16, lineHeight: 1.5 }}>
+                  Name and colour are fixed for a real platform. Switch to Account or Other to set your own.
+                </div>
+              )}
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Platform</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 8, marginBottom: 16 }}>
@@ -609,10 +735,10 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7,
                         padding: '13px 4px', borderRadius: 11, cursor: 'pointer',
                         background: on ? hexToRgba(p.accent, 0.14) : 'var(--hover-bg)',
-                        border: on ? `1.5px solid ${hexToRgba(p.accent, 0.75)}` : '1px solid var(--border)',
+                        border: on ? `1.5px solid ${p.accent}` : '1px solid var(--border)',
                       }}
                     >
-                      <span style={{ color: hexToRgba(p.accent, 0.95), display: 'flex' }}><p.Icon s={26} /></span>
+                      <span style={{ color: p.accent, display: 'flex' }}><p.Icon s={26} /></span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: on ? 'var(--text)' : 'var(--text2)' }}>{p.label}</span>
                     </button>
                   )
@@ -620,7 +746,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
               </div>
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Colour</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 16, alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 16, alignItems: 'center', opacity: locked ? 0.4 : 1, pointerEvents: locked ? 'none' : 'auto' }}>
                 {SWATCHES.map(c => (
                   <button key={c} onClick={() => updateChannel(selected.id, { color: c })}
                     style={{ width: 24, height: 24, borderRadius: 7, background: c, cursor: 'pointer', border: selected.color === c ? '2px solid var(--text)' : '1px solid var(--border2)' }} />
@@ -653,7 +779,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                         fontSize: 14, padding: '9px 11px', borderRadius: 9, cursor: 'pointer', fontWeight: 600,
                         background: on ? hexToRgba(selected.color, 0.14) : 'var(--hover-bg)',
                         color: on ? 'var(--text)' : takenBy ? 'var(--text4)' : 'var(--text2)',
-                        border: on ? `1px solid ${hexToRgba(selected.color, 0.6)}` : '1px solid var(--border)',
+                        border: on ? `1px solid ${hexToRgba(selected.color, 0.7)}` : '1px solid var(--border)',
                       }}
                     >
                       {activeVars.has(v) && <span title="Active" style={{ width: 7, height: 7, borderRadius: '50%', background: '#34D399', flexShrink: 0 }} />}

@@ -1,6 +1,17 @@
 // Migrates ONE user's data from the team Firebase project to the personal one.
-// Run locally, never in CI: it needs two admin service account keys, and those
-// should not pass through a chat window or a repo. See the usage note below.
+//
+// Runs as the "Migrate Personal Dashboard Data" GitHub Actions workflow
+// (.github/workflows/migrate-personal.yml), triggered manually from the
+// Actions tab. It uses the same two service account secrets already needed
+// for deploy.yml and deploy-personal.yml, so nothing new has to be pasted
+// anywhere, this is a second consumer of credentials that already live in
+// the repo's GitHub secrets.
+//
+// It can also be run locally the same way, if you'd rather:
+//   OLD_SERVICE_ACCOUNT=/path/to/old-project-key.json \
+//   NEW_SERVICE_ACCOUNT=/path/to/new-project-key.json \
+//   GOOGLE_EMAIL=you@example.com \
+//   node scripts/migrate-personal.js --dry-run
 //
 // What it copies, scoped strictly to the given account:
 //   - users/{oldUid}            -> users/{newUid}            (the whole config
@@ -23,13 +34,6 @@
 //     denormalized snapshot taken at creation time. A copy would not produce a
 //     working link on the new domain. Generate fresh ones from the new
 //     dashboard if you need them.
-//
-// Usage:
-//   npm install                       # picks up firebase-admin as a devDependency
-//   OLD_SERVICE_ACCOUNT=/path/to/old-project-key.json \
-//   NEW_SERVICE_ACCOUNT=/path/to/new-project-key.json \
-//   GOOGLE_EMAIL=you@example.com \
-//   node scripts/migrate-personal.js
 //
 // Add --dry-run to see exactly what would be written without writing anything.
 //

@@ -33,6 +33,30 @@ function IconAccount({ s = 16, c = 'currentColor' }) {
 function IconOther({ s = 16, c = 'currentColor' }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill={c}><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
 }
+// Pickable glyphs for an Account or Other box, inline so no icon dependency
+// gets pulled in just for this.
+const G = (d, fill) => ({ s = 16, c = 'currentColor' }) =>
+  <svg width={s} height={s} viewBox="0 0 24 24" fill={fill ? c : 'none'} stroke={fill ? 'none' : c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>
+
+export const GLYPHS = {
+  megaphone: G('M3 11v2a1 1 0 001 1h2l5 4V6L6 10H4a1 1 0 00-1 1zM16 8.5a4 4 0 010 7'),
+  mail:      G('M3 6h18v12H3zM3 7l9 6 9-6'),
+  phone:     G('M6 3h4l2 5-2.5 1.5a12 12 0 005 5L16 12l5 2v4a2 2 0 01-2 2A16 16 0 014 5a2 2 0 012-2z'),
+  users:     G('M16 20v-1.5a4 4 0 00-4-4H7a4 4 0 00-4 4V20M9.5 7.5a3 3 0 100 5 3 3 0 000-5M17 5.2a3 3 0 010 5.6M21 20v-1.5a4 4 0 00-3-3.8'),
+  target:    G('M12 3a9 9 0 100 18 9 9 0 000-18zM12 8a4 4 0 100 8 4 4 0 000-8zM12 11.5a.5.5 0 100 1 .5.5 0 000-1'),
+  star:      G('M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9L3.5 9.7l5.9-.8z'),
+  rocket:    G('M12 3c3.5 2 5.5 5.5 5.5 9.5L14 16h-4l-3.5-3.5C6.5 8.5 8.5 5 12 3zM10 16l-2 5 4-2 4 2-2-5'),
+  briefcase: G('M3 8h18v11H3zM9 8V5.5A1.5 1.5 0 0110.5 4h3A1.5 1.5 0 0115 5.5V8'),
+  calendar:  G('M4 6h16v14H4zM8 3v4M16 3v4M4 11h16'),
+  chat:      G('M20 5H4v11h4v4l4-4h8z'),
+  globe:     G('M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 20.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z'),
+  pin:       G('M12 21s6.5-6 6.5-10.5a6.5 6.5 0 10-13 0C5.5 15 12 21 12 21zM12 8a2.5 2.5 0 100 5 2.5 2.5 0 000-5'),
+  tag:       G('M3 12.5V4h8.5L21 13.5 13.5 21zM7.5 7.5v.01'),
+  bolt:      G('M13 3L5 14h6l-1 7 8-11h-6z'),
+  search:    G('M11 4a7 7 0 100 14 7 7 0 000-14zM20 20l-4-4'),
+  video:     G('M3 6h12v12H3zM15 10l6-3v10l-6-3'),
+}
+
 function IconPlus({ s = 14, c = 'currentColor', w = 2.4 }) {
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={w} strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
 }
@@ -46,13 +70,16 @@ export const CHANNEL_PRESETS = [
   { key: 'instagram', label: 'Instagram', accent: '#E1306C', Icon: IconInstagram },
   { key: 'facebook',  label: 'Facebook',  accent: '#1877F2', Icon: IconFacebook },
   { key: 'skool',     label: 'Skool',     accent: '#F5B301', Icon: IconSkool },
-  { key: 'youtube',   label: 'YouTube',   accent: '#FF0000', Icon: IconYouTube },
-  { key: 'website',   label: 'Website',   accent: '#94A3B8', Icon: IconWebsite },
+  { key: 'youtube',   label: 'YouTube',   accent: '#FF0000', Icon: IconYouTube, labels: { first: 'Views' } },
+  { key: 'website',   label: 'Website',   accent: '#94A3B8', Icon: IconWebsite, labels: { first: 'Visits', rate: 'CR' } },
   { key: 'account',   label: 'Account',   accent: '#22D3EE', Icon: IconAccount, free: true },
   { key: 'other',     label: 'Other',     accent: '#9CA3AF', Icon: IconOther,   free: true },
 ]
 const PRESET_BY_KEY = Object.fromEntries(CHANNEL_PRESETS.map(p => [p.key, p]))
 const isFree = key => !!PRESET_BY_KEY[key]?.free
+// A free box can override its glyph, a real platform always shows its own
+const iconFor = ch => (isFree(ch.preset) && GLYPHS[ch.icon]) || (PRESET_BY_KEY[ch.preset] || PRESET_BY_KEY.other).Icon
+const labelsFor = ch => (PRESET_BY_KEY[ch.preset] || {}).labels || {}
 
 const SWATCHES = ['#0A66C2', '#E1306C', '#1877F2', '#F5B301', '#FF0000', '#94A3B8', '#22D3EE', '#9CA3AF', '#34D399', '#A78BFA', '#FB923C', '#F472B6']
 
@@ -397,17 +424,24 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
     setSelectedId(fresh.id)
   }
 
-  // Opens a brand new row above this card and feeds into it, which is how an
-  // Account row ends up sitting on top of a platform row.
+  // Feeds a card into this one from above. If a row already sits up there the
+  // new card joins it on the same level, next to whatever is above this card.
+  // Only a card on the very top row opens a genuinely new row.
   function addAbove(ch) {
     const at = ch.row ?? 0
-    const fresh = newChannel(at)
+    const fresh = newChannel(Math.max(at - 1, 0))
     commit(prev => {
-      const shifted = prev.channels.map(c => ((c.row ?? 0) >= at ? { ...c, row: (c.row ?? 0) + 1 } : c))
-      return {
-        channels: normalizeRows([fresh, ...shifted]),
-        connections: [...prev.connections, { id: makeId(), from: fresh.id, to: ch.id }],
+      const link = { id: makeId(), from: fresh.id, to: ch.id }
+      if (at === 0) {
+        const shifted = prev.channels.map(c => ({ ...c, row: (c.row ?? 0) + 1 }))
+        return { channels: normalizeRows([fresh, ...shifted]), connections: [...prev.connections, link] }
       }
+      const posInRow = prev.channels.filter(c => (c.row ?? 0) === at).findIndex(c => c.id === ch.id)
+      const upper = prev.channels.filter(c => (c.row ?? 0) === at - 1)
+      const anchor = upper[Math.min(posInRow, upper.length - 1)]
+      const list = [...prev.channels]
+      list.splice(anchor ? list.findIndex(c => c.id === anchor.id) + 1 : list.length, 0, fresh)
+      return { channels: normalizeRows(list), connections: [...prev.connections, link] }
     })
     setSelectedId(fresh.id)
   }
@@ -479,10 +513,10 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
   }
 
   return (
-    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <style>{`@keyframes chFlow { to { stroke-dashoffset: -28 } }`}</style>
 
-      <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           {!readOnly && hasChannels && (
             <button onClick={addToBottomRow} style={{ ...btn, background: 'var(--text)', color: 'var(--bg)', border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -555,7 +589,8 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
             {/* channel boxes */}
             {board.channels.map(ch => {
               const st = channelStats[ch.id] || { initiated: 0, booked: 0, abr: 0, active: false }
-              const Icon = (PRESET_BY_KEY[ch.preset] || PRESET_BY_KEY.other).Icon
+              const Icon = iconFor(ch)
+              const lab = labelsFor(ch)
               const isSel = selectedId === ch.id
               const isHov = hoveredId === ch.id
               const isDragging = nodeDrag?.id === ch.id && nodeDrag.moved
@@ -577,7 +612,7 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                     <button
                       onPointerDown={e => e.stopPropagation()}
                       onClick={e => { e.stopPropagation(); addAbove(ch) }}
-                      title="Add a row above this one"
+                      title={(ch.row ?? 0) === 0 ? 'Add a row above this one' : 'Add a feeder above this one'}
                       style={{ ...addBtn, position: 'absolute', top: 0, left: '50%', marginLeft: -14, width: 28, height: 28 }}
                     ><IconPlus s={14} /></button>
                   )}
@@ -615,9 +650,9 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
 
                     <div style={{ display: 'flex', padding: '13px 8px 10px' }}>
                       {[
-                        { lbl: 'Initiated', val: st.initiated, color: '#60A5FA' },
+                        { lbl: lab.first || 'Initiated', val: st.initiated, color: '#60A5FA' },
                         { lbl: 'Booked', val: st.booked, color: '#A855F7' },
-                        { lbl: 'ABR', val: `${st.abr}%`, color: '#34D399' },
+                        { lbl: lab.rate || 'ABR', val: `${st.abr}%`, color: '#34D399' },
                       ].map((m, k) => (
                         <div key={m.lbl} style={{ flex: 1, textAlign: 'center', borderLeft: k ? '1px solid var(--border)' : 'none' }}>
                           <div style={{ fontSize: 19, fontWeight: 800, color: m.color, letterSpacing: '-0.02em' }}>{m.val}</div>
@@ -673,34 +708,24 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
         </div>
       </div>
 
-      {/* --------------------------------------------------- inspector */}
-      {!readOnly && (
+      {/* ----------------- inspector, floats over the canvas when open ----- */}
+      {!readOnly && selected && (
         <div style={{
-          width: isMobile ? '100%' : 300, flexShrink: 0,
-          background: 'var(--card)', borderRadius: 18, border: '1px solid var(--border)',
-          boxShadow: 'var(--card-shadow)', padding: 18,
-          maxHeight: isMobile ? 'none' : '72vh', overflowY: 'auto',
+          position: 'absolute', zIndex: 30,
+          top: isMobile ? 'auto' : 60, bottom: 14,
+          right: isMobile ? 8 : 14, left: isMobile ? 8 : 'auto',
+          width: isMobile ? 'auto' : 300,
+          maxHeight: isMobile ? '52vh' : 'none',
+          background: 'var(--card)', borderRadius: 16, border: '1px solid var(--border2)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.32)', padding: 18, overflowY: 'auto',
         }}>
-          {!selected ? (
-            <div style={{ color: 'var(--text3)', fontSize: 12, lineHeight: 1.7 }}>
-              <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 13, marginBottom: 8 }}>Nothing selected</div>
-              {hasChannels
-                ? <>Click a box to edit it. Drag a box sideways to reorder its row, use the plus above a box to open a new row on top of it, drag the dot underneath onto another box to connect, click a line to remove it.</>
-                : <>Hit the plus above Booked Calls to add your first channel.</>}
-              {hasChannels && unassigned.length > 0 && (
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 800, color: 'var(--text2)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Not linked yet</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {unassigned.map(v => <span key={v} style={{ fontSize: 13, padding: '6px 10px', borderRadius: 8, background: 'var(--hover-bg)', color: 'var(--text3)' }}>{v}</span>)}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ fontWeight: 800, color: 'var(--text)', fontSize: 13 }}>Channel</div>
-                <button onClick={() => removeChannel(selected.id)} style={{ background: 'none', border: 'none', color: '#EF4444', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}>Delete</button>
+                <button onClick={() => removeChannel(selected.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF4444', fontSize: 11, fontWeight: 700, cursor: 'pointer', padding: 0 }}>Delete</button>
+                <button onClick={() => setSelectedId(null)} title="Close" style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 0, display: 'flex' }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
               </div>
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Name</label>
@@ -744,6 +769,42 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                   )
                 })}
               </div>
+
+              {!locked && (
+                <>
+                  <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Icon</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 5, marginTop: 8, marginBottom: 16 }}>
+                    <button
+                      onClick={() => updateChannel(selected.id, { icon: null })}
+                      title="Default"
+                      style={{
+                        aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        borderRadius: 7, cursor: 'pointer',
+                        background: !selected.icon ? hexToRgba(selected.color, 0.16) : 'var(--hover-bg)',
+                        border: !selected.icon ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
+                        color: !selected.icon ? selected.color : 'var(--text3)',
+                      }}
+                    >{(() => { const D = (PRESET_BY_KEY[selected.preset] || PRESET_BY_KEY.other).Icon; return <D s={15} /> })()}</button>
+                    {Object.entries(GLYPHS).map(([key, Glyph]) => {
+                      const on = selected.icon === key
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => updateChannel(selected.id, { icon: key })}
+                          title={key}
+                          style={{
+                            aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                            borderRadius: 7, cursor: 'pointer',
+                            background: on ? hexToRgba(selected.color, 0.16) : 'var(--hover-bg)',
+                            border: on ? `1.5px solid ${selected.color}` : '1px solid var(--border)',
+                            color: on ? selected.color : 'var(--text3)',
+                          }}
+                        ><Glyph s={15} /></button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
 
               <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Colour</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, marginBottom: 16, alignItems: 'center', opacity: locked ? 0.4 : 1, pointerEvents: locked ? 'none' : 'auto' }}>
@@ -790,7 +851,6 @@ export default function Channels({ data, filter, customFrom, customTo, user, con
                 })}
               </div>
             </>
-          )}
         </div>
       )}
     </div>

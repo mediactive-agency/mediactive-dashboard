@@ -1,0 +1,43 @@
+name: Migrate Personal Dashboard Data
+
+# Manual, one-off: run from the Actions tab, not on every push. Uses the same
+# two service account secrets already needed for deploy.yml and
+# deploy-personal.yml, so this adds no new credential exposure, it's a second
+# consumer of secrets that already live in this repo.
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'Google account email to migrate (e.g. you@gmail.com)'
+        required: true
+      dry_run:
+        description: 'Dry run first (recommended): prints what would be written, writes nothing'
+        required: true
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - name: Write service account keys to disk for this job only
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$HOME/old-key.json"
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PERSONAL }}' > "$HOME/new-key.json"
+      - name: Run migration
+        env:
+          OLD_SERVICE_ACCOUNT: /home/runner/old-key.json
+          NEW_SERVICE_ACCOUNT: /home/runner/new-key.json
+          GOOGLE_EMAIL: ${{ github.event.inputs.email }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            node scripts/migrate-personal.js --dry-run
+          else
+            node scripts/migrate-personal.js
+          fi

@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "mediactive-dashboard"
+    "default": "mediactive-dashboard",
+    "personal": "mediactive-dashboard-backend"
   }
 }

@@ -13,6 +13,7 @@ import Sales from './components/Sales'
 import Tasks from './components/Tasks'
 import Clients from './components/Clients'
 import Campaigns from './components/Campaigns'
+import Channels from './components/Channels'
 import Login from './components/Login'
 import InviteLanding from './components/InviteLanding'
 import PreviewDashboard from './components/PreviewDashboard'
@@ -87,7 +88,7 @@ export default function App() {
     setAppliedFrom(customFrom); setAppliedTo(customTo); setFilter('custom')
   }
 
-  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns', settings: 'Settings', members: 'AGP Members' }
+  const PAGE_TITLES = { dashboard: getGreeting(config?.userName), outreach: 'Outreach', sales: 'Sales Calls', tasks: 'Daily Tasks', clients: 'Clients', campaigns: 'Campaigns', channels: 'Channels', settings: 'Settings', members: 'AGP Members' }
   const isDark = theme === 'dark'
 
   if (previewToken) return <PreviewDashboard token={previewToken} />
@@ -157,6 +158,7 @@ export default function App() {
               {page === 'tasks'     && <Tasks     stats={taskStats} filter={filter} isMobile={isMobile} dailyGoal={config?.dailyGoal ?? 20} weekendOutreach={config?.weekendOutreach ?? false} />}
               {page === 'clients'   && <Clients   user={user} isMobile={isMobile} isTablet={isTablet} filter={filter} customFrom={appliedFrom} customTo={appliedTo} clients={clientsState.clients} clientData={clientsState.clientData} clientsLoading={clientsState.loading} onClientsReload={clientsState.reload} />}
               {page === 'campaigns' && <Campaigns data={data} user={user} config={config} isMobile={isMobile} isTablet={isTablet} />}
+              {page === 'channels'  && <Channels  data={data} filter={filter} customFrom={appliedFrom} customTo={appliedTo} user={user} config={config} isMobile={isMobile} />}
               {page === 'settings'  && <Settings  user={user} config={config} workspaceId={workspace.activeWorkspaceId} workspace={workspace} isOwner={workspace.activeRole === 'owner'} onSaved={reload} isMobile={isMobile} />}
               {page === 'members'   && isAdmin && <Members isMobile={isMobile} isTablet={isTablet} />}
             </>

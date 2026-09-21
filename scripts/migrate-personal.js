@@ -45,7 +45,14 @@
 //      script refuses to run if OLD and NEW resolve to the same project ID,
 //      as a guard against pointing both env vars at the same file by mistake.
 
-import admin from 'firebase-admin'
+// Modular imports, not `import admin from 'firebase-admin'`: in an ESM project
+// (this one is "type": "module") the default export doesn't reliably carry
+// over namespaced properties like admin.credential, which is exactly what
+// crashed the first run of this script. Modular imports sidestep that, and
+// match the style src/firebase.js already uses for the client SDK.
+import { initializeApp, cert } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 import { readFileSync } from 'fs'
 
 const DRY_RUN = process.argv.includes('--dry-run')
@@ -81,10 +88,10 @@ async function main() {
     process.exit(1)
   }
 
-  const oldApp = admin.initializeApp({ credential: admin.credential.cert(oldKey) }, 'old')
-  const newApp = admin.initializeApp({ credential: admin.credential.cert(newKey) }, 'new')
-  const oldDb = admin.firestore(oldApp)
-  const newDb = admin.firestore(newApp)
+  const oldApp = initializeApp({ credential: cert(oldKey) }, 'old')
+  const newApp = initializeApp({ credential: cert(newKey) }, 'new')
+  const oldDb = getFirestore(oldApp)
+  const newDb = getFirestore(newApp)
 
   console.log(`Old project: ${oldKey.project_id}`)
   console.log(`New project: ${newKey.project_id}`)
@@ -93,13 +100,13 @@ async function main() {
   // --- resolve uids on both sides ------------------------------------------
   let oldUid, newUid
   try {
-    oldUid = (await admin.auth(oldApp).getUserByEmail(email)).uid
+    oldUid = (await getAuth(oldApp).getUserByEmail(email)).uid
   } catch (e) {
     console.error(`Could not find ${email} in the OLD project's Auth: ${e.message}`)
     process.exit(1)
   }
   try {
-    newUid = (await admin.auth(newApp).getUserByEmail(email)).uid
+    newUid = (await getAuth(newApp).getUserByEmail(email)).uid
   } catch (e) {
     console.error(`Could not find ${email} in the NEW project's Auth.`)
     console.error(`Have you signed into the new dashboard at least once yet? That's what creates this account. ${e.message}`)
